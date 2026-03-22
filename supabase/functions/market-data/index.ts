@@ -142,4 +142,3 @@ function formatPremiumHelper(value: any): string {
   if (num >= 1_000) return `${(num / 1_000).toFixed(0)}K`;
   return num.toFixed(0);
 }
-});
