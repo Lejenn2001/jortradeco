@@ -71,6 +71,8 @@ const MarketChartPanel = () => {
 
   const [activeTicker, setActiveTicker] = useState("");
   const [searchValue, setSearchValue] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
   const [insight, setInsight] = useState<TickerInsight>(defaultInsight);
   const [loading, setLoading] = useState(false);
 
