@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import { Users, UserPlus, MessageSquare, TrendingUp, BarChart3 } from "lucide-react";
+import { Users, UserPlus, MessageSquare, TrendingUp, BarChart3, ShieldAlert } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
 
 interface StatCardProps {
