@@ -77,8 +77,8 @@ const HeroSection = () => {
           transition={{ duration: 0.6, delay: 0.6 }}
           className="text-muted-foreground mt-6 max-w-2xl mx-auto text-base md:text-lg leading-relaxed"
         >
-          JORTRADE is the intelligence engine that helps traders spot opportunities,
-          understand market conditions, and make more structured decisions — powered by AI.
+          JORTRADE helps traders spot opportunities, understand market conditions, and
+          make more structured trading decisions with AI guidance.
         </motion.p>
 
         <motion.div
