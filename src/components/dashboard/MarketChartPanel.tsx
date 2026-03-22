@@ -1,4 +1,6 @@
-import { TrendingUp } from "lucide-react";
+import { useState } from "react";
+import { TrendingUp, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 const candlesticks = [
   { x: 20, o: 160, c: 145, h: 138, l: 165, bull: true },
@@ -23,7 +25,20 @@ const candlesticks = [
   { x: 400, o: 55, c: 48, h: 42, l: 62, bull: true },
 ];
 
+const quickTickers = ["NQ", "SPX", "PLTR", "TSLA"];
+
 const MarketChartPanel = () => {
+  const [activeTicker, setActiveTicker] = useState("NQ");
+  const [searchValue, setSearchValue] = useState("");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchValue.trim()) {
+      setActiveTicker(searchValue.trim().toUpperCase());
+      setSearchValue("");
+    }
+  };
+
   return (
     <div className="glass-panel rounded-xl p-5 border-glow-purple">
       <div className="flex items-center justify-between mb-4">
@@ -31,25 +46,35 @@ const MarketChartPanel = () => {
           <TrendingUp className="h-4 w-4 text-primary" />
           <span className="font-semibold text-sm text-foreground">Market Structure</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs bg-primary/20 text-primary px-2.5 py-0.5 rounded-full">Bullish Bias ↗</span>
-        </div>
+        <span className="text-xs bg-primary/20 text-primary px-2.5 py-0.5 rounded-full">Bullish Bias ↗</span>
       </div>
 
-      {/* Ticker selector */}
-      <div className="flex gap-2 mb-4">
-        {["NQ", "SPX", "PLTR", "TSLA"].map((ticker, i) => (
-          <button
-            key={ticker}
-            className={`text-xs px-3 py-1 rounded-full transition-colors ${
-              i === 0
-                ? "bg-primary/20 text-primary font-medium"
-                : "bg-muted/50 text-muted-foreground hover:bg-muted"
-            }`}
-          >
-            {ticker}
-          </button>
-        ))}
+      {/* Ticker search + quick picks */}
+      <div className="flex flex-col sm:flex-row gap-2 mb-4">
+        <form onSubmit={handleSearch} className="relative flex-1 max-w-[200px]">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            placeholder="Search ticker..."
+            className="pl-8 h-8 text-xs bg-muted/30 border-border/50 rounded-lg"
+          />
+        </form>
+        <div className="flex gap-2">
+          {quickTickers.map((ticker) => (
+            <button
+              key={ticker}
+              onClick={() => setActiveTicker(ticker)}
+              className={`text-xs px-3 py-1 rounded-full transition-colors ${
+                activeTicker === ticker
+                  ? "bg-primary/20 text-primary font-medium"
+                  : "bg-muted/50 text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              {ticker}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Chart */}
