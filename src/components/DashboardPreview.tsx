@@ -193,7 +193,7 @@ const DashboardPreview = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className="glass-panel rounded-xl p-4 mt-4 border-glow-blue"
+          className="glass-panel rounded-xl p-4 mt-4 border-glow-purple"
         >
           <div className="flex items-center gap-3">
             <span className="text-accent">✨</span>
