@@ -205,7 +205,7 @@ const DashboardCommunity = () => {
                     >
                       {!isOwn && (
                         <p className={`text-[11px] font-semibold mb-0.5 ${userColor(msg.user_id)}`}>
-                          {msg.user_name || "Trader"}
+                          {isBiddie ? "Biddie AI" : (msg.user_name || "Trader")}
                         </p>
                       )}
                       <p className="text-xs text-foreground break-words leading-relaxed">{msg.content}</p>
