@@ -59,7 +59,7 @@ Given real-time flow data for a ticker, generate a JSON response with these exac
   "strategy": one of ONLY: "Call" | "Put" | "Call Butterfly" | "Put Butterfly" | "Bull Call Debit Spread" | "Bear Put Debit Spread",
   "contract": "the specific contract(s), e.g. 'Buy NVDA Mar 28 2026 $980 Call' or for spreads 'Buy NVDA Mar 28 $950 Call / Sell NVDA Mar 28 $970 Call' or for butterflies 'Buy 1x $940 Call / Sell 2x $960 Call / Buy 1x $980 Call'",
   "expiration": "the nearest expiration with heavy activity, format: Mon DD, YYYY",
-  "score": "X.X / 10" (confidence score — score based on the TICKER'S individual flow strength, not overall market sentiment. Use the full 1-10 range. A 9 or 10 means extremely strong, repeated flow with high premium and clear directional bias on that specific ticker. 7-8 = solid setup. 5-6 = moderate. Below 5 = weak/unclear.),
+  "score": "X.X / 10" (probability score for the SPECIFIC CONTRACT you are recommending. How likely is this contract to be profitable? Base it on: volume of flow at that strike, size of premiums, number of repeated sweeps, how close price is to the strike, time to expiration. 9-10 = very high probability — massive repeated flow, large premiums, price action confirming. 7-8 = good probability. 5-6 = moderate, mixed signals. Below 5 = speculative. Use the full range.),
   "description": "Hey ${name}, the market structure for ${ticker} is... (2-3 sentences explaining the current setup, addressing the trader by name, referencing specific flow data like sweep counts, premium sizes, dominant strikes)",
   "strategyExplanation": "1-2 sentences explaining WHY this specific strategy makes sense given the flow data"
 }
