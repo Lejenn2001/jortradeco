@@ -104,61 +104,70 @@ const MarketStatusSign = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const statusConfig = {
+    open: {
+      label: "Market Open",
+      dotClass: "bg-green-500",
+      pingClass: "bg-green-500/60",
+      textClass: "text-green-400 drop-shadow-[0_0_8px_hsl(142_71%_45%/0.8)] drop-shadow-[0_0_20px_hsl(142_71%_45%/0.4)]",
+      textShadow: "0 0 7px hsl(142 71% 45% / 0.8), 0 0 20px hsl(142 71% 45% / 0.4), 0 0 40px hsl(142 71% 45% / 0.2)",
+      bgGlow: "bg-[radial-gradient(ellipse_at_center,hsl(142_71%_45%/0.15),transparent_70%)]",
+      countdownClass: "text-green-400",
+    },
+    premarket: {
+      label: "Pre-Market Open",
+      dotClass: "bg-amber-400",
+      pingClass: "bg-amber-400/60",
+      textClass: "text-amber-400 drop-shadow-[0_0_8px_hsl(45_93%_47%/0.8)] drop-shadow-[0_0_20px_hsl(45_93%_47%/0.4)]",
+      textShadow: "0 0 7px hsl(45 93% 47% / 0.8), 0 0 20px hsl(45 93% 47% / 0.4), 0 0 40px hsl(45 93% 47% / 0.2)",
+      bgGlow: "bg-[radial-gradient(ellipse_at_center,hsl(45_93%_47%/0.12),transparent_70%)]",
+      countdownClass: "text-amber-400",
+    },
+    afterhours: {
+      label: "After-Hours",
+      dotClass: "bg-purple-400",
+      pingClass: "bg-purple-400/60",
+      textClass: "text-purple-400 drop-shadow-[0_0_8px_hsl(270_70%_60%/0.8)] drop-shadow-[0_0_20px_hsl(270_70%_60%/0.4)]",
+      textShadow: "0 0 7px hsl(270 70% 60% / 0.8), 0 0 20px hsl(270 70% 60% / 0.4)",
+      bgGlow: "bg-[radial-gradient(ellipse_at_center,hsl(270_70%_60%/0.12),transparent_70%)]",
+      countdownClass: "text-purple-400",
+    },
+    closed: {
+      label: "Market Closed",
+      dotClass: "bg-destructive",
+      pingClass: "bg-destructive/40",
+      textClass: "text-destructive drop-shadow-[0_0_8px_hsl(0_72%_51%/0.6)]",
+      textShadow: "0 0 7px hsl(0 72% 51% / 0.6), 0 0 20px hsl(0 72% 51% / 0.3)",
+      bgGlow: "bg-[radial-gradient(ellipse_at_center,hsl(0_72%_51%/0.1),transparent_70%)]",
+      countdownClass: "text-muted-foreground",
+    },
+  };
+
+  const cfg = statusConfig[state.status];
+
   return (
     <div className="glass-panel rounded-xl p-4 border-glow-purple relative overflow-hidden">
-      {/* Neon glow background */}
-      <div
-        className={`absolute inset-0 rounded-xl transition-all duration-1000 ${
-          state.isOpen
-            ? "bg-[radial-gradient(ellipse_at_center,hsl(142_71%_45%/0.15),transparent_70%)]"
-            : "bg-[radial-gradient(ellipse_at_center,hsl(0_72%_51%/0.1),transparent_70%)]"
-        }`}
-      />
+      <div className={`absolute inset-0 rounded-xl transition-all duration-1000 ${cfg.bgGlow}`} />
 
       <div className="relative flex items-center justify-between gap-4">
-        {/* Neon sign */}
         <div className="flex items-center gap-3">
-          {/* Glowing dot */}
           <div className="relative">
-            <div
-              className={`w-3 h-3 rounded-full ${
-                state.isOpen ? "bg-green-500" : "bg-destructive"
-              }`}
-            />
-            <div
-              className={`absolute inset-0 w-3 h-3 rounded-full animate-ping ${
-                state.isOpen ? "bg-green-500/60" : "bg-destructive/40"
-              }`}
-            />
+            <div className={`w-3 h-3 rounded-full ${cfg.dotClass}`} />
+            <div className={`absolute inset-0 w-3 h-3 rounded-full animate-ping ${cfg.pingClass}`} />
           </div>
-
-          {/* OPEN / CLOSED text — neon style */}
           <span
-            className={`text-lg font-black tracking-[0.25em] uppercase ${
-              state.isOpen
-                ? "text-green-400 drop-shadow-[0_0_8px_hsl(142_71%_45%/0.8)] drop-shadow-[0_0_20px_hsl(142_71%_45%/0.4)]"
-                : "text-destructive drop-shadow-[0_0_8px_hsl(0_72%_51%/0.6)]"
-            }`}
-            style={{
-              textShadow: state.isOpen
-                ? "0 0 7px hsl(142 71% 45% / 0.8), 0 0 20px hsl(142 71% 45% / 0.4), 0 0 40px hsl(142 71% 45% / 0.2)"
-                : "0 0 7px hsl(0 72% 51% / 0.6), 0 0 20px hsl(0 72% 51% / 0.3)",
-            }}
+            className={`text-lg font-black tracking-[0.25em] uppercase ${cfg.textClass}`}
+            style={{ textShadow: cfg.textShadow }}
           >
-            {state.isOpen ? "Market Open" : "Market Closed"}
+            {cfg.label}
           </span>
         </div>
 
-        {/* Countdown */}
         <div className="text-right">
           <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
             {state.targetLabel} <span className="text-foreground font-medium">{state.targetTime}</span>
           </div>
-          <div
-            className={`text-sm font-mono font-bold tracking-wider ${
-              state.isOpen ? "text-green-400" : "text-muted-foreground"
-            }`}
-          >
+          <div className={`text-sm font-mono font-bold tracking-wider ${cfg.countdownClass}`}>
             {state.countdown}
           </div>
         </div>
