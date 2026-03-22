@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { TrendingUp, Search, Info } from "lucide-react";
+import { useState, useCallback } from "react";
+import { TrendingUp, Search, Info, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
 
 const candlesticks = [
   { x: 20, o: 160, c: 145, h: 138, l: 165, bull: true },
@@ -25,7 +26,7 @@ const candlesticks = [
   { x: 400, o: 55, c: 48, h: 42, l: 62, bull: true },
 ];
 
-const quickTickers = ["NQ", "SPX", "PLTR", "TSLA"];
+const quickTickers = ["NQ", "SPX", "PLTR", "TSLA", "NVDA", "AAPL"];
 
 interface TickerInsight {
   bias: string;
@@ -38,74 +39,63 @@ interface TickerInsight {
   strategyExplanation: string;
 }
 
-const tickerInsights: Record<string, TickerInsight> = {
-  NQ: {
-    bias: "Bullish Bias ↗",
-    callZone: "Call Zone 18,950–19,050",
-    invalidation: "Invalidation: $18,800",
-    strategy: "Call Option",
-    expiration: "Mar 28, 2026",
-    score: "9.1 / 10",
-    description: "Hey Trader, the market structure for NQ is showing strong bullish momentum. Price is breaking above a key resistance level with heavy call flow volume backing the move. Institutional sweeps are confirming the directional bias.",
-    strategyExplanation: "A call option profits when the underlying moves higher. Given the bullish structure and sweep activity, calls positioned near the breakout level offer the best risk-to-reward setup.",
-  },
-  SPX: {
-    bias: "Bullish Bias ↗",
-    callZone: "Call Zone 5,220–5,250",
-    invalidation: "Invalidation: $5,180",
-    strategy: "Call Spread",
-    expiration: "Mar 28, 2026",
-    score: "8.4 / 10",
-    description: "Hey Trader, the market structure for SPX is consolidating near all-time highs with a bullish flag formation. Volume is compressing, which typically precedes an expansion move. Smart money flow is leaning bullish.",
-    strategyExplanation: "A call spread (buying a lower strike call and selling a higher strike call) reduces cost while capping profit. Ideal when you expect a measured move higher within a defined range.",
-  },
-  PLTR: {
-    bias: "Bullish Bias ↗",
-    callZone: "Call Zone 150–152.50",
-    invalidation: "Invalidation: $147",
-    strategy: "Call Option",
-    expiration: "Mar 28, 2026",
-    score: "8.7 / 10",
-    description: "Hey Trader, the market structure for PLTR is forming a higher-low pattern with increasing call sweep activity. Relative strength vs. the broader market is strong, and dark pool prints suggest accumulation.",
-    strategyExplanation: "Buying call options gives you leveraged exposure to PLTR's upside. The higher-low pattern and dark pool accumulation signal potential continuation — calls let you participate with defined risk.",
-  },
-  TSLA: {
-    bias: "Neutral / Watching ↔",
-    callZone: "Put Zone 240–235",
-    invalidation: "Invalidation: $260",
-    strategy: "Put Option",
-    expiration: "Apr 4, 2026",
-    score: "7.2 / 10",
-    description: "Hey Trader, the market structure for TSLA is showing weakness below a key support zone. Put flow is outpacing calls and the stock is lagging the sector. A breakdown below support could accelerate the move.",
-    strategyExplanation: "A put option profits when the stock moves lower. With bearish flow and weakening structure, puts positioned near the breakdown level capture downside momentum with limited risk.",
-  },
-};
-
 const defaultInsight: TickerInsight = {
-  bias: "Analyzing...",
-  callZone: "Calculating zones...",
-  invalidation: "Awaiting data",
-  strategy: "Pending",
+  bias: "Select a ticker ↗",
+  callZone: "—",
+  invalidation: "—",
+  strategy: "—",
   expiration: "—",
   score: "— / 10",
-  description: "Hey Trader, we're pulling the latest market structure data for this ticker. Check back in a moment for a full analysis.",
-  strategyExplanation: "Strategy details will populate once the market structure analysis is complete.",
+  description: "Hey Trader, select a ticker above to get a live AI-powered market structure analysis with entry signals, strategy recommendations, and confidence scoring.",
+  strategyExplanation: "Biddie will analyze real-time options flow data to recommend the best strategy for the current market conditions.",
 };
 
 const MarketChartPanel = () => {
-  const [activeTicker, setActiveTicker] = useState("NQ");
+  const [activeTicker, setActiveTicker] = useState("");
   const [searchValue, setSearchValue] = useState("");
+  const [insight, setInsight] = useState<TickerInsight>(defaultInsight);
+  const [loading, setLoading] = useState(false);
 
-  const insight = tickerInsights[activeTicker] || defaultInsight;
-  const isBearish = insight.strategy.toLowerCase().includes("put");
+  const fetchAnalysis = useCallback(async (ticker: string) => {
+    setActiveTicker(ticker);
+    setLoading(true);
+    setInsight({
+      ...defaultInsight,
+      bias: "Analyzing...",
+      description: `Hey Trader, Biddie is analyzing real-time flow data for ${ticker}. Pulling sweep activity, volume, and market sentiment...`,
+    });
+
+    try {
+      const { data, error } = await supabase.functions.invoke('ticker-analysis', {
+        body: { ticker, traderName: 'Trader' },
+      });
+
+      if (error) throw error;
+      if (data && data.bias) {
+        setInsight(data as TickerInsight);
+      }
+    } catch (e) {
+      console.error('Failed to fetch analysis:', e);
+      setInsight({
+        ...defaultInsight,
+        bias: "Error",
+        description: `Hey Trader, we couldn't pull live data for ${ticker} right now. Please try again in a moment.`,
+        strategyExplanation: "Analysis unavailable — the data feed may be temporarily down.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchValue.trim()) {
-      setActiveTicker(searchValue.trim().toUpperCase());
+      fetchAnalysis(searchValue.trim().toUpperCase());
       setSearchValue("");
     }
   };
+
+  const isBearish = insight.strategy.toLowerCase().includes("put");
 
   return (
     <div className="glass-panel rounded-xl p-5 border-glow-purple">
@@ -114,9 +104,11 @@ const MarketChartPanel = () => {
           <TrendingUp className="h-4 w-4 text-primary" />
           <span className="font-semibold text-sm text-foreground">Market Structure</span>
         </div>
-        <span className={`text-xs px-2.5 py-0.5 rounded-full ${
+        <span className={`text-xs px-2.5 py-0.5 rounded-full flex items-center gap-1.5 ${
+          loading ? "bg-muted/50 text-muted-foreground" :
           isBearish ? "bg-destructive/20 text-destructive" : "bg-primary/20 text-primary"
         }`}>
+          {loading && <Loader2 className="h-3 w-3 animate-spin" />}
           {insight.bias}
         </span>
       </div>
@@ -132,16 +124,17 @@ const MarketChartPanel = () => {
             className="pl-8 h-8 text-xs bg-muted/30 border-border/50 rounded-lg"
           />
         </form>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {quickTickers.map((ticker) => (
             <button
               key={ticker}
-              onClick={() => setActiveTicker(ticker)}
+              onClick={() => fetchAnalysis(ticker)}
+              disabled={loading}
               className={`text-xs px-3 py-1 rounded-full transition-colors ${
                 activeTicker === ticker
                   ? "bg-primary/20 text-primary font-medium"
                   : "bg-muted/50 text-muted-foreground hover:bg-muted"
-              }`}
+              } disabled:opacity-50`}
             >
               {ticker}
             </button>
@@ -151,7 +144,7 @@ const MarketChartPanel = () => {
 
       {/* AI Market Insight */}
       <div className="bg-muted/20 rounded-lg p-3 mb-4 border border-border/30">
-        <div className="flex items-start gap-2 mb-1">
+        <div className="flex items-start gap-2">
           <Info className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
           <p className="text-xs text-muted-foreground leading-relaxed">
             {insight.description}
@@ -161,6 +154,11 @@ const MarketChartPanel = () => {
 
       {/* Chart */}
       <div className="relative h-48 w-full mb-4 bg-muted/20 rounded-lg overflow-hidden">
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        )}
         <svg viewBox="0 0 420 200" className="w-full h-full" preserveAspectRatio="none">
           {[50, 100, 150].map((y) => (
             <line key={y} x1="0" y1={y} x2="420" y2={y} stroke="hsl(var(--border))" strokeWidth="0.5" opacity="0.3" />
@@ -182,20 +180,24 @@ const MarketChartPanel = () => {
           })}
         </svg>
 
-        <div className={`absolute top-3 right-3 text-[10px] font-medium px-2 py-0.5 rounded ${
-          isBearish ? "text-destructive bg-destructive/10" : "text-primary bg-primary/10"
-        }`}>
-          {insight.callZone}
-        </div>
-        <div className="absolute bottom-3 right-3 text-[10px] text-destructive font-medium bg-destructive/10 px-2 py-0.5 rounded">
-          {insight.invalidation}
-        </div>
+        {insight.callZone !== "—" && (
+          <div className={`absolute top-3 right-3 text-[10px] font-medium px-2 py-0.5 rounded ${
+            isBearish ? "text-destructive bg-destructive/10" : "text-primary bg-primary/10"
+          }`}>
+            {insight.callZone}
+          </div>
+        )}
+        {insight.invalidation !== "—" && (
+          <div className="absolute bottom-3 right-3 text-[10px] text-destructive font-medium bg-destructive/10 px-2 py-0.5 rounded">
+            {insight.invalidation}
+          </div>
+        )}
       </div>
 
       {/* Stats Row */}
       <div className="grid grid-cols-4 gap-3 border-t border-border/40 pt-3 mb-3">
         {[
-          { label: "Asset", value: activeTicker },
+          { label: "Asset", value: activeTicker || "—" },
           { label: "Strategy", value: insight.strategy },
           { label: "Expiration", value: insight.expiration },
           { label: "AI Score", value: insight.score },
