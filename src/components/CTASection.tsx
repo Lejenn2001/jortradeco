@@ -32,7 +32,7 @@ const CTASection = () => {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="flex-shrink-0 relative md:-mr-8 z-20"
+            className="flex-shrink-0 relative md:-mr-20 lg:-mr-24 z-20"
           >
             <img
               src={biddieLeaning}
