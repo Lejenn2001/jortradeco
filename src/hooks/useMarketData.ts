@@ -301,10 +301,8 @@ export function useMarketData() {
       console.error('Failed to fetch whale alerts:', e);
     }
   }, []);
-    } catch (e) {
-      console.error('Failed to fetch flow alerts:', e);
-    }
-  }, []);
+
+
 
   const fetchMarketOverview = useCallback(async () => {
     try {
