@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Fish, ArrowUpRight, ArrowDownRight, Clock, ChevronDown, ChevronUp, Info, Copy, Check, Repeat2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import type { FlowAlert } from "@/hooks/useMarketData";
 import { toast } from "sonner";
 
 interface Props {
   whaleAlerts: FlowAlert[];
   loading: boolean;
+  limit?: number;
 }
 
 const exampleWhaleAlerts: FlowAlert[] = [
@@ -104,17 +106,18 @@ function getSentimentEmoji(alert: FlowAlert): string {
   return "📊";
 }
 
-const PortfolioPanel = ({ whaleAlerts, loading }: Props) => {
+const PortfolioPanel = ({ whaleAlerts, loading, limit }: Props) => {
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
   const liveTickers = new Set(whaleAlerts.map(a => a.ticker));
   const fillers = exampleWhaleAlerts.filter(a => !liveTickers.has(a.ticker));
-  const displayAlerts = [...whaleAlerts, ...fillers].slice(0, 8);
+  const allAlerts = [...whaleAlerts, ...fillers].slice(0, 8);
+  const displayAlerts = limit ? allAlerts.slice(0, limit) : allAlerts;
 
-  const bullishPremium = displayAlerts
+  const bullishPremium = allAlerts
     .filter((a) => a.sentiment === "bullish")
     .reduce((sum, a) => sum + parsePremium(a.premium), 0);
-  const bearishPremium = displayAlerts
+  const bearishPremium = allAlerts
     .filter((a) => a.sentiment === "bearish")
     .reduce((sum, a) => sum + parsePremium(a.premium), 0);
 
@@ -291,6 +294,11 @@ const PortfolioPanel = ({ whaleAlerts, loading }: Props) => {
             );
           })}
         </div>
+      )}
+      {limit && allAlerts.length > limit && (
+        <Link to="/dashboard/signals" className="block mt-3 text-center text-xs font-semibold text-primary hover:text-primary/80 transition-colors">
+          View All {allAlerts.length} Whale Alerts →
+        </Link>
       )}
     </div>
   );

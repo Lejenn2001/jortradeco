@@ -1,12 +1,15 @@
 import { Activity, TrendingUp, TrendingDown, Clock, AlertTriangle, Target, ShieldX, Zap, Crosshair, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 import type { MarketSignal } from "@/hooks/useMarketData";
 
 interface Props {
   signals: MarketSignal[];
   loading: boolean;
+  limit?: number;
 }
 
-const SignalFeedPanel = ({ signals, loading }: Props) => {
+const SignalFeedPanel = ({ signals, loading, limit }: Props) => {
+  const displaySignals = limit ? signals.slice(0, limit) : signals;
   return (
     <div className="glass-panel rounded-xl p-5 border-glow-blue">
       <div className="flex items-center justify-between mb-5">
@@ -16,7 +19,7 @@ const SignalFeedPanel = ({ signals, loading }: Props) => {
         </div>
         <span className="text-xs bg-primary/20 text-primary px-2.5 py-0.5 rounded-full flex items-center gap-1">
           <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-          {signals.length} Active
+          {displaySignals.length} Active
         </span>
       </div>
 
@@ -28,7 +31,7 @@ const SignalFeedPanel = ({ signals, loading }: Props) => {
         </div>
       ) : (
         <div className="space-y-4">
-          {signals.map((signal) => (
+          {displaySignals.map((signal) => (
             <div
               key={signal.id}
               className={`rounded-xl border overflow-hidden ${
@@ -177,6 +180,11 @@ const SignalFeedPanel = ({ signals, loading }: Props) => {
             </div>
           ))}
         </div>
+      )}
+      {limit && signals.length > limit && (
+        <Link to="/dashboard/signals" className="block mt-3 text-center text-xs font-semibold text-primary hover:text-primary/80 transition-colors">
+          View All {signals.length} Signals →
+        </Link>
       )}
     </div>
   );
