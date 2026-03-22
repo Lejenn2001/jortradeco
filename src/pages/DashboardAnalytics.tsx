@@ -47,6 +47,8 @@ const DashboardAnalytics = () => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [apiUsageToday, setApiUsageToday] = useState(0);
+  const [apiUsageMinute, setApiUsageMinute] = useState(0);
 
   useEffect(() => {
     const checkAdmin = async () => {
