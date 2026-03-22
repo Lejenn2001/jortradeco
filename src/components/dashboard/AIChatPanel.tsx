@@ -17,9 +17,20 @@ const quickPrompts = [
   "Show me high-confidence setups",
 ];
 
+const greetings = [
+  (name: string) => `Hey ${name}! 👋 Biddie is watching the flow — things are heating up.`,
+  (name: string) => `Markets are moving, ${name}. Let's find the edge. 🎯`,
+  (name: string) => `Hey ${name}! Let's scan the markets and see what's cooking. 🔥`,
+  (name: string) => `What's good, ${name}? The whales are active today. 🐳`,
+  (name: string) => `${name}, the flow is looking interesting right now. Let's dive in. 📊`,
+  (name: string) => `Hey ${name}! Ready to spot some setups? I've been watching. 👀`,
+  (name: string) => `Good to see you, ${name}. Let's break down what's moving. ⚡`,
+];
+
 const AIChatPanel = () => {
   const { profile } = useAuth();
   const firstName = profile?.full_name?.split(" ")[0] || "Trader";
+  const [greeting] = useState(() => greetings[Math.floor(Math.random() * greetings.length)](firstName));
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -106,8 +117,7 @@ const AIChatPanel = () => {
         {messages.length === 0 && (
           <div className="text-center py-8">
             <Bot className="h-8 w-8 text-primary/40 mx-auto mb-3" />
-            <p className="text-sm text-foreground font-medium">Hey {firstName}! 👋 Hope your day is going well.</p>
-            <p className="text-sm text-muted-foreground mt-1">Let's make some money! Ask me anything about the markets.</p>
+            <p className="text-sm text-foreground font-medium">{greeting}</p>
             <p className="text-xs text-muted-foreground mt-2">Powered by real-time Unusual Whales data + Claude AI</p>
           </div>
         )}
