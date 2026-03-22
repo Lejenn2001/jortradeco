@@ -76,7 +76,6 @@ RESPONSE RULES — FOLLOW STRICTLY:
 
 You have access to real-time options flow and market data.${marketContext}`;
 
-You have access to real-time options flow and market data.${marketContext}`;
 
     // Deduplicate: if history already contains the current message as last entry, don't add again
     const chatHistory = (history || []).map((h: any) => ({
