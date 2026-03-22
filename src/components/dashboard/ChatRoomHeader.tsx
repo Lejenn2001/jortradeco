@@ -1,8 +1,31 @@
 import { useState, useEffect } from "react";
 import { Users, Clock, MapPin } from "lucide-react";
-import { useWeather, getBiddieOutfit, getBiddieAccessory } from "@/hooks/useWeather";
+import { useWeather, getBiddieOutfit } from "@/hooks/useWeather";
 import { motion } from "framer-motion";
-import biddieRobot from "@/assets/biddie-robot.png";
+
+// Weather-based Biddie outfits
+import biddieSunny from "@/assets/biddie-sunny.png";
+import biddieRainy from "@/assets/biddie-rainy.png";
+import biddieSnowy from "@/assets/biddie-snowy.png";
+import biddieCloudy from "@/assets/biddie-cloudy.png";
+import biddieFoggy from "@/assets/biddie-foggy.png";
+import biddieStorm from "@/assets/biddie-storm.png";
+import biddieDefault from "@/assets/biddie-robot.png";
+
+const getBiddieImage = (condition: string): string => {
+  switch (condition) {
+    case "Clear": return biddieSunny;
+    case "Cloudy": return biddieCloudy;
+    case "Foggy": return biddieFoggy;
+    case "Drizzle":
+    case "Rainy":
+    case "Showers": return biddieRainy;
+    case "Snowy":
+    case "Snow Showers": return biddieSnowy;
+    case "Thunderstorm": return biddieStorm;
+    default: return biddieDefault;
+  }
+};
 
 const QUOTES = [
   "The stock market is a device for transferring money from the impatient to the patient.",
@@ -51,13 +74,12 @@ const ChatRoomHeader = ({ onlineCount, firstName }: ChatRoomHeaderProps) => {
   });
 
   const biddieOutfit = weather ? getBiddieOutfit(weather.condition) : "looking fresh 🤖";
-  const biddieAccessory = weather ? getBiddieAccessory(weather.condition) : "";
+  const biddieImage = weather ? getBiddieImage(weather.condition) : biddieDefault;
 
   return (
     <div className="space-y-3">
-      {/* Top bar: Time + Weather + Online */}
+      {/* Top bar */}
       <div className="flex items-center gap-3 flex-wrap">
-        {/* Live Clock */}
         <div className="glass-panel rounded-xl px-4 py-2.5 flex items-center gap-2.5">
           <Clock className="h-4 w-4 text-primary" />
           <div>
@@ -66,7 +88,6 @@ const ChatRoomHeader = ({ onlineCount, firstName }: ChatRoomHeaderProps) => {
           </div>
         </div>
 
-        {/* Weather */}
         {weather && (
           <div className="glass-panel rounded-xl px-4 py-2.5 flex items-center gap-2.5">
             <span className="text-xl">{weather.icon}</span>
@@ -80,7 +101,6 @@ const ChatRoomHeader = ({ onlineCount, firstName }: ChatRoomHeaderProps) => {
           </div>
         )}
 
-        {/* Online Count */}
         <div className="glass-panel rounded-xl px-4 py-2.5 flex items-center gap-2.5">
           <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           <Users className="h-3.5 w-3.5 text-emerald-400" />
@@ -89,7 +109,6 @@ const ChatRoomHeader = ({ onlineCount, firstName }: ChatRoomHeaderProps) => {
 
         <div className="flex-1" />
 
-        {/* Title */}
         <div className="text-right">
           <h1 className="text-lg font-display font-bold text-gradient-blue tracking-wider">JORTRADE CHAT</h1>
           <p className="text-[10px] text-muted-foreground">Talk trades · Share setups · Build together</p>
@@ -98,34 +117,26 @@ const ChatRoomHeader = ({ onlineCount, firstName }: ChatRoomHeaderProps) => {
 
       {/* Biddie + Quote Row */}
       <div className="glass-panel rounded-xl p-3 border-glow-blue flex items-center gap-4">
-        {/* Biddie Robot with weather accessory */}
         <motion.div
           animate={{ y: [0, -6, 0] }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          className="flex-shrink-0 relative"
+          className="flex-shrink-0"
         >
           <img
-            src={biddieRobot}
+            src={biddieImage}
             alt="Biddie"
-            className="w-16 h-16 drop-shadow-[0_0_12px_hsl(230_85%_60%_/_0.4)]"
+            className="w-16 h-16 object-contain drop-shadow-[0_0_12px_hsl(230_85%_60%_/_0.4)]"
           />
-          {/* Weather accessory overlay */}
-          {biddieAccessory && (
-            <span className="absolute -top-1 -right-1 text-lg drop-shadow-md">
-              {biddieAccessory}
-            </span>
-          )}
         </motion.div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
             <p className="text-xs font-semibold text-primary">Biddie AI</p>
-            <span className="text-[10px] text-muted-foreground">is rocking {biddieOutfit}</span>
+            <span className="text-[10px] text-muted-foreground">{biddieOutfit}</span>
           </div>
           <p className="text-xs text-muted-foreground/80 italic truncate">"{quote}"</p>
         </div>
 
-        {/* Greeting */}
         <div className="hidden md:block text-right flex-shrink-0">
           <p className="text-xs text-muted-foreground">Welcome back</p>
           <p className="text-sm font-semibold text-foreground">{firstName} 👋</p>
