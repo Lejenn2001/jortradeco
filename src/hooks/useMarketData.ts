@@ -26,6 +26,8 @@ export interface MarketSignal {
   suggestedTrade?: string;
   entryTrigger?: string;
   invalidation?: string;
+  keyLevel?: string;
+  targetZone?: string;
 }
 
 export interface TickerData {
