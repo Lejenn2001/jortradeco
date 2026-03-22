@@ -51,7 +51,6 @@ const ChatRoomHeader = ({ onlineCount, firstName }: ChatRoomHeaderProps) => {
   });
 
   const biddieOutfit = weather ? getBiddieOutfit(weather.condition) : "looking fresh 🤖";
-  const biddieImage = weather ? getBiddieImage(weather.condition) : biddieDefault;
 
   return (
     <div className="space-y-3">
