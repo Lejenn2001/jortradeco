@@ -150,7 +150,7 @@ const AIAssistantPanel = () => (
 
 const DashboardPreview = () => {
   return (
-    <section className="relative py-24 bg-mesh">
+    <section className="relative py-24 bg-gradient-to-b from-background via-[hsl(var(--glow-purple)/0.06)] to-background">
       <div className="container mx-auto px-6">
         {/* Header */}
         <motion.div
@@ -193,7 +193,7 @@ const DashboardPreview = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className="glass-panel rounded-xl p-4 mt-4 border-glow-blue"
+          className="glass-panel rounded-xl p-4 mt-4 border-glow-purple"
         >
           <div className="flex items-center gap-3">
             <span className="text-accent">✨</span>
