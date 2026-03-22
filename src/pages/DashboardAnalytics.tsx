@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import { Users, UserPlus, MessageSquare, TrendingUp, BarChart3 } from "lucide-react";
+import { Users, UserPlus, MessageSquare, TrendingUp, BarChart3, ShieldAlert } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
 
 interface StatCardProps {
@@ -37,11 +39,32 @@ interface MemberRow {
 }
 
 const DashboardAnalytics = () => {
+  const { session } = useAuth();
+  const navigate = useNavigate();
   const [members, setMembers] = useState<MemberRow[]>([]);
   const [chatCount, setChatCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
   useEffect(() => {
+    const checkAdmin = async () => {
+      if (!session?.user?.id) {
+        setIsAdmin(false);
+        return;
+      }
+      const { data } = await supabase
+        .from("user_roles" as any)
+        .select("role")
+        .eq("user_id", session.user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      setIsAdmin(!!data);
+    };
+    checkAdmin();
+  }, [session?.user?.id]);
+
+  useEffect(() => {
+    if (isAdmin !== true) return;
     const load = async () => {
       const [profilesRes, chatRes] = await Promise.all([
         supabase.from("profiles").select("id, full_name, created_at").order("created_at", { ascending: false }),
@@ -52,7 +75,7 @@ const DashboardAnalytics = () => {
       setLoading(false);
     };
     load();
-  }, []);
+  }, [isAdmin]);
 
   const today = new Date().toISOString().split("T")[0];
   const newToday = members.filter((m) => m.created_at.startsWith(today)).length;
@@ -63,6 +86,35 @@ const DashboardAnalytics = () => {
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+
+  if (isAdmin === null) {
+    return (
+      <div className="h-screen flex bg-background overflow-hidden">
+        <DashboardSidebar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="h-screen flex bg-background overflow-hidden">
+        <DashboardSidebar />
+        <div className="flex-1 flex flex-col min-w-0">
+          <DashboardHeader />
+          <main className="flex-1 flex items-center justify-center bg-mesh">
+            <div className="text-center space-y-3">
+              <ShieldAlert className="h-12 w-12 text-destructive mx-auto" />
+              <h2 className="text-lg font-bold text-foreground">Admin Access Only</h2>
+              <p className="text-sm text-muted-foreground">You don't have permission to view this page.</p>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen flex bg-background overflow-hidden">
@@ -81,7 +133,6 @@ const DashboardAnalytics = () => {
             </div>
           ) : (
             <>
-              {/* Stats */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <StatCard icon={Users} label="Total Members" value={members.length} color="bg-primary" />
                 <StatCard icon={UserPlus} label="New Today" value={newToday} color="bg-emerald-500" />
@@ -89,7 +140,6 @@ const DashboardAnalytics = () => {
                 <StatCard icon={MessageSquare} label="Chat Messages" value={chatCount} color="bg-amber-500" />
               </div>
 
-              {/* Members Table */}
               <div className="glass-panel rounded-xl border-border/40 overflow-hidden">
                 <div className="px-5 py-4 border-b border-border/40 flex items-center gap-2">
                   <BarChart3 className="h-4 w-4 text-primary" />
