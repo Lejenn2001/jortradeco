@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, UserPlus, MessageSquare, TrendingUp, BarChart3, ShieldAlert, Shield, ShieldCheck, ShieldX } from "lucide-react";
+import { Users, UserPlus, MessageSquare, TrendingUp, BarChart3, ShieldAlert, Shield, ShieldCheck, ShieldX, Anchor, Gauge } from "lucide-react";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { supabase } from "@/integrations/supabase/client";
