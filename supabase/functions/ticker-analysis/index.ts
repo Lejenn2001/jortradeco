@@ -56,16 +56,21 @@ Given real-time flow data for a ticker, generate a JSON response with these exac
   "bias": "Bullish Bias ↗" or "Bearish Bias ↘" or "Neutral ↔",
   "callZone": "Call Zone $XXX–$XXX" or "Put Zone $XXX–$XXX" (use real strikes from the data),
   "invalidation": "Invalidation: $XXX" (a logical stop-loss level based on flow),
-  "strategy": "Call Option" or "Put Option" or "Call Spread" or "Put Spread" (based on the flow bias),
-  "expiration": "the nearest expiration with heavy activity from the flow data, format: Mon DD, YYYY",
+  "strategy": one of ONLY: "Long Call" | "Long Put" | "Long Call Butterfly" | "Long Put Butterfly" | "Bull Call Debit Spread" | "Bear Put Debit Spread",
+  "contract": "the specific contract(s), e.g. 'Buy NVDA Mar 28 2026 $980 Call' or for spreads 'Buy NVDA Mar 28 $950 Call / Sell NVDA Mar 28 $970 Call' or for butterflies 'Buy 1x $940 Call / Sell 2x $960 Call / Buy 1x $980 Call'",
+  "expiration": "the nearest expiration with heavy activity, format: Mon DD, YYYY",
   "score": "X.X / 10" (confidence score based on flow conviction),
   "description": "Hey ${name}, the market structure for ${ticker} is... (2-3 sentences explaining the current setup, addressing the trader by name, referencing specific flow data like sweep counts, premium sizes, dominant strikes)",
-  "strategyExplanation": "1-2 sentences explaining WHY this specific strategy (call/put/spread) makes sense given the flow data"
+  "strategyExplanation": "1-2 sentences explaining WHY this specific strategy makes sense given the flow data"
 }
 
 Rules:
 - Use ONLY real data from the flow. Don't invent numbers.
-- If flow is mostly calls, recommend calls. If mostly puts, recommend puts.
+- ONLY recommend: Long Call, Long Put, Long Call Butterfly, Long Put Butterfly, Bull Call Debit Spread, or Bear Put Debit Spread.
+- Bullish flow → Long Call, Bull Call Debit Spread, or Long Call Butterfly.
+- Bearish flow → Long Put, Bear Put Debit Spread, or Long Put Butterfly.
+- Use spreads when the move looks measured/range-bound. Use butterflies for concentrated strike activity. Use Long Call/Put for strong directional conviction.
+- The "contract" field MUST have exact ticker, expiration date, strike(s), and type. For multi-leg strategies, list each leg.
 - Use actual strike prices and expirations from the flow data.
 - Keep descriptions conversational but professional.
 - The year is 2026.
