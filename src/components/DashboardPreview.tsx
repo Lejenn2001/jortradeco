@@ -105,7 +105,7 @@ const MarketStructureView = () => (
       </div>
       <div className="text-center">
         <div className="text-xs text-muted-foreground">Expiration</div>
-        <div className="font-bold text-foreground text-sm">March 27, 2025</div>
+        <div className="font-bold text-foreground text-sm">March 27, 2026</div>
       </div>
     </div>
   </div>
