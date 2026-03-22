@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 
 const RealTimeGuidanceSection = () => {
   return (
-    <section className="relative py-28 bg-background">
+    <section className="relative py-28">
       <div className="container mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-8 items-start">
           {/* Left - heading + description card */}

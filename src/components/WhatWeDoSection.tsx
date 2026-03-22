@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react";
 
 const WhatWeDoSection = () => {
   return (
-    <section className="relative py-28 bg-background overflow-hidden">
+    <section className="relative py-28 overflow-hidden">
       {/* Subtle ambient glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-[radial-gradient(ellipse,hsl(30_60%_35%_/_0.12)_0%,transparent_70%)]" />
 

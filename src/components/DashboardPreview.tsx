@@ -150,7 +150,7 @@ const AIAssistantPanel = () => (
 
 const DashboardPreview = () => {
   return (
-    <section className="relative py-24 bg-gradient-to-b from-background via-[hsl(var(--glow-purple)/0.06)] to-background">
+    <section className="relative py-24">
       <div className="container mx-auto px-6">
         {/* Header */}
         <motion.div
