@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Send, Trash2, Bot } from "lucide-react";
 import biddieRobot from "@/assets/biddie-robot.png";
+import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import ChatRoomHeader from "@/components/dashboard/ChatRoomHeader";
 import { Input } from "@/components/ui/input";
