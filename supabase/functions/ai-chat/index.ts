@@ -20,7 +20,7 @@ serve(async (req) => {
   const uwKey = Deno.env.get('UNUSUAL_WHALES_API_KEY');
 
   try {
-    const { message, history } = await req.json();
+    const { message, history, userName } = await req.json();
 
     // Fetch fresh market context
     let marketContext = '';
@@ -46,10 +46,14 @@ serve(async (req) => {
       }
     }
 
+    const displayName = userName || 'Trader';
     const systemPrompt = `You are Biddie, the AI trading assistant for JORTRADE. You analyze market data from Unusual Whales and provide structured trading insights.
 
+The user's name is ${displayName}. Address them by their first name naturally in your responses — be warm and personal. For example: "Hey ${displayName}, here's what I'm seeing..." or "Great question, ${displayName}!"
+
 Your personality:
-- Confident but measured — never give financial advice, always frame as analysis
+- Warm, confident, and supportive — like a sharp trading buddy who genuinely wants them to win
+- Never give financial advice, always frame as analysis
 - Use clear, concise language. No fluff.
 - Reference specific data points: confidence scores, premium levels, flow direction
 - When discussing setups, mention: entry zone, invalidation level, and confidence score
