@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 const MentorshipSection = () => {
   return (
-    <section className="relative py-28 bg-background overflow-hidden">
+    <section className="relative py-28 overflow-hidden">
       {/* Ambient glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px]">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse,hsl(270_60%_35%_/_0.15)_0%,transparent_60%)]" />
