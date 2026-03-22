@@ -274,6 +274,9 @@ const DashboardAnalytics = () => {
                 </div>
               </div>
 
+              {/* Signal Accuracy Tracker */}
+              <SignalAccuracyPanel isAdmin={!!isAdmin} />
+
               {/* Members Table */}
               <div className="glass-panel rounded-xl border-border/40 overflow-hidden">
                 <div className="px-5 py-4 border-b border-border/40 flex items-center gap-2">
