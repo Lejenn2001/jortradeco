@@ -1,9 +1,11 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Check, Zap, Crown, Star } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const plans = [
   {
@@ -64,15 +66,35 @@ const Signup = () => {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`Sign up coming soon! Selected plan: ${selectedPlan}`);
+    if (!name.trim()) {
+      toast.error("Please enter your full name");
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: name },
+        emailRedirectTo: window.location.origin,
+      },
+    });
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Check your email to confirm your account!");
+      navigate("/login");
+    }
   };
 
   return (
     <div className="min-h-screen bg-background px-6 py-12 relative overflow-hidden">
-      {/* Ambient glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px]">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse,hsl(230_70%_45%_/_0.15)_0%,transparent_60%)]" />
         <div className="absolute inset-[80px] bg-[radial-gradient(ellipse,hsl(270_60%_40%_/_0.12)_0%,transparent_55%)]" />
@@ -97,7 +119,6 @@ const Signup = () => {
           </p>
         </motion.div>
 
-        {/* Pricing cards */}
         <div className="grid md:grid-cols-3 gap-6 mb-16">
           {plans.map((plan, i) => (
             <motion.div
@@ -117,18 +138,15 @@ const Signup = () => {
                   {plan.badge}
                 </span>
               )}
-
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                 <plan.icon className="h-5 w-5 text-primary" />
               </div>
-
               <h3 className="text-foreground font-bold text-lg mb-1">{plan.name}</h3>
               <div className="flex items-baseline gap-1 mb-2">
                 <span className="text-3xl font-extrabold text-foreground">{plan.price}</span>
                 <span className="text-sm text-muted-foreground">{plan.period}</span>
               </div>
               <p className="text-muted-foreground text-xs mb-5">{plan.desc}</p>
-
               <ul className="space-y-2">
                 {plan.features.map((f) => (
                   <li key={f} className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -141,7 +159,6 @@ const Signup = () => {
           ))}
         </div>
 
-        {/* Sign up form */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -150,7 +167,6 @@ const Signup = () => {
         >
           <div className="glass-panel rounded-2xl p-8 border-glow-blue">
             <h2 className="text-xl font-bold text-foreground mb-6 text-center">Create Your Account</h2>
-
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Full Name</label>
@@ -158,6 +174,7 @@ const Signup = () => {
                   placeholder="Jordan Smith"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  required
                   className="bg-muted/30 border-border/50 rounded-lg"
                 />
               </div>
@@ -168,6 +185,7 @@ const Signup = () => {
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  required
                   className="bg-muted/30 border-border/50 rounded-lg"
                 />
               </div>
@@ -178,12 +196,18 @@ const Signup = () => {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
                   className="bg-muted/30 border-border/50 rounded-lg"
                 />
               </div>
 
-              <Button type="submit" className="w-full bg-foreground text-background hover:bg-foreground/90 rounded-full py-6 text-base font-semibold mt-2">
-                Start 5-Day Free Trial
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-foreground text-background hover:bg-foreground/90 rounded-full py-6 text-base font-semibold mt-2"
+              >
+                {loading ? "Creating account..." : "Start 5-Day Free Trial"}
               </Button>
 
               <p className="text-center text-[11px] text-muted-foreground">

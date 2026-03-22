@@ -1,30 +1,8 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { TrendingUp, Search, Info, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-
-const candlesticks = [
-  { x: 20, o: 160, c: 145, h: 138, l: 165, bull: true },
-  { x: 40, o: 145, c: 155, h: 138, l: 158, bull: false },
-  { x: 60, o: 150, c: 135, h: 128, l: 155, bull: true },
-  { x: 80, o: 135, c: 140, h: 128, l: 148, bull: false },
-  { x: 100, o: 140, c: 125, h: 118, l: 148, bull: true },
-  { x: 120, o: 125, c: 130, h: 118, l: 138, bull: false },
-  { x: 140, o: 128, c: 115, h: 108, l: 135, bull: true },
-  { x: 160, o: 115, c: 120, h: 108, l: 128, bull: false },
-  { x: 180, o: 118, c: 105, h: 98, l: 125, bull: true },
-  { x: 200, o: 105, c: 112, h: 98, l: 118, bull: false },
-  { x: 220, o: 110, c: 95, h: 88, l: 118, bull: true },
-  { x: 240, o: 95, c: 102, h: 88, l: 108, bull: false },
-  { x: 260, o: 100, c: 88, h: 80, l: 108, bull: true },
-  { x: 280, o: 88, c: 78, h: 70, l: 95, bull: true },
-  { x: 300, o: 78, c: 85, h: 68, l: 90, bull: false },
-  { x: 320, o: 83, c: 72, h: 65, l: 90, bull: true },
-  { x: 340, o: 72, c: 62, h: 55, l: 78, bull: true },
-  { x: 360, o: 62, c: 68, h: 55, l: 75, bull: false },
-  { x: 380, o: 66, c: 55, h: 48, l: 72, bull: true },
-  { x: 400, o: 55, c: 48, h: 42, l: 62, bull: true },
-];
+import { useAuth } from "@/hooks/useAuth";
 
 const quickTickers = ["NQ", "SPX", "PLTR", "TSLA", "NVDA", "AAPL"];
 
@@ -51,11 +29,40 @@ const defaultInsight: TickerInsight = {
   strategyExplanation: "Biddie will analyze real-time options flow data to recommend the best strategy for the current market conditions.",
 };
 
+// Generate candlesticks based on bias direction
+function generateCandles(isBearish: boolean) {
+  const candles = [];
+  let basePrice = isBearish ? 60 : 160;
+  for (let i = 0; i < 20; i++) {
+    const x = 20 + i * 20;
+    const move = (Math.random() - (isBearish ? 0.35 : 0.65)) * 15;
+    const open = basePrice;
+    const close = basePrice + move;
+    const high = Math.min(open, close) - Math.random() * 8;
+    const low = Math.max(open, close) + Math.random() * 8;
+    const bull = close < open; // SVG y-axis is inverted: lower y = higher price
+    candles.push({ x, o: open, c: close, h: high, l: low, bull });
+    basePrice = close;
+  }
+  return candles;
+}
+
 const MarketChartPanel = () => {
+  const { profile } = useAuth();
+  const traderName = profile?.full_name?.split(" ")[0] || "Trader";
+
   const [activeTicker, setActiveTicker] = useState("");
   const [searchValue, setSearchValue] = useState("");
   const [insight, setInsight] = useState<TickerInsight>(defaultInsight);
   const [loading, setLoading] = useState(false);
+
+  const isBearish = insight.bias.toLowerCase().includes("bearish");
+  const isBullish = insight.bias.toLowerCase().includes("bullish");
+
+  const candles = useMemo(() => {
+    if (!activeTicker) return generateCandles(false);
+    return generateCandles(isBearish);
+  }, [activeTicker, isBearish]);
 
   const fetchAnalysis = useCallback(async (ticker: string) => {
     setActiveTicker(ticker);
@@ -63,14 +70,13 @@ const MarketChartPanel = () => {
     setInsight({
       ...defaultInsight,
       bias: "Analyzing...",
-      description: `Hey Trader, Biddie is analyzing real-time flow data for ${ticker}. Pulling sweep activity, volume, and market sentiment...`,
+      description: `Hey ${traderName}, Biddie is analyzing real-time flow data for ${ticker}. Pulling sweep activity, volume, and market sentiment...`,
     });
 
     try {
       const { data, error } = await supabase.functions.invoke('ticker-analysis', {
-        body: { ticker, traderName: 'Trader' },
+        body: { ticker, traderName },
       });
-
       if (error) throw error;
       if (data && data.bias) {
         setInsight(data as TickerInsight);
@@ -80,13 +86,13 @@ const MarketChartPanel = () => {
       setInsight({
         ...defaultInsight,
         bias: "Error",
-        description: `Hey Trader, we couldn't pull live data for ${ticker} right now. Please try again in a moment.`,
+        description: `Hey ${traderName}, we couldn't pull live data for ${ticker} right now. Please try again in a moment.`,
         strategyExplanation: "Analysis unavailable — the data feed may be temporarily down.",
       });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [traderName]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,8 +101,6 @@ const MarketChartPanel = () => {
       setSearchValue("");
     }
   };
-
-  const isBearish = insight.strategy.toLowerCase().includes("put");
 
   return (
     <div className="glass-panel rounded-xl p-5 border-glow-purple">
@@ -107,7 +111,9 @@ const MarketChartPanel = () => {
         </div>
         <span className={`text-xs px-2.5 py-0.5 rounded-full flex items-center gap-1.5 ${
           loading ? "bg-muted/50 text-muted-foreground" :
-          isBearish ? "bg-destructive/20 text-destructive" : "bg-primary/20 text-primary"
+          isBearish ? "bg-destructive/20 text-destructive" :
+          isBullish ? "bg-primary/20 text-primary" :
+          "bg-muted/50 text-muted-foreground"
         }`}>
           {loading && <Loader2 className="h-3 w-3 animate-spin" />}
           {insight.bias}
@@ -153,7 +159,7 @@ const MarketChartPanel = () => {
         </div>
       </div>
 
-      {/* Chart */}
+      {/* Chart - direction matches bias */}
       <div className="relative h-48 w-full mb-4 bg-muted/20 rounded-lg overflow-hidden">
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
@@ -164,11 +170,28 @@ const MarketChartPanel = () => {
           {[50, 100, 150].map((y) => (
             <line key={y} x1="0" y1={y} x2="420" y2={y} stroke="hsl(var(--border))" strokeWidth="0.5" opacity="0.3" />
           ))}
-          <line x1="0" y1="90" x2="420" y2="90" stroke="hsl(var(--primary))" strokeWidth="1" strokeDasharray="6 4" opacity="0.5" />
-          <rect x="200" y="30" width="220" height="35" fill={isBearish ? "hsl(var(--destructive))" : "hsl(var(--primary))"} opacity="0.06" rx="4" />
-          <rect x="100" y="150" width="220" height="25" fill="hsl(var(--destructive))" opacity="0.06" rx="4" />
 
-          {candlesticks.map((c, i) => {
+          {/* Key level line */}
+          <line x1="0" y1="100" x2="420" y2="100"
+            stroke={isBearish ? "hsl(var(--destructive))" : "hsl(var(--primary))"}
+            strokeWidth="1" strokeDasharray="6 4" opacity="0.5"
+          />
+
+          {/* Zone highlight - Put zone at bottom for bearish, Call zone at top for bullish */}
+          {isBearish ? (
+            <>
+              <rect x="200" y="140" width="220" height="35" fill="hsl(var(--destructive))" opacity="0.08" rx="4" />
+              <rect x="100" y="30" width="220" height="25" fill="hsl(var(--primary))" opacity="0.04" rx="4" />
+            </>
+          ) : (
+            <>
+              <rect x="200" y="30" width="220" height="35" fill="hsl(var(--primary))" opacity="0.08" rx="4" />
+              <rect x="100" y="150" width="220" height="25" fill="hsl(var(--destructive))" opacity="0.04" rx="4" />
+            </>
+          )}
+
+          {/* Candlesticks */}
+          {candles.map((c, i) => {
             const top = Math.min(c.o, c.c);
             const bottom = Math.max(c.o, c.c);
             const color = c.bull ? "hsl(var(--primary))" : "hsl(var(--destructive))";
@@ -181,21 +204,28 @@ const MarketChartPanel = () => {
           })}
         </svg>
 
+        {/* Zone labels */}
         {insight.callZone !== "—" && (
-          <div className={`absolute top-3 right-3 text-[10px] font-medium px-2 py-0.5 rounded ${
-            isBearish ? "text-destructive bg-destructive/10" : "text-primary bg-primary/10"
+          <div className={`absolute text-[10px] font-medium px-2 py-0.5 rounded ${
+            isBearish
+              ? "bottom-3 right-3 text-destructive bg-destructive/10"
+              : "top-3 right-3 text-primary bg-primary/10"
           }`}>
             {insight.callZone}
           </div>
         )}
         {insight.invalidation !== "—" && (
-          <div className="absolute bottom-3 right-3 text-[10px] text-destructive font-medium bg-destructive/10 px-2 py-0.5 rounded">
+          <div className={`absolute text-[10px] font-medium px-2 py-0.5 rounded ${
+            isBearish
+              ? "top-3 right-3 text-primary bg-primary/10"
+              : "bottom-3 right-3 text-destructive bg-destructive/10"
+          }`}>
             {insight.invalidation}
           </div>
         )}
       </div>
 
-      {/* Stats Row */}
+      {/* Stats + Contract */}
       <div className="space-y-3 border-t border-border/40 pt-3 mb-3">
         <div className="grid grid-cols-4 gap-3">
           {[
