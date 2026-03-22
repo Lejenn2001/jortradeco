@@ -23,6 +23,7 @@ function getETNow() {
 function getMarketState() {
   const { now, weekday, hour, minute, second } = getETNow();
   const totalSec = hour * 3600 + minute * 60 + second;
+  const futuresSundaySec = 18 * 3600;       // 6:00 PM ET (Sunday futures open)
   const premarketSec = 4 * 3600;           // 4:00 AM ET
   const openSec = 9 * 3600 + 30 * 60;      // 9:30 AM ET
   const closeSec = 16 * 3600;              // 4:00 PM ET
@@ -30,13 +31,17 @@ function getMarketState() {
 
   const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri"];
   const isWeekday = weekdays.includes(weekday);
+  const isSunday = weekday === "Sun";
+
+  // Sunday evening futures session (6 PM ET onward)
+  const isSundayFutures = isSunday && totalSec >= futuresSundaySec;
 
   // Determine session
   const isPremarket = isWeekday && totalSec >= premarketSec && totalSec < openSec;
   const isOpen = isWeekday && totalSec >= openSec && totalSec < closeSec;
   const isAfterHours = isWeekday && totalSec >= closeSec && totalSec < afterHoursEnd;
 
-  let status: "open" | "premarket" | "afterhours" | "closed";
+  let status: "open" | "premarket" | "afterhours" | "closed" | "futures";
   let targetLabel = "";
   let targetTime = "";
   let remainingSec = 0;
@@ -51,6 +56,12 @@ function getMarketState() {
     targetLabel = "Market opens at";
     targetTime = "9:30 AM ET";
     remainingSec = openSec - totalSec;
+  } else if (isSundayFutures) {
+    status = "futures";
+    targetLabel = "Pre-market opens at";
+    targetTime = "4:00 AM ET";
+    // Seconds left Sunday + 4 hours into Monday
+    remainingSec = (86400 - totalSec) + premarketSec;
   } else if (isAfterHours) {
     status = "afterhours";
     targetLabel = "After-hours end at";
@@ -59,27 +70,39 @@ function getMarketState() {
   } else {
     status = "closed";
 
-    // Find next session: premarket at 4:00 AM on next weekday
     const secLeftToday = 86400 - totalSec;
 
-    if (isWeekday && totalSec < premarketSec) {
+    if (isSunday && totalSec < futuresSundaySec) {
+      // Sunday before futures open
+      targetLabel = "Futures open at";
+      targetTime = "6:00 PM ET";
+      remainingSec = futuresSundaySec - totalSec;
+    } else if (isWeekday && totalSec < premarketSec) {
       // Before premarket on a weekday
       targetLabel = "Pre-market opens at";
       targetTime = "4:00 AM ET";
       remainingSec = premarketSec - totalSec;
     } else {
-      // After all sessions or weekend — find next weekday
-      targetLabel = "Pre-market opens at";
-      targetTime = "4:00 AM ET";
+      // After all sessions or Saturday — find next session
       const dayOrder = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
       const dayIdx = dayOrder.indexOf(weekday);
-      let daysAhead = 1;
-      let nextIdx = (dayIdx + 1) % 7;
-      while (nextIdx === 0 || nextIdx === 6) {
-        daysAhead++;
-        nextIdx = (nextIdx + 1) % 7;
+
+      if (weekday === "Fri" && totalSec >= afterHoursEnd) {
+        // Friday after hours ended — next is Sunday 6 PM
+        targetLabel = "Futures open at";
+        targetTime = "6:00 PM ET";
+        remainingSec = secLeftToday + 86400 + futuresSundaySec; // Sat + part of Sun
+      } else if (weekday === "Sat") {
+        // Saturday — next is Sunday 6 PM
+        targetLabel = "Futures open at";
+        targetTime = "6:00 PM ET";
+        remainingSec = secLeftToday + futuresSundaySec;
+      } else {
+        // Weekday after 8 PM — next premarket tomorrow
+        targetLabel = "Pre-market opens at";
+        targetTime = "4:00 AM ET";
+        remainingSec = secLeftToday + premarketSec;
       }
-      remainingSec = secLeftToday + (daysAhead - 1) * 86400 + premarketSec;
     }
   }
 
