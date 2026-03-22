@@ -23,33 +23,54 @@ function getETNow() {
 function getMarketState() {
   const { now, weekday, hour, minute, second } = getETNow();
   const totalSec = hour * 3600 + minute * 60 + second;
-  const openSec = 9 * 3600 + 30 * 60;   // 9:30 AM
-  const closeSec = 16 * 3600;            // 4:00 PM
+  const premarketSec = 4 * 3600;           // 4:00 AM ET
+  const openSec = 9 * 3600 + 30 * 60;      // 9:30 AM ET
+  const closeSec = 16 * 3600;              // 4:00 PM ET
+  const afterHoursEnd = 20 * 3600;          // 8:00 PM ET
 
   const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri"];
   const isWeekday = weekdays.includes(weekday);
-  const isOpen = isWeekday && totalSec >= openSec && totalSec < closeSec;
 
+  // Determine session
+  const isPremarket = isWeekday && totalSec >= premarketSec && totalSec < openSec;
+  const isOpen = isWeekday && totalSec >= openSec && totalSec < closeSec;
+  const isAfterHours = isWeekday && totalSec >= closeSec && totalSec < afterHoursEnd;
+
+  let status: "open" | "premarket" | "afterhours" | "closed";
   let targetLabel = "";
   let targetTime = "";
   let remainingSec = 0;
 
   if (isOpen) {
+    status = "open";
     targetLabel = "Closes at";
     targetTime = "4:00 PM ET";
     remainingSec = closeSec - totalSec;
-  } else {
-    targetLabel = "Opens at";
+  } else if (isPremarket) {
+    status = "premarket";
+    targetLabel = "Market opens at";
     targetTime = "9:30 AM ET";
+    remainingSec = openSec - totalSec;
+  } else if (isAfterHours) {
+    status = "afterhours";
+    targetLabel = "After-hours end at";
+    targetTime = "8:00 PM ET";
+    remainingSec = afterHoursEnd - totalSec;
+  } else {
+    status = "closed";
 
-    // Seconds left today
+    // Find next session: premarket at 4:00 AM on next weekday
     const secLeftToday = 86400 - totalSec;
 
-    if (isWeekday && totalSec < openSec) {
-      // Before open on a weekday — opens today
-      remainingSec = openSec - totalSec;
+    if (isWeekday && totalSec < premarketSec) {
+      // Before premarket on a weekday
+      targetLabel = "Pre-market opens at";
+      targetTime = "4:00 AM ET";
+      remainingSec = premarketSec - totalSec;
     } else {
-      // After close or weekend — find days until next weekday
+      // After all sessions or weekend — find next weekday
+      targetLabel = "Pre-market opens at";
+      targetTime = "4:00 AM ET";
       const dayOrder = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
       const dayIdx = dayOrder.indexOf(weekday);
       let daysAhead = 1;
@@ -58,8 +79,7 @@ function getMarketState() {
         daysAhead++;
         nextIdx = (nextIdx + 1) % 7;
       }
-      // Time = rest of today + (daysAhead-1) full days + seconds until 9:30 AM
-      remainingSec = secLeftToday + (daysAhead - 1) * 86400 + openSec;
+      remainingSec = secLeftToday + (daysAhead - 1) * 86400 + premarketSec;
     }
   }
 
@@ -73,7 +93,7 @@ function getMarketState() {
   parts.push(`${s}s`);
   const countdown = parts.join(" ");
 
-  return { isOpen, countdown, targetLabel, targetTime };
+  return { status, isOpen: status === "open", countdown, targetLabel, targetTime };
 }
 
 const MarketStatusSign = () => {
