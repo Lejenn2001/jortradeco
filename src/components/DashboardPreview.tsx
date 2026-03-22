@@ -1,7 +1,8 @@
 import { Activity, CheckCircle2, Send, TrendingUp } from "lucide-react";
+import { motion } from "framer-motion";
 
 const SignalFeed = () => (
-  <div className="glass-panel rounded-xl p-5 border-glow-green flex-1 min-w-[280px]">
+  <div className="glass-panel rounded-xl p-5 border-glow-blue flex-1 min-w-[280px]">
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
         <Activity className="h-4 w-4 text-primary" />
@@ -10,7 +11,6 @@ const SignalFeed = () => (
       <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">● 2 Active</span>
     </div>
 
-    {/* Signal 1 */}
     <div className="border-l-2 border-primary p-3 rounded-r-lg bg-primary/5 mb-3">
       <div className="flex items-center justify-between">
         <div>
@@ -30,7 +30,6 @@ const SignalFeed = () => (
       </div>
     </div>
 
-    {/* Signal 2 */}
     <div className="border-l-2 border-accent p-3 rounded-r-lg bg-accent/5">
       <div className="font-semibold text-foreground text-sm">Structured Setup</div>
       <div className="text-foreground">SPX Index</div>
@@ -51,19 +50,12 @@ const MarketStructureView = () => (
       <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">Bullish Bias ↗</span>
     </div>
 
-    {/* Candlestick chart area */}
     <div className="relative h-48 w-full mb-4">
       <svg viewBox="0 0 500 200" className="w-full h-full" preserveAspectRatio="none">
-        {/* Dashed key level */}
-        <line x1="0" y1="90" x2="500" y2="90" stroke="hsl(142 71% 45%)" strokeWidth="1" strokeDasharray="6 4" opacity="0.5" />
+        <line x1="0" y1="90" x2="500" y2="90" stroke="hsl(230 85% 60%)" strokeWidth="1" strokeDasharray="6 4" opacity="0.4" />
+        <rect x="250" y="30" width="250" height="40" fill="hsl(230 85% 60%)" opacity="0.06" rx="4" />
+        <rect x="150" y="150" width="250" height="30" fill="hsl(0 72% 51%)" opacity="0.06" rx="4" />
 
-        {/* Call Zone highlight */}
-        <rect x="250" y="30" width="250" height="40" fill="hsl(142 71% 45%)" opacity="0.08" rx="4" />
-
-        {/* Invalidation zone */}
-        <rect x="150" y="150" width="250" height="30" fill="hsl(0 72% 51%)" opacity="0.08" rx="4" />
-
-        {/* Candlesticks */}
         {[
           { x: 30, o: 160, c: 145, h: 140, l: 165, bull: true },
           { x: 55, o: 145, c: 155, h: 138, l: 158, bull: false },
@@ -87,7 +79,7 @@ const MarketStructureView = () => (
         ].map((c, i) => {
           const top = Math.min(c.o, c.c);
           const bottom = Math.max(c.o, c.c);
-          const color = c.bull ? "hsl(142 71% 45%)" : "hsl(0 72% 51%)";
+          const color = c.bull ? "hsl(230 85% 60%)" : "hsl(0 72% 51%)";
           return (
             <g key={i}>
               <line x1={c.x} y1={c.h} x2={c.x} y2={c.l} stroke={color} strokeWidth="1.5" />
@@ -97,13 +89,11 @@ const MarketStructureView = () => (
         })}
       </svg>
 
-      {/* Labels */}
       <div className="absolute top-4 right-4 text-xs text-primary font-medium">Call Zone 150 – 152.5</div>
       <div className="absolute right-4 top-[45%] text-xs text-primary">Key Level: $149</div>
       <div className="absolute bottom-4 right-4 text-xs text-destructive">Invalidation: $147</div>
     </div>
 
-    {/* Bottom info */}
     <div className="grid grid-cols-3 gap-4 border-t border-border pt-3">
       <div className="text-center">
         <div className="text-xs text-muted-foreground">Asset</div>
@@ -128,7 +118,6 @@ const AIAssistantPanel = () => (
       <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">● Online</span>
     </div>
 
-    {/* Chat messages */}
     <div className="space-y-3">
       <div className="bg-muted/50 rounded-lg p-3">
         <div className="flex items-center gap-2 mb-1">
@@ -161,10 +150,16 @@ const AIAssistantPanel = () => (
 
 const DashboardPreview = () => {
   return (
-    <section className="relative py-20">
+    <section className="relative py-24 bg-mesh">
       <div className="container mx-auto px-6">
         {/* Header */}
-        <div className="text-center mb-10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12"
+        >
           <span className="text-xs font-display tracking-widest text-primary bg-primary/10 px-4 py-1.5 rounded-full">
             ● LIVE PLATFORM PREVIEW
           </span>
@@ -175,23 +170,35 @@ const DashboardPreview = () => {
             See how JORTRADE delivers structured trade intelligence, real-time alerts,
             and AI-guided decision support — all in one simple interface.
           </p>
-        </div>
+        </motion.div>
 
         {/* Dashboard panels */}
-        <div className="glass-panel rounded-2xl p-4 md:p-6 border-glow-purple">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, delay: 0.2 }}
+          className="glass-panel rounded-2xl p-4 md:p-6 border-glow-purple"
+        >
           <div className="flex flex-col lg:flex-row gap-4">
             <SignalFeed />
             <MarketStructureView />
             <AIAssistantPanel />
           </div>
-        </div>
+        </motion.div>
 
         {/* Chat input */}
-        <div className="glass-panel rounded-xl p-4 mt-4 border-glow-purple">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="glass-panel rounded-xl p-4 mt-4 border-glow-blue"
+        >
           <div className="flex items-center gap-3">
             <span className="text-accent">✨</span>
             <span className="text-sm text-muted-foreground flex-1">Ask Biddie anything about the market...</span>
-            <button className="bg-accent/20 text-accent rounded-lg p-2.5 hover:bg-accent/30 transition-colors">
+            <button className="bg-primary/20 text-primary rounded-lg p-2.5 hover:bg-primary/30 transition-colors">
               <Send className="h-4 w-4" />
             </button>
           </div>
@@ -203,15 +210,14 @@ const DashboardPreview = () => {
             ].map((q) => (
               <span
                 key={q}
-                className="text-xs bg-muted/50 text-muted-foreground px-3 py-1.5 rounded-full border border-border hover:border-accent/50 cursor-pointer transition-colors"
+                className="text-xs bg-muted/50 text-muted-foreground px-3 py-1.5 rounded-full border border-border hover:border-primary/40 cursor-pointer transition-colors"
               >
                 {q}
               </span>
             ))}
           </div>
-        </div>
+        </motion.div>
 
-        {/* Footer note */}
         <div className="text-center mt-6 text-sm text-muted-foreground">
           <CheckCircle2 className="h-4 w-4 text-primary inline mr-1" />
           Demo environment with real market data • No sign-up required to explore
