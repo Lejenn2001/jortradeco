@@ -92,7 +92,11 @@ const DashboardCommunity = () => {
   }, [session?.user?.id, firstName]);
 
   const sendMessage = async () => {
-    if (!input.trim() || !session?.user?.id || sending) return;
+    if (!session?.user?.id) {
+      toast({ title: "Please log in", description: "You need to be signed in to send messages.", variant: "destructive" });
+      return;
+    }
+    if (!input.trim() || sending) return;
     setSending(true);
     const { error } = await supabase.from("chat_messages").insert({
       user_id: session.user.id,
