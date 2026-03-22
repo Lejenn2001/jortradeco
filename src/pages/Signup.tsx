@@ -219,6 +219,9 @@ const Signup = () => {
           </div>
         </motion.div>
       </div>
+      <div className="mt-8 w-full">
+        <Disclaimer />
+      </div>
     </div>
   );
 };

@@ -22,6 +22,7 @@ const Index = () => {
       <MentorshipSection />
       <CTASection />
       <FAQSection />
+      <Disclaimer />
       <Footer />
     </div>
   );

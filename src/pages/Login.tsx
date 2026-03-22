@@ -87,6 +87,9 @@ const Login = () => {
           </Link>
         </div>
       </motion.div>
+      <div className="absolute bottom-0 left-0 right-0">
+        <Disclaimer />
+      </div>
     </div>
   );
 };
