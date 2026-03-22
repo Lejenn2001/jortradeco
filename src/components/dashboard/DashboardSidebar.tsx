@@ -12,6 +12,7 @@ import {
   Menu,
   X,
   Users,
+  PieChart,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
