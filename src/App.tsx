@@ -6,6 +6,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
+import DashboardSignals from "./pages/DashboardSignals.tsx";
+import DashboardMarket from "./pages/DashboardMarket.tsx";
+import DashboardChat from "./pages/DashboardChat.tsx";
+import DashboardPnL from "./pages/DashboardPnL.tsx";
 import Login from "./pages/Login.tsx";
 import Signup from "./pages/Signup.tsx";
 import Contact from "./pages/Contact.tsx";
@@ -23,6 +27,10 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard/signals" element={<DashboardSignals />} />
+            <Route path="/dashboard/market" element={<DashboardMarket />} />
+            <Route path="/dashboard/chat" element={<DashboardChat />} />
+            <Route path="/dashboard/pnl" element={<DashboardPnL />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/contact" element={<Contact />} />

@@ -19,7 +19,7 @@ const navItems = [
   { icon: Activity, label: "Signals", path: "/dashboard/signals" },
   { icon: BarChart3, label: "Market View", path: "/dashboard/market" },
   { icon: MessageSquare, label: "AI Chat", path: "/dashboard/chat" },
-  { icon: Wallet, label: "Portfolio", path: "/dashboard/portfolio" },
+  { icon: Wallet, label: "P&L Calendar", path: "/dashboard/pnl" },
   { icon: Settings, label: "Settings", path: "/dashboard/settings" },
 ];
 
