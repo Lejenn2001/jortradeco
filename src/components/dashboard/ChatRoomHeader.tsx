@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Users, Clock, MapPin } from "lucide-react";
-import { useWeather, getBiddieOutfit } from "@/hooks/useWeather";
+import { useWeather, getBiddieOutfit, getBiddieAccessory } from "@/hooks/useWeather";
 import { motion } from "framer-motion";
+import biddieRobot from "@/assets/biddie-robot.png";
 
 const QUOTES = [
   "The stock market is a device for transferring money from the impatient to the patient.",
@@ -50,6 +51,7 @@ const ChatRoomHeader = ({ onlineCount, firstName }: ChatRoomHeaderProps) => {
   });
 
   const biddieOutfit = weather ? getBiddieOutfit(weather.condition) : "looking fresh 🤖";
+  const biddieAccessory = weather ? getBiddieAccessory(weather.condition) : "";
 
   return (
     <div className="space-y-3">
@@ -79,13 +81,12 @@ const ChatRoomHeader = ({ onlineCount, firstName }: ChatRoomHeaderProps) => {
         )}
 
         {/* Online Count */}
-        <div className="glass-panel rounded-xl px-4 py-2.5 flex items-center gap-2.5 border border-hsl(var(--success))/20">
+        <div className="glass-panel rounded-xl px-4 py-2.5 flex items-center gap-2.5">
           <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           <Users className="h-3.5 w-3.5 text-emerald-400" />
           <span className="text-sm font-medium text-emerald-400">{onlineCount} online</span>
         </div>
 
-        {/* Spacer */}
         <div className="flex-1" />
 
         {/* Title */}
@@ -97,23 +98,23 @@ const ChatRoomHeader = ({ onlineCount, firstName }: ChatRoomHeaderProps) => {
 
       {/* Biddie + Quote Row */}
       <div className="glass-panel rounded-xl p-3 border-glow-blue flex items-center gap-4">
-        {/* Biddie Avatar */}
+        {/* Biddie Robot with weather accessory */}
         <motion.div
           animate={{ y: [0, -6, 0] }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          className="flex-shrink-0"
+          className="flex-shrink-0 relative"
         >
-          <div className="w-14 h-14 rounded-2xl bg-primary/15 border border-primary/30 flex items-center justify-center text-3xl relative">
-            🤖
-            {weather && (
-              <span className="absolute -bottom-1 -right-1 text-sm">
-                {weather.condition === "Rainy" || weather.condition === "Showers" || weather.condition === "Drizzle" ? "☂️" :
-                 weather.condition === "Snowy" || weather.condition === "Snow Showers" ? "🧣" :
-                 weather.condition === "Clear" ? "😎" :
-                 weather.condition === "Thunderstorm" ? "⚡" : ""}
-              </span>
-            )}
-          </div>
+          <img
+            src={biddieRobot}
+            alt="Biddie"
+            className="w-16 h-16 drop-shadow-[0_0_12px_hsl(230_85%_60%_/_0.4)]"
+          />
+          {/* Weather accessory overlay */}
+          {biddieAccessory && (
+            <span className="absolute -top-1 -right-1 text-lg drop-shadow-md">
+              {biddieAccessory}
+            </span>
+          )}
         </motion.div>
 
         <div className="flex-1 min-w-0">
