@@ -1,13 +1,27 @@
 import { TrendingUp, Activity, Target, BarChart3 } from "lucide-react";
+import type { MarketSignal } from "@/hooks/useMarketData";
 
-const stats = [
-  { label: "Market Sentiment", value: "Bullish", icon: TrendingUp, color: "text-primary" },
-  { label: "Active Signals", value: "4", icon: Activity, color: "text-primary" },
-  { label: "Avg Confidence", value: "7.6", icon: Target, color: "text-accent" },
-  { label: "Today's Trades", value: "3", icon: BarChart3, color: "text-foreground" },
-];
+interface Props {
+  signals: MarketSignal[];
+  marketOverview: any;
+}
 
-const StatsBar = () => {
+const StatsBar = ({ signals, marketOverview }: Props) => {
+  const avgConfidence = signals.length > 0
+    ? (signals.reduce((sum, s) => sum + s.confidence, 0) / signals.length).toFixed(1)
+    : "—";
+
+  const bullishCount = signals.filter((s) => s.type === "bullish").length;
+  const bearishCount = signals.filter((s) => s.type === "bearish").length;
+  const sentiment = bullishCount > bearishCount ? "Bullish" : bearishCount > bullishCount ? "Bearish" : "Neutral";
+
+  const stats = [
+    { label: "Market Sentiment", value: sentiment, icon: TrendingUp, color: sentiment === "Bullish" ? "text-primary" : sentiment === "Bearish" ? "text-destructive" : "text-muted-foreground" },
+    { label: "Active Signals", value: String(signals.length), icon: Activity, color: "text-primary" },
+    { label: "Avg Confidence", value: avgConfidence, icon: Target, color: "text-accent" },
+    { label: "Whale Alerts", value: marketOverview ? "Live" : "—", icon: BarChart3, color: "text-foreground" },
+  ];
+
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       {stats.map((stat) => (
