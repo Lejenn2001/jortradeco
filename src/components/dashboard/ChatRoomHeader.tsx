@@ -2,30 +2,7 @@ import { useState, useEffect } from "react";
 import { Users, Clock, MapPin } from "lucide-react";
 import { useWeather, getBiddieOutfit } from "@/hooks/useWeather";
 import { motion } from "framer-motion";
-
-// Weather-based Biddie outfits
-import biddieSunny from "@/assets/biddie-sunny.png";
-import biddieRainy from "@/assets/biddie-rainy.png";
-import biddieSnowy from "@/assets/biddie-snowy.png";
-import biddieCloudy from "@/assets/biddie-cloudy.png";
-import biddieFoggy from "@/assets/biddie-foggy.png";
-import biddieStorm from "@/assets/biddie-storm.png";
-import biddieDefault from "@/assets/biddie-robot.png";
-
-const getBiddieImage = (condition: string): string => {
-  switch (condition) {
-    case "Clear": return biddieSunny;
-    case "Cloudy": return biddieCloudy;
-    case "Foggy": return biddieFoggy;
-    case "Drizzle":
-    case "Rainy":
-    case "Showers": return biddieRainy;
-    case "Snowy":
-    case "Snow Showers": return biddieSnowy;
-    case "Thunderstorm": return biddieStorm;
-    default: return biddieDefault;
-  }
-};
+import biddieRobot from "@/assets/biddie-robot.png";
 
 const QUOTES = [
   "The stock market is a device for transferring money from the impatient to the patient.",
