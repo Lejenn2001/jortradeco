@@ -1,0 +1,34 @@
+import { Bell, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+
+const DashboardHeader = () => {
+  return (
+    <header className="h-16 glass-panel border-b border-border/60 flex items-center justify-between px-6 shrink-0">
+      <div className="flex items-center gap-3 flex-1 max-w-md">
+        <Search className="h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search signals, tickers..."
+          className="bg-transparent border-none shadow-none focus-visible:ring-0 text-sm placeholder:text-muted-foreground"
+        />
+      </div>
+
+      <div className="flex items-center gap-4">
+        <button className="relative p-2 rounded-lg hover:bg-muted/50 transition-colors">
+          <Bell className="h-4 w-4 text-muted-foreground" />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary" />
+        </button>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+            <span className="text-xs font-bold text-primary">T</span>
+          </div>
+          <div className="hidden sm:block">
+            <div className="text-sm font-medium text-foreground">Trader</div>
+            <div className="text-xs text-muted-foreground">Pro Member</div>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+export default DashboardHeader;
