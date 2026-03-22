@@ -119,6 +119,7 @@ const AIChatPanel = () => {
           <div className="text-center py-8">
             <img src={biddieRobot} alt="Biddie" className="w-16 h-16 mx-auto mb-3 drop-shadow-[0_0_15px_hsl(230_85%_60%_/_0.4)]" />
             <p className="text-sm text-foreground font-medium">{greeting}</p>
+            <Flame className="h-4 w-4 text-primary mx-auto mt-2" />
             <p className="text-xs text-muted-foreground mt-2">Powered by real-time Unusual Whales data + Claude AI</p>
           </div>
         )}
