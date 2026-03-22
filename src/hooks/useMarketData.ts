@@ -169,13 +169,13 @@ export function useMarketData() {
       }
 
       // Transform flow alerts into signals — live data replaces examples
-      const newSignals: MarketSignal[] = alerts.slice(0, 6).map((alert: any, i: number) => {
-        // API returns "type" as "put" or "call", and "alert_rule" for the flow pattern
+      const allSignals: MarketSignal[] = alerts.map((alert: any, i: number) => {
         const putCall = alert.type === 'call' ? 'call' : 'put';
         const isBullish = putCall === 'call';
         const ticker = alert.ticker || alert.underlying_symbol || 'N/A';
         const strike = alert.strike || '—';
-        const premium = formatPremium(alert.total_premium || alert.premium);
+        const totalPremium = parseFloat(alert.total_premium || alert.premium || '0');
+        const premium = formatPremium(totalPremium);
         const expiry = alert.expiry || alert.expires || 'N/A';
         const flowType = alert.alert_rule?.includes('Sweep') ? 'Sweep' : 
                          alert.alert_rule?.includes('Block') ? 'Block' : 
@@ -183,17 +183,27 @@ export function useMarketData() {
         const volOiRatio = alert.volume_oi_ratio ? parseFloat(alert.volume_oi_ratio) : null;
         const tradeCount = alert.trade_count || 0;
 
+        const confidence = volOiRatio && volOiRatio > 10 ? 9.5 : 
+                          volOiRatio && volOiRatio > 3 ? 9.0 : 
+                          tradeCount > 8 ? 8.8 : 
+                          Math.round((Math.random() * 2 + 7.5) * 10) / 10;
+
+        const urgencyTag = confidence >= 9.0 ? '🔥 ACT NOW' : confidence >= 8.5 ? '⚡ HIGH CONVICTION' : null;
+        const tags = [
+          putCall === 'call' ? 'Call Flow' : 'Put Flow',
+          flowType,
+          ...(urgencyTag ? [urgencyTag] : []),
+        ].filter(Boolean);
+
         return {
           id: alert.id || String(i),
           ticker,
           type: isBullish ? 'bullish' as const : 'bearish' as const,
-          confidence: volOiRatio && volOiRatio > 10 ? 9.5 : 
-                      volOiRatio && volOiRatio > 3 ? 9.0 : 
-                      tradeCount > 8 ? 8.8 : 
-                      Math.round((Math.random() * 2 + 7.5) * 10) / 10,
+          confidence,
+          _totalPremium: totalPremium, // used for dedup sorting
           description: `${tradeCount} ${putCall} trades detected on ${ticker} at $${strike} strike. Total premium: $${premium}. Volume/OI ratio: ${volOiRatio ? volOiRatio.toFixed(1) + 'x' : 'N/A'} — ${volOiRatio && volOiRatio > 3 ? 'significant new positioning' : 'active flow'}.`,
           timestamp: alert.created_at ? timeAgo(alert.created_at) : `${i + 1} min ago`,
-          tags: [putCall === 'call' ? 'Call Flow' : 'Put Flow', flowType].filter(Boolean),
+          tags,
           strike: `$${strike}`,
           expiry,
           premium: `$${premium}`,
@@ -205,8 +215,26 @@ export function useMarketData() {
           targetZone: isBullish 
             ? `$${(parseFloat(strike) * 1.02).toFixed(2)} – $${(parseFloat(strike) * 1.05).toFixed(2)}`
             : `$${(parseFloat(strike) * 0.95).toFixed(2)} – $${(parseFloat(strike) * 0.98).toFixed(2)}`,
-        };
+        } as MarketSignal & { _totalPremium: number };
       });
+
+      // Filter to 8.5+ confidence only
+      const filtered = allSignals.filter(s => s.confidence >= 8.5);
+
+      // Deduplicate: per ticker, keep only the dominant side (highest total premium)
+      const tickerMap = new Map<string, (typeof allSignals)[0]>();
+      for (const signal of filtered) {
+        const existing = tickerMap.get(signal.ticker);
+        if (!existing || signal._totalPremium > existing._totalPremium) {
+          tickerMap.set(signal.ticker, signal);
+        }
+      }
+
+      // Sort by confidence descending, take top 6
+      const newSignals: MarketSignal[] = Array.from(tickerMap.values())
+        .sort((a, b) => b.confidence - a.confidence)
+        .slice(0, 6)
+        .map(({ _totalPremium, ...signal }) => signal);
 
       if (newSignals.length > 0) setSignals(newSignals);
 
