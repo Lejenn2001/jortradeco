@@ -155,15 +155,35 @@ const MarketChartPanel = () => {
 
       {/* Ticker search + quick picks */}
       <div className="flex flex-col sm:flex-row gap-2 mb-4">
-        <form onSubmit={handleSearch} className="relative flex-1 max-w-[200px]">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-          <Input
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            placeholder="Search ticker..."
-            className="pl-8 h-8 text-xs bg-muted/30 border-border/50 rounded-lg"
-          />
-        </form>
+        <div ref={searchRef} className="relative flex-1 max-w-[200px]">
+          <form onSubmit={handleSearch}>
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground z-10" />
+            <Input
+              value={searchValue}
+              onChange={(e) => {
+                setSearchValue(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => searchValue && setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+              placeholder="Search ticker..."
+              className="pl-8 h-8 text-xs bg-muted/30 border-border/50 rounded-lg"
+            />
+          </form>
+          {showSuggestions && filteredTickers.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg z-50 overflow-hidden">
+              {filteredTickers.map((ticker) => (
+                <button
+                  key={ticker}
+                  onMouseDown={() => handleSelectTicker(ticker)}
+                  className="w-full text-left px-3 py-1.5 text-xs text-foreground hover:bg-muted/50 transition-colors"
+                >
+                  {ticker}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <div className="flex flex-wrap gap-2">
           {quickTickers.map((ticker) => (
             <button
