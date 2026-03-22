@@ -165,14 +165,22 @@ const DashboardCommunity = () => {
             )}
             {messages.map((msg) => {
               const isOwn = msg.user_id === session?.user?.id;
+              const isBiddie = msg.user_id === BIDDIE_USER_ID;
               return (
                 <div
                   key={msg.id}
                   className={`group flex gap-3 ${isOwn ? "flex-row-reverse" : ""}`}
                 >
+                  {isBiddie && (
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center">
+                      <Bot className="h-4 w-4 text-primary" />
+                    </div>
+                  )}
                   <div
                     className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
-                      isOwn
+                      isBiddie
+                        ? "bg-primary/10 border border-primary/30 rounded-bl-md"
+                        : isOwn
                         ? "bg-primary/20 border border-primary/30 rounded-br-md"
                         : "bg-muted/30 border border-border/40 rounded-bl-md"
                     }`}
@@ -188,9 +196,9 @@ const DashboardCommunity = () => {
                   {isOwn && (
                     <button
                       onClick={() => deleteMessage(msg.id)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity self-center p-1 rounded hover:bg-red-500/20"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity self-center p-1 rounded hover:bg-destructive/20"
                     >
-                      <Trash2 className="h-3 w-3 text-red-400" />
+                      <Trash2 className="h-3 w-3 text-destructive" />
                     </button>
                   )}
                 </div>
