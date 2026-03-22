@@ -18,13 +18,13 @@ const quickPrompts = [
 ];
 
 const greetings = [
-  (name: string) => `Hey ${name}! 👋 Biddie is watching the flow — things are heating up.`,
-  (name: string) => `Markets are moving, ${name}. Let's find the edge. 🎯`,
+  (name: string) => `Hey ${name}! 👋 Biddie is watching the flow. Things are heating up.`,
+  (name: string) => `Markets are moving ${name}. Let's find the edge. 🎯`,
   (name: string) => `Hey ${name}! Let's scan the markets and see what's cooking. 🔥`,
-  (name: string) => `What's good, ${name}? The whales are active today. 🐳`,
-  (name: string) => `${name}, the flow is looking interesting right now. Let's dive in. 📊`,
+  (name: string) => `What's good ${name}? The whales are active today. 🐳`,
+  (name: string) => `${name}! The flow is looking interesting right now. Let's dive in. 📊`,
   (name: string) => `Hey ${name}! Ready to spot some setups? I've been watching. 👀`,
-  (name: string) => `Good to see you, ${name}. Let's break down what's moving. ⚡`,
+  (name: string) => `Good to see you ${name}. Let's break down what's moving. ⚡`,
 ];
 
 const AIChatPanel = () => {
