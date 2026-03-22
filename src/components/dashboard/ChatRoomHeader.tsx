@@ -59,7 +59,7 @@ const ChatRoomHeader = ({ onlineCount, firstName }: ChatRoomHeaderProps) => {
         <div className="glass-panel rounded-xl px-4 py-2.5 flex items-center gap-2.5">
           <Clock className="h-4 w-4 text-primary" />
           <div>
-            <p className="text-sm font-display font-bold text-foreground tracking-wide">{timeStr}</p>
+            <p className="text-sm font-semibold text-foreground tracking-wide">{timeStr}</p>
             <p className="text-[10px] text-muted-foreground">{dateStr} EST</p>
           </div>
         </div>
