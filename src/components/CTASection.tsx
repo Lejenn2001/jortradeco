@@ -24,68 +24,60 @@ const CTASection = () => {
       <div className="absolute bottom-6 right-6 w-4 h-px bg-muted-foreground/20" />
       <div className="absolute bottom-6 right-6 w-px h-4 bg-muted-foreground/20" />
 
-      <div className="relative z-10 container mx-auto px-6">
-        <div className="flex flex-col md:flex-row items-end gap-0 md:gap-0">
-          {/* Biddie — left side, positioned to lean against the text */}
-          <motion.div
-            initial={{ opacity: 0, x: -40 }}
-            whileInView={{ opacity: 1, x: 0 }}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.7 }}
+        className="relative z-10 container mx-auto px-6 text-center"
+      >
+        <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-foreground leading-[1.1] max-w-2xl mx-auto">
+          Ready to Trade Smarter?
+        </h2>
+
+        {/* Biddie standing on the subtitle */}
+        <div className="relative inline-block mt-6">
+          <p className="text-muted-foreground max-w-xl mx-auto text-base leading-relaxed">
+            Let Biddie do the heavy lifting — you focus on pulling the trigger at the right time.
+          </p>
+          <motion.img
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="flex-shrink-0 relative md:-mr-4 z-20 self-end"
-          >
-            <img
-              src={biddieLeaning}
-              alt="Biddie leaning casually"
-              className="w-40 h-40 md:w-52 md:h-52 lg:w-60 lg:h-60 object-contain drop-shadow-[0_0_40px_hsl(230_85%_60%_/_0.35)] md:translate-y-2 md:rotate-[6deg]"
-            />
-          </motion.div>
-
-          {/* Text — right side */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            className="flex-1 text-center md:text-left"
-          >
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-foreground leading-[1.1]">
-              Ready to Trade Smarter?
-            </h2>
-
-            <p className="text-muted-foreground mt-6 max-w-xl text-base leading-relaxed">
-              Let Biddie do the heavy lifting — you focus on pulling the trigger at the right time.
-            </p>
-
-            <Link to="/signup">
-              <Button className="mt-10 bg-foreground text-background hover:bg-foreground/90 rounded-full px-10 py-6 text-base font-semibold">
-                Chat with Biddie
-              </Button>
-            </Link>
-          </motion.div>
+            transition={{ duration: 0.5, delay: 0.3 }}
+            src={biddieLeaning}
+            alt="Biddie leaning casually"
+            className="absolute -right-20 md:-right-28 -top-16 md:-top-24 w-24 h-24 md:w-36 md:h-36 object-contain drop-shadow-[0_0_30px_hsl(230_85%_60%_/_0.35)] rotate-[6deg]"
+          />
         </div>
 
-        {/* Stats bar */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="mt-20"
-        >
-          <div className="grid grid-cols-3 gap-8 border-t border-border pt-10">
-            {[
-              "24/7 Market Scanning",
-              "AI Confidence Scores",
-              "Futures • Options • Stocks",
-            ].map((text) => (
-              <div key={text} className="text-center">
-                <span className="text-xl md:text-2xl font-extrabold text-foreground">{text}</span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      </div>
+        <Link to="/signup">
+          <Button className="mt-10 bg-foreground text-background hover:bg-foreground/90 rounded-full px-10 py-6 text-base font-semibold">
+            Chat with Biddie
+          </Button>
+        </Link>
+      </motion.div>
+
+      {/* Stats bar */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6, delay: 0.3 }}
+        className="relative z-10 container mx-auto px-6 mt-20"
+      >
+        <div className="grid grid-cols-3 gap-8 border-t border-border pt-10">
+          {[
+            "24/7 Market Scanning",
+            "AI Confidence Scores",
+            "Futures • Options • Stocks",
+          ].map((text) => (
+            <div key={text} className="text-center">
+              <span className="text-xl md:text-2xl font-extrabold text-foreground">{text}</span>
+            </div>
+          ))}
+        </div>
+      </motion.div>
     </section>
   );
 };
