@@ -1,4 +1,4 @@
-import { Activity, TrendingUp, TrendingDown, Clock, AlertTriangle, Target, ShieldX, Zap } from "lucide-react";
+import { Activity, TrendingUp, TrendingDown, Clock, AlertTriangle, Target, ShieldX, Zap, Crosshair, MapPin } from "lucide-react";
 import type { MarketSignal } from "@/hooks/useMarketData";
 
 interface Props {

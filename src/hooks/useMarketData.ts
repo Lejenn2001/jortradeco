@@ -200,7 +200,11 @@ export function useMarketData() {
           putCall: putCall as 'call' | 'put',
           suggestedTrade: `Buy ${ticker} $${strike} ${putCall === 'call' ? 'Calls' : 'Puts'} expiring ${expiry}`,
           entryTrigger: isBullish ? `Break above $${strike} with volume` : `Break below $${strike} with volume`,
-          invalidation: isBullish ? 'Back below VWAP' : 'Back above VWAP',
+          invalidation: isBullish ? `$${(parseFloat(strike) * 0.97).toFixed(2)}` : `$${(parseFloat(strike) * 1.03).toFixed(2)}`,
+          keyLevel: `$${(parseFloat(strike) * (isBullish ? 0.99 : 1.01)).toFixed(2)}`,
+          targetZone: isBullish 
+            ? `$${(parseFloat(strike) * 1.02).toFixed(2)} – $${(parseFloat(strike) * 1.05).toFixed(2)}`
+            : `$${(parseFloat(strike) * 0.95).toFixed(2)} – $${(parseFloat(strike) * 0.98).toFixed(2)}`,
         };
       });
 
