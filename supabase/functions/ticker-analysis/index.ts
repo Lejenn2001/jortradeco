@@ -72,11 +72,16 @@ Rules:
 - Use spreads when the move looks measured/range-bound. Use butterflies for concentrated strike activity. Use Long Call/Put for strong directional conviction.
 - The "contract" field MUST have exact ticker, expiration date, strike(s), and type. For multi-leg strategies, list each leg.
 - Use actual strike prices and expirations from the flow data.
+- ONLY use flow data from TODAY or this current trading week. Ignore any trades with past expirations or old dates.
+- All recommended expirations MUST be in the future (today or later). Never recommend an expired contract.
+- Today's date is ${new Date().toISOString().split('T')[0]}.
 - Keep descriptions conversational but professional.
 - The year is 2026.
 - Return ONLY valid JSON, no markdown.`;
 
+    const today = new Date().toISOString().split('T')[0];
     const userPrompt = `Analyze this flow data for ${ticker} and generate the trade recommendation JSON.
+IMPORTANT: Today is ${today}. Only use flow entries from this week. Only recommend contracts with future expirations (${today} or later). Discard anything expired.
 
 Recent Flow (last 10 trades):
 ${flowSummary}
