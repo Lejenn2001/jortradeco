@@ -33,14 +33,16 @@ const defaultInsight: TickerInsight = {
 function generateCandles(isBearish: boolean) {
   const candles = [];
   let basePrice = isBearish ? 60 : 160;
-  for (let i = 0; i < 20; i++) {
-    const x = 20 + i * 20;
-    const move = (Math.random() - (isBearish ? 0.35 : 0.65)) * 15;
+  const count = 12;
+  const spacing = 420 / (count + 1);
+  for (let i = 0; i < count; i++) {
+    const x = spacing * (i + 1);
+    const move = (Math.random() - (isBearish ? 0.35 : 0.65)) * 18;
     const open = basePrice;
     const close = basePrice + move;
-    const high = Math.min(open, close) - Math.random() * 8;
-    const low = Math.max(open, close) + Math.random() * 8;
-    const bull = close < open; // SVG y-axis is inverted: lower y = higher price
+    const high = Math.min(open, close) - Math.random() * 10;
+    const low = Math.max(open, close) + Math.random() * 10;
+    const bull = close < open;
     candles.push({ x, o: open, c: close, h: high, l: low, bull });
     basePrice = close;
   }
@@ -197,8 +199,8 @@ const MarketChartPanel = () => {
             const color = c.bull ? "hsl(var(--primary))" : "hsl(var(--destructive))";
             return (
               <g key={i}>
-                <line x1={c.x} y1={c.h} x2={c.x} y2={c.l} stroke={color} strokeWidth="1.5" />
-                <rect x={c.x - 5} y={top} width="10" height={Math.max(bottom - top, 2)} fill={color} rx="1" />
+                <line x1={c.x} y1={c.h} x2={c.x} y2={c.l} stroke={color} strokeWidth="2" />
+                <rect x={c.x - 8} y={top} width="16" height={Math.max(bottom - top, 3)} fill={color} rx="2" />
               </g>
             );
           })}
