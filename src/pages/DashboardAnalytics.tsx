@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Users, UserPlus, MessageSquare, TrendingUp, BarChart3, ShieldAlert } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Users, UserPlus, MessageSquare, TrendingUp, BarChart3, ShieldAlert, Shield, ShieldCheck, ShieldX } from "lucide-react";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 
 interface StatCardProps {
@@ -32,19 +33,20 @@ const StatCard = ({ icon: Icon, label, value, subtitle, color }: StatCardProps) 
   </motion.div>
 );
 
-interface MemberRow {
+interface MemberWithRoles {
   id: string;
   full_name: string;
   created_at: string;
+  roles: string[];
 }
 
 const DashboardAnalytics = () => {
   const { session } = useAuth();
-  const navigate = useNavigate();
-  const [members, setMembers] = useState<MemberRow[]>([]);
+  const [members, setMembers] = useState<MemberWithRoles[]>([]);
   const [chatCount, setChatCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -63,19 +65,50 @@ const DashboardAnalytics = () => {
     checkAdmin();
   }, [session?.user?.id]);
 
+  const loadMembers = async () => {
+    const { data, error } = await supabase.functions.invoke("manage-roles", {
+      body: { action: "list" },
+    });
+    if (error) {
+      console.error("Failed to load members:", error);
+      return;
+    }
+    if (data?.members) setMembers(data.members);
+
+    const chatRes = await supabase.from("chat_messages").select("id", { count: "exact", head: true });
+    if (chatRes.count !== null) setChatCount(chatRes.count);
+    setLoading(false);
+  };
+
   useEffect(() => {
     if (isAdmin !== true) return;
-    const load = async () => {
-      const [profilesRes, chatRes] = await Promise.all([
-        supabase.from("profiles").select("id, full_name, created_at").order("created_at", { ascending: false }),
-        supabase.from("chat_messages").select("id", { count: "exact", head: true }),
-      ]);
-      if (profilesRes.data) setMembers(profilesRes.data);
-      if (chatRes.count !== null) setChatCount(chatRes.count);
-      setLoading(false);
-    };
-    load();
+    loadMembers();
   }, [isAdmin]);
+
+  const toggleAdmin = async (userId: string, currentlyAdmin: boolean) => {
+    setTogglingId(userId);
+    const { data, error } = await supabase.functions.invoke("manage-roles", {
+      body: {
+        action: currentlyAdmin ? "revoke" : "grant",
+        user_id: userId,
+        role: "admin",
+      },
+    });
+    if (error || data?.error) {
+      toast({
+        title: "Error",
+        description: data?.error || error?.message || "Failed to update role",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: currentlyAdmin ? "Admin removed" : "Admin granted",
+        description: currentlyAdmin ? "User is no longer an admin." : "User is now an admin.",
+      });
+      await loadMembers();
+    }
+    setTogglingId(null);
+  };
 
   const today = new Date().toISOString().split("T")[0];
   const newToday = members.filter((m) => m.created_at.startsWith(today)).length;
@@ -140,10 +173,11 @@ const DashboardAnalytics = () => {
                 <StatCard icon={MessageSquare} label="Chat Messages" value={chatCount} color="bg-amber-500" />
               </div>
 
+              {/* Members Table with Role Management */}
               <div className="glass-panel rounded-xl border-border/40 overflow-hidden">
                 <div className="px-5 py-4 border-b border-border/40 flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4 text-primary" />
-                  <h2 className="text-sm font-semibold text-foreground">Members</h2>
+                  <Shield className="h-4 w-4 text-primary" />
+                  <h2 className="text-sm font-semibold text-foreground">Members & Roles</h2>
                   <span className="text-xs text-muted-foreground ml-auto">{members.length} total</span>
                 </div>
                 <div className="overflow-x-auto">
@@ -152,18 +186,55 @@ const DashboardAnalytics = () => {
                       <tr className="border-b border-border/30">
                         <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground">Name</th>
                         <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground">Joined</th>
+                        <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground">Role</th>
+                        <th className="text-right px-5 py-3 text-xs font-medium text-muted-foreground">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {members.map((m) => (
-                        <tr key={m.id} className="border-b border-border/20 hover:bg-muted/20 transition-colors">
-                          <td className="px-5 py-3 text-foreground">{m.full_name || "Unknown"}</td>
-                          <td className="px-5 py-3 text-muted-foreground">{formatDate(m.created_at)}</td>
-                        </tr>
-                      ))}
+                      {members.map((m) => {
+                        const memberIsAdmin = m.roles.includes("admin");
+                        const isSelf = m.id === session?.user?.id;
+                        return (
+                          <tr key={m.id} className="border-b border-border/20 hover:bg-muted/20 transition-colors">
+                            <td className="px-5 py-3 text-foreground">
+                              {m.full_name || "Unknown"}
+                              {isSelf && <span className="text-xs text-muted-foreground ml-2">(you)</span>}
+                            </td>
+                            <td className="px-5 py-3 text-muted-foreground">{formatDate(m.created_at)}</td>
+                            <td className="px-5 py-3">
+                              {memberIsAdmin ? (
+                                <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-full">
+                                  <ShieldCheck className="h-3 w-3" /> Admin
+                                </span>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">Member</span>
+                              )}
+                            </td>
+                            <td className="px-5 py-3 text-right">
+                              {!isSelf && (
+                                <Button
+                                  size="sm"
+                                  variant={memberIsAdmin ? "destructive" : "outline"}
+                                  className="text-xs h-7 px-3"
+                                  disabled={togglingId === m.id}
+                                  onClick={() => toggleAdmin(m.id, memberIsAdmin)}
+                                >
+                                  {togglingId === m.id ? (
+                                    <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+                                  ) : memberIsAdmin ? (
+                                    <><ShieldX className="h-3 w-3 mr-1" /> Remove Admin</>
+                                  ) : (
+                                    <><ShieldCheck className="h-3 w-3 mr-1" /> Make Admin</>
+                                  )}
+                                </Button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
                       {members.length === 0 && (
                         <tr>
-                          <td colSpan={2} className="px-5 py-8 text-center text-muted-foreground">No members yet</td>
+                          <td colSpan={4} className="px-5 py-8 text-center text-muted-foreground">No members yet</td>
                         </tr>
                       )}
                     </tbody>
