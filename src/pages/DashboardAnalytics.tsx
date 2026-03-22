@@ -197,6 +197,50 @@ const DashboardAnalytics = () => {
                 <StatCard icon={MessageSquare} label="Chat Messages" value={chatCount} color="bg-amber-500" />
               </div>
 
+              {/* Whale API Usage */}
+              <div className="glass-panel rounded-xl p-5 border-border/40 mb-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Anchor className="h-4 w-4 text-primary" />
+                  <h2 className="text-sm font-semibold text-foreground">Unusual Whales API Usage</h2>
+                </div>
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="bg-muted/20 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Gauge className="h-3.5 w-3.5 text-muted-foreground" />
+                      <p className="text-xs text-muted-foreground">Per Minute</p>
+                    </div>
+                    <p className="text-xl font-bold text-foreground">{apiUsageMinute} <span className="text-sm font-normal text-muted-foreground">/ 120</span></p>
+                    <div className="mt-2 h-1.5 bg-muted/30 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${apiUsageMinute > 100 ? "bg-destructive" : apiUsageMinute > 60 ? "bg-amber-500" : "bg-emerald-500"}`}
+                        style={{ width: `${Math.min((apiUsageMinute / 120) * 100, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="bg-muted/20 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Gauge className="h-3.5 w-3.5 text-muted-foreground" />
+                      <p className="text-xs text-muted-foreground">Today</p>
+                    </div>
+                    <p className="text-xl font-bold text-foreground">{apiUsageToday.toLocaleString()} <span className="text-sm font-normal text-muted-foreground">/ 15,000</span></p>
+                    <div className="mt-2 h-1.5 bg-muted/30 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${apiUsageToday > 12000 ? "bg-destructive" : apiUsageToday > 7500 ? "bg-amber-500" : "bg-emerald-500"}`}
+                        style={{ width: `${Math.min((apiUsageToday / 15000) * 100, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="bg-muted/20 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Gauge className="h-3.5 w-3.5 text-muted-foreground" />
+                      <p className="text-xs text-muted-foreground">Remaining Today</p>
+                    </div>
+                    <p className="text-xl font-bold text-foreground">{(15000 - apiUsageToday).toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground mt-1">requests left</p>
+                  </div>
+                </div>
+              </div>
+
               {/* Members Table with Role Management */}
               <div className="glass-panel rounded-xl border-border/40 overflow-hidden">
                 <div className="px-5 py-4 border-b border-border/40 flex items-center gap-2">
