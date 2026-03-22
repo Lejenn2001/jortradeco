@@ -104,7 +104,7 @@ const HeroSection = () => {
           <img
             src={biddieRobot}
             alt="Biddie - AI Trading Assistant"
-            className="w-32 h-32 md:w-40 md:h-40 mx-auto drop-shadow-[0_0_30px_hsl(230_85%_60%_/_0.4)]"
+            className="w-40 h-40 md:w-56 md:h-56 mx-auto drop-shadow-[0_0_30px_hsl(230_85%_60%_/_0.4)]"
           />
           <motion.div
             initial={{ opacity: 0, y: 10 }}
