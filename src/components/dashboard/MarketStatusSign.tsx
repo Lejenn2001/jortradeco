@@ -1,82 +1,72 @@
 import { useState, useEffect } from "react";
 
-function getMarketState() {
+function getETNow() {
+  // Get the current ET time components reliably
   const now = new Date();
-
-  // Get current ET components using Intl (reliable timezone conversion)
-  const etParts = new Intl.DateTimeFormat("en-US", {
+  const formatter = new Intl.DateTimeFormat("en-US", {
     timeZone: "America/New_York",
     year: "numeric", month: "2-digit", day: "2-digit",
     hour: "2-digit", minute: "2-digit", second: "2-digit",
-    hour12: false,
-  }).formatToParts(now);
+    hour12: false, weekday: "short",
+  });
+  const parts = formatter.formatToParts(now);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value || "";
+  return {
+    now,
+    weekday: get("weekday"),
+    hour: parseInt(get("hour")) % 24,
+    minute: parseInt(get("minute")),
+    second: parseInt(get("second")),
+  };
+}
 
-  const get = (type: string) => parseInt(etParts.find((p) => p.type === type)?.value || "0");
-  const etHour = get("hour") === 24 ? 0 : get("hour");
-  const etMin = get("minute");
-  const etDay = now.toLocaleDateString("en-US", { timeZone: "America/New_York", weekday: "short" });
-
-  const totalMin = etHour * 60 + etMin;
-  const openMin = 9 * 60 + 30;  // 9:30 AM ET
-  const closeMin = 16 * 60;     // 4:00 PM ET
+function getMarketState() {
+  const { now, weekday, hour, minute, second } = getETNow();
+  const totalSec = hour * 3600 + minute * 60 + second;
+  const openSec = 9 * 3600 + 30 * 60;   // 9:30 AM
+  const closeSec = 16 * 3600;            // 4:00 PM
 
   const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-  const isWeekday = weekdays.includes(etDay);
-  const isOpen = isWeekday && totalMin >= openMin && totalMin < closeMin;
+  const isWeekday = weekdays.includes(weekday);
+  const isOpen = isWeekday && totalSec >= openSec && totalSec < closeSec;
 
   let targetLabel = "";
   let targetTime = "";
-  let diffMs = 0;
-
-  // Build a proper Date in ET by computing offset from UTC
-  const buildETDate = (daysAhead: number, hour: number, min: number) => {
-    // Start from current UTC midnight of the ET date
-    const etDateStr = now.toLocaleDateString("en-US", { timeZone: "America/New_York" });
-    const base = new Date(etDateStr);
-    base.setDate(base.getDate() + daysAhead);
-    // Create target in ET by using a formatter round-trip
-    const target = new Date(
-      base.toLocaleDateString("en-US") + ` ${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}:00`
-    );
-    // Adjust: find the real UTC time for this ET moment
-    // The offset between "now in UTC" vs "now displayed as ET" tells us the shift
-    const offsetMs = now.getTime() - new Date(now.toLocaleString("en-US", { timeZone: "America/New_York" })).getTime();
-    return new Date(target.getTime() + offsetMs);
-  };
+  let remainingSec = 0;
 
   if (isOpen) {
     targetLabel = "Closes at";
     targetTime = "4:00 PM ET";
-    const closeUTC = buildETDate(0, 16, 0);
-    diffMs = closeUTC.getTime() - now.getTime();
+    remainingSec = closeSec - totalSec;
   } else {
     targetLabel = "Opens at";
     targetTime = "9:30 AM ET";
 
-    // Figure out days until next weekday open
-    const dayMap: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
-    const dayNum = dayMap[etDay] ?? 0;
-    let daysAhead = 0;
+    // Seconds left today
+    const secLeftToday = 86400 - totalSec;
 
-    if (isWeekday && totalMin < openMin) {
-      daysAhead = 0; // Today before open
+    if (isWeekday && totalSec < openSec) {
+      // Before open on a weekday — opens today
+      remainingSec = openSec - totalSec;
     } else {
-      daysAhead = 1;
-      let nextDayNum = (dayNum + 1) % 7;
-      while (nextDayNum === 0 || nextDayNum === 6) {
+      // After close or weekend — find days until next weekday
+      const dayOrder = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const dayIdx = dayOrder.indexOf(weekday);
+      let daysAhead = 1;
+      let nextIdx = (dayIdx + 1) % 7;
+      while (nextIdx === 0 || nextIdx === 6) {
         daysAhead++;
-        nextDayNum = (nextDayNum + 1) % 7;
+        nextIdx = (nextIdx + 1) % 7;
       }
+      // Time = rest of today + (daysAhead-1) full days + seconds until 9:30 AM
+      remainingSec = secLeftToday + (daysAhead - 1) * 86400 + openSec;
     }
-
-    const openUTC = buildETDate(daysAhead, 9, 30);
-    diffMs = openUTC.getTime() - now.getTime();
   }
 
-  const totalSec = Math.max(0, Math.floor(diffMs / 1000));
-  const h = Math.floor(totalSec / 3600);
-  const m = Math.floor((totalSec % 3600) / 60);
-  const s = totalSec % 60;
+  remainingSec = Math.max(0, remainingSec);
+  const h = Math.floor(remainingSec / 3600);
+  const m = Math.floor((remainingSec % 3600) / 60);
+  const s = remainingSec % 60;
   const parts: string[] = [];
   if (h > 0) parts.push(`${h}h`);
   parts.push(`${m}m`);
