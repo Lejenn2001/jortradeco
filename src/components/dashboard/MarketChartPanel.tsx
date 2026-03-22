@@ -164,54 +164,43 @@ const MarketChartPanel = () => {
         </div>
       </div>
 
-      {/* Chart - matches reference image layout */}
-      <div className="relative h-56 w-full mb-4 bg-muted/10 rounded-lg overflow-hidden">
+      {/* Chart - matching reference image exactly */}
+      <div className="relative h-56 w-full mb-4">
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         )}
-        <svg viewBox="0 0 500 220" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
-          {/* Subtle grid lines */}
-          {[55, 110, 165].map((y) => (
-            <line key={y} x1="0" y1={y} x2="500" y2={y} stroke="hsl(var(--border))" strokeWidth="0.5" opacity="0.15" />
-          ))}
-
-          {/* Key Level dashed line */}
-          <line x1="0" y1="110" x2="500" y2="110"
-            stroke="hsl(var(--primary))"
-            strokeWidth="1" strokeDasharray="8 5" opacity="0.6"
+        <svg viewBox="0 0 500 200" className="w-full h-full" preserveAspectRatio="none">
+          {/* Key Level dashed line across full width */}
+          <line x1="0" y1="90" x2="500" y2="90"
+            stroke="hsl(230 85% 60%)"
+            strokeWidth="1" strokeDasharray="6 4" opacity="0.4"
           />
 
-          {/* Target zone rectangle (top for bullish, bottom for bearish) */}
+          {/* Target zone shaded rectangle */}
           {isBearish ? (
-            <>
-              <rect x="250" y="155" width="250" height="40" fill="hsl(var(--destructive))" opacity="0.08" rx="4" />
-              <rect x="200" y="145" width="200" height="30" fill="hsl(var(--destructive))" opacity="0.04" rx="4" />
-            </>
+            <rect x="150" y="150" width="250" height="30" fill="hsl(0 72% 51%)" opacity="0.06" rx="4" />
           ) : (
-            <>
-              <rect x="250" y="25" width="250" height="40" fill="hsl(var(--primary))" opacity="0.08" rx="4" />
-              <rect x="200" y="20" width="200" height="35" fill="hsl(var(--primary))" opacity="0.04" rx="4" />
-            </>
+            <rect x="250" y="30" width="250" height="40" fill="hsl(230 85% 60%)" opacity="0.06" rx="4" />
           )}
 
-          {/* Invalidation zone (opposite side) */}
+          {/* Invalidation zone shaded rectangle */}
           {isBearish ? (
-            <rect x="150" y="25" width="200" height="25" fill="hsl(var(--primary))" opacity="0.03" rx="4" />
+            <rect x="250" y="30" width="250" height="40" fill="hsl(230 85% 60%)" opacity="0.03" rx="4" />
           ) : (
-            <rect x="150" y="165" width="250" height="30" fill="hsl(var(--destructive))" opacity="0.06" rx="4" />
+            <rect x="150" y="150" width="250" height="30" fill="hsl(0 72% 51%)" opacity="0.06" rx="4" />
           )}
 
           {/* Candlesticks */}
           {candles.map((c, i) => {
             const top = Math.min(c.o, c.c);
             const bottom = Math.max(c.o, c.c);
-            const color = c.bull ? "hsl(var(--primary))" : "hsl(var(--destructive))";
+            const color = c.bull ? "hsl(230 85% 60%)" : "hsl(0 72% 51%)";
             return (
               <g key={i}>
                 <line x1={c.x} y1={c.h} x2={c.x} y2={c.l} stroke={color} strokeWidth="1.5" />
-                <rect x={c.x - 6} y={top} width="12" height={Math.max(bottom - top, 3)} fill={color} rx="1.5" />
+                <rect x={c.x - 6} y={top} width="12" height={Math.max(bottom - top, 2)} fill={color} rx="1" />
               </g>
             );
           })}
@@ -219,7 +208,7 @@ const MarketChartPanel = () => {
 
         {/* Target Zone label */}
         {insight.targetZone !== "—" && (
-          <div className={`absolute text-[11px] font-semibold px-2 py-0.5 ${
+          <div className={`absolute text-xs font-medium ${
             isBearish
               ? "bottom-4 right-4 text-destructive"
               : "top-4 right-4 text-primary"
@@ -228,16 +217,16 @@ const MarketChartPanel = () => {
           </div>
         )}
 
-        {/* Key Level label */}
+        {/* Key Level label - middle right */}
         {insight.keyLevel !== "—" && (
-          <div className="absolute right-4 top-[45%] text-[11px] text-primary font-medium">
+          <div className="absolute right-4 top-[45%] text-xs text-primary">
             {insight.keyLevel}
           </div>
         )}
 
         {/* Invalidation label */}
         {insight.invalidation !== "—" && (
-          <div className={`absolute text-[11px] font-semibold px-2 py-0.5 ${
+          <div className={`absolute text-xs font-medium ${
             isBearish
               ? "top-4 right-4 text-muted-foreground"
               : "bottom-4 right-4 text-destructive"
