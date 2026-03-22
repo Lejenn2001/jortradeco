@@ -8,7 +8,8 @@ interface Props {
   limit?: number;
 }
 
-const SignalFeedPanel = ({ signals, loading }: Props) => {
+const SignalFeedPanel = ({ signals, loading, limit }: Props) => {
+  const displaySignals = limit ? signals.slice(0, limit) : signals;
   return (
     <div className="glass-panel rounded-xl p-5 border-glow-blue">
       <div className="flex items-center justify-between mb-5">
