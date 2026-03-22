@@ -232,12 +232,17 @@ export function useMarketData() {
       }
 
       // Sort by confidence descending, take top 6
-      const newSignals: MarketSignal[] = Array.from(tickerMap.values())
+      const liveDeduped: MarketSignal[] = Array.from(tickerMap.values())
         .sort((a, b) => b.confidence - a.confidence)
         .slice(0, 6)
         .map(({ _totalPremium, ...signal }) => signal);
 
-      if (newSignals.length > 0) setSignals(newSignals);
+      // Merge: live data takes priority, fill remaining slots with example signals for diversity
+      const liveTickers = new Set(liveDeduped.map(s => s.ticker));
+      const fillerSignals = exampleSignals.filter(s => !liveTickers.has(s.ticker));
+      const merged = [...liveDeduped, ...fillerSignals].slice(0, 6);
+
+      if (merged.length > 0) setSignals(merged);
 
       // Transform into whale alerts
       const newWhaleAlerts: FlowAlert[] = alerts.slice(0, 8).map((alert: any) => ({
