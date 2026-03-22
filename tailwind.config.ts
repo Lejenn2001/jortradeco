@@ -63,6 +63,7 @@ export default {
         },
         "glow-green": "hsl(var(--glow-green))",
         "glow-purple": "hsl(var(--glow-purple))",
+        warning: "hsl(var(--warning))",
       },
       borderRadius: {
         lg: "var(--radius)",
