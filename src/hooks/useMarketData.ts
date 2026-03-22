@@ -98,7 +98,7 @@ const exampleSignals: MarketSignal[] = [
     confidence: 9.8,
     description: "Extreme put sweep cluster on SPY — $4.5M in $570 puts expiring March 27. 9 sweeps in under 20 minutes, all filled at the ask. Put/call ratio spiked to 2.1x. This is the highest conviction bearish flow seen this week across all indices.",
     timestamp: "Fri 12:30 PM",
-    tags: ["Put Flow", "Sweep"],
+    tags: ["Put Flow", "Sweep", "🔥 ACT NOW"],
     strike: "$570",
     expiry: "March 27, 2026",
     premium: "$4.5M",
