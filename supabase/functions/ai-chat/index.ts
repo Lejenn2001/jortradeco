@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 serve(async (req) => {
@@ -10,9 +10,9 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const claudeKey = Deno.env.get('CLAUDE_API_KEY');
-  if (!claudeKey) {
-    return new Response(JSON.stringify({ error: 'CLAUDE_API_KEY not configured' }), {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  if (!LOVABLE_API_KEY) {
+    return new Response(JSON.stringify({ error: 'LOVABLE_API_KEY not configured' }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
@@ -22,7 +22,7 @@ serve(async (req) => {
   try {
     const { message, history } = await req.json();
 
-    // Fetch fresh market context for Claude
+    // Fetch fresh market context
     let marketContext = '';
     if (uwKey) {
       try {
@@ -58,6 +58,7 @@ Your personality:
 You have access to real-time options flow and market data.${marketContext}`;
 
     const messages = [
+      { role: 'system', content: systemPrompt },
       ...(history || []).map((h: any) => ({
         role: h.role,
         content: h.content,
@@ -65,27 +66,35 @@ You have access to real-time options flow and market data.${marketContext}`;
       { role: 'user', content: message },
     ];
 
-    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+    const aiRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
-        'x-api-key': claudeKey,
-        'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1024,
-        system: systemPrompt,
+        model: 'google/gemini-3-flash-preview',
         messages,
       }),
     });
 
-    if (!claudeRes.ok) {
-      throw new Error(`Claude API failed [${claudeRes.status}]: ${await claudeRes.text()}`);
+    if (!aiRes.ok) {
+      if (aiRes.status === 429) {
+        return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again in a moment.' }), {
+          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      if (aiRes.status === 402) {
+        return new Response(JSON.stringify({ error: 'AI credits exhausted. Please add funds.' }), {
+          status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const errText = await aiRes.text();
+      throw new Error(`AI gateway failed [${aiRes.status}]: ${errText}`);
     }
 
-    const claudeData = await claudeRes.json();
-    const reply = claudeData.content?.[0]?.text || 'No response generated.';
+    const aiData = await aiRes.json();
+    const reply = aiData.choices?.[0]?.message?.content || 'No response generated.';
 
     return new Response(JSON.stringify({ reply }), {
       status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
