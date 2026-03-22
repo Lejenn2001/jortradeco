@@ -114,12 +114,25 @@ const MarketChartPanel = () => {
     }
   }, [traderName]);
 
+  const filteredTickers = useMemo(() => {
+    if (!searchValue.trim()) return [];
+    const query = searchValue.toUpperCase();
+    return popularTickers.filter(t => t.startsWith(query) && t !== query).slice(0, 8);
+  }, [searchValue]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchValue.trim()) {
       fetchAnalysis(searchValue.trim().toUpperCase());
       setSearchValue("");
+      setShowSuggestions(false);
     }
+  };
+
+  const handleSelectTicker = (ticker: string) => {
+    setSearchValue("");
+    setShowSuggestions(false);
+    fetchAnalysis(ticker);
   };
 
   return (
