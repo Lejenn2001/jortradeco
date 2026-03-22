@@ -22,12 +22,12 @@ const WhatWeDoSection = () => {
             </span>
 
             <h2 className="text-4xl md:text-5xl font-extrabold text-foreground leading-[1.1] mb-6">
-              AI-Powered Trading Intelligence That Keeps You One Step Ahead
+              Your Edge in Every Market Move
             </h2>
 
             <p className="text-muted-foreground text-base leading-relaxed mb-8">
-              JORTRADE identifies developing market opportunities using structure and liquidity signals.
-              Biddie translates them into simple, real-time guidance.
+              Biddie watches the markets so you don't have to — surfacing the setups that matter
+              and translating them into clear, actionable guidance.
             </p>
 
             <a href="#workflow" className="inline-flex items-center gap-2 text-foreground font-semibold text-sm hover:gap-3 transition-all group">
@@ -41,23 +41,23 @@ const WhatWeDoSection = () => {
             {[
               {
                 title: "1,000+",
-                subtitle: "Signals Reviewed Daily",
-                desc: "AI scans structured setups across key markets daily.",
+                subtitle: "Setups Scanned Daily",
+                desc: "AI combs through price action and volume across key markets every day.",
               },
               {
                 title: "Real-Time",
-                subtitle: "Market Monitoring",
-                desc: "Futures, stocks, and options tracked continuously.",
+                subtitle: "Always-On Monitoring",
+                desc: "Futures, equities, and options tracked around the clock.",
               },
               {
                 title: "Instant",
                 subtitle: "Confidence Scores",
-                desc: "Each opportunity ranked for clarity and alignment.",
+                desc: "Every opportunity ranked so you know where to focus.",
               },
               {
                 title: "Institutional",
                 subtitle: "Levels Tracked",
-                desc: "Liquidity zones and structure shifts monitored.",
+                desc: "Key zones where big money is active — surfaced automatically.",
               },
             ].map((item, i) => (
               <motion.div

@@ -4,24 +4,24 @@ import { useState } from "react";
 
 const faqs = [
   {
-    q: "How does JORTRADE find trade opportunities?",
-    a: "JORTRADE uses AI to continuously scan market structure, liquidity activity, and price behavior across futures, options, and stocks to identify developing setups.",
+    q: "How does JORTRADE find opportunities?",
+    a: "Biddie uses AI to scan price action, volume, and liquidity patterns across futures, options, and stocks — then surfaces what's worth your attention.",
   },
   {
-    q: "Does JORTRADE tell me exactly what to trade?",
-    a: "JORTRADE provides structured insights and guidance, but all trading decisions remain yours. Think of it as an intelligent second opinion that helps you stay disciplined.",
+    q: "Does it tell me exactly what to trade?",
+    a: "No — Biddie gives you the context and analysis. You always make the final call. Think of it as a smarter second opinion.",
   },
   {
-    q: "Is this only for experienced traders?",
-    a: "No. JORTRADE is designed for traders of all experience levels. The AI simplifies complex market data into clear, actionable guidance anyone can understand.",
+    q: "Do I need trading experience?",
+    a: "Not at all. Biddie simplifies complex data into plain-language guidance that anyone can act on.",
   },
   {
-    q: "What markets does JORTRADE monitor?",
-    a: "JORTRADE monitors futures (NQ, ES), options, and individual stocks with a focus on structured setups and high-probability opportunities.",
+    q: "What markets are covered?",
+    a: "NQ and ES futures, individual stocks, and options — with a focus on the highest-conviction setups.",
   },
   {
-    q: "Can I ask JORTRADE questions?",
-    a: "Yes! Biddie, your AI trading assistant, is available to answer questions about market conditions, review trade setups, and provide real-time guidance.",
+    q: "Can I chat with Biddie?",
+    a: "Yes! Ask about any ticker, strategy, or setup and get a clear, conversational response in seconds.",
   },
 ];
 

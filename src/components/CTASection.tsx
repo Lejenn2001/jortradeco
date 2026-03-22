@@ -30,12 +30,11 @@ const CTASection = () => {
         className="relative z-10 container mx-auto px-6 text-center"
       >
         <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-foreground leading-[1.1] max-w-2xl mx-auto">
-          Ready to Meet Your AI Trading Assistant?
+          Ready to Trade Smarter?
         </h2>
 
         <p className="text-muted-foreground mt-6 max-w-xl mx-auto text-base leading-relaxed">
-          JORTRADE introduces Biddie, your real-time market guide helping you spot opportunities,
-          understand conditions, and trade with more structure and confidence.
+          Let Biddie do the heavy lifting — you focus on pulling the trigger at the right time.
         </p>
 
         <Button className="mt-10 bg-foreground text-background hover:bg-foreground/90 rounded-full px-10 py-6 text-base font-semibold">

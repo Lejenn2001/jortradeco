@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import biddieRobot from "@/assets/biddie-robot.png";
 
@@ -21,9 +20,8 @@ const HeroSection = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-8 py-6"
+        className="absolute top-0 left-0 right-0 z-20 flex items-center justify-end px-8 py-6"
       >
-        <span className="font-display text-lg font-bold tracking-wider text-foreground">JORTRADE</span>
         <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
           <span className="hover:text-foreground cursor-pointer transition-colors">Features</span>
           <span className="hover:text-foreground cursor-pointer transition-colors">Dashboard</span>
@@ -36,16 +34,6 @@ const HeroSection = () => {
 
       {/* Content */}
       <div className="relative z-10 text-center px-6 max-w-4xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="flex items-center justify-center gap-1 mb-4"
-        >
-          {[...Array(5)].map((_, i) => (
-            <Star key={i} className="h-4 w-4 fill-foreground text-foreground" />
-          ))}
-        </motion.div>
 
         <motion.p
           initial={{ opacity: 0, y: 20 }}

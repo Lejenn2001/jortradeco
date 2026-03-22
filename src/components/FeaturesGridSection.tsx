@@ -3,27 +3,27 @@ import { motion } from "framer-motion";
 const features = [
   {
     title: "Opportunity Scanner",
-    desc: "Identifies structured high-probability trade setups across futures, options, and equities based on market behavior and liquidity activity.",
+    desc: "Finds high-probability setups by reading price action, volume, and where institutional money is moving.",
   },
   {
-    title: "Confidence Scoring Engine",
-    desc: "Evaluates potential opportunities using multiple market signals to help you focus on stronger trade ideas.",
+    title: "Confidence Scoring",
+    desc: "Every setup gets a score so you instantly know which ideas deserve your attention.",
   },
   {
-    title: "AI Trade Assistant",
-    desc: "Ask questions about market conditions, review trade ideas, and receive simple guidance before entering positions.",
+    title: "Ask Biddie Anything",
+    desc: "Chat with your AI assistant about any ticker, setup, or strategy — and get a clear answer.",
   },
   {
     title: "Execution Alerts",
-    desc: "Receive structured alerts with timing context, potential entry zones, and risk awareness considerations.",
+    desc: "Timed notifications with entry zones, risk levels, and context — delivered when it matters.",
   },
   {
-    title: "Market Structure Insights",
-    desc: "Highlights trend direction, key price levels, and liquidity zones to help traders better understand market conditions.",
+    title: "Market Structure Map",
+    desc: "Visualize trend direction, key levels, and where liquidity is sitting at a glance.",
   },
   {
     title: "Performance Feedback",
-    desc: "Review past opportunities and outcomes to improve discipline, pattern recognition, and trading decisions over time.",
+    desc: "Review past trades and patterns to sharpen your edge over time.",
   },
 ];
 
@@ -45,11 +45,10 @@ const FeaturesGridSection = () => {
           className="text-center mb-16"
         >
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-foreground leading-[1.1] max-w-3xl mx-auto">
-            How JORTRADE Supports Your Trading Decisions
+            Everything Biddie Brings to Your Trading
           </h2>
           <p className="text-muted-foreground mt-5 max-w-2xl mx-auto text-base leading-relaxed">
-            From opportunity scanning to real-time alerts and AI chat guidance,
-            JORTRADE helps you stay structured and confident in fast-moving markets.
+            One platform. Six capabilities. Zero guesswork.
           </p>
         </motion.div>
 
