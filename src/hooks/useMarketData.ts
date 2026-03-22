@@ -116,7 +116,7 @@ const exampleSignals: MarketSignal[] = [
     confidence: 9.2,
     description: "Repeat call sweeps on PLTR at the $120 strike — $1.4M total premium across 4 sweeps. Unusual whales flagged this as top-tier flow. Open interest is building rapidly and the stock is consolidating near a breakout level.",
     timestamp: "Fri 11:45 AM",
-    tags: ["Call Flow", "Sweep"],
+    tags: ["Call Flow", "Sweep", "🔥 ACT NOW"],
     strike: "$120",
     expiry: "March 27, 2026",
     premium: "$1.4M",
