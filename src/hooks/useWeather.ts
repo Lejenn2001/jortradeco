@@ -22,37 +22,20 @@ const getConditionFromCode = (code: number): { condition: string; icon: string }
 
 export const getBiddieOutfit = (condition: string): string => {
   switch (condition) {
-    case "Clear": return "sunglasses and a cap 😎";
-    case "Cloudy": return "a cozy hoodie 🧥";
-    case "Foggy": return "a trench coat looking mysterious 🕵️";
+    case "Clear": return "rocking sunglasses and a cap 😎";
+    case "Cloudy": return "cozy in a hoodie 🧥";
+    case "Foggy": return "mysterious in a trench coat 🕵️";
     case "Drizzle":
     case "Rainy":
-    case "Showers": return "rain boots and an umbrella ☂️";
+    case "Showers": return "splashing in rain boots ☂️";
     case "Snowy":
-    case "Snow Showers": return "a beanie and scarf 🧣";
-    case "Thunderstorm": return "full storm gear ⚡";
+    case "Snow Showers": return "bundled up in a beanie and scarf 🧣";
+    case "Thunderstorm": return "charged up in storm gear ⚡";
     default: return "looking fresh as always 🤖";
   }
 };
 
-// Weather accessory emoji overlay for Biddie
-export const getBiddieAccessory = (condition: string): string => {
-  switch (condition) {
-    case "Clear": return "🕶️";
-    case "Cloudy": return "🧥";
-    case "Foggy": return "🌫️";
-    case "Drizzle":
-    case "Rainy":
-    case "Showers": return "☂️";
-    case "Snowy":
-    case "Snow Showers": return "🧣";
-    case "Thunderstorm": return "⚡";
-    default: return "";
-  }
-};
-
 const fetchWeatherByCoords = async (lat: number, lon: number): Promise<WeatherData> => {
-  // Get city name from reverse geocoding
   let cityName = "Your Area";
   try {
     const geoRes = await fetch(
@@ -85,10 +68,10 @@ export const useWeather = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Dallas fallback coords
     const fallback = async () => {
-      // Fallback to NYC
-      const data = await fetchWeatherByCoords(40.7128, -74.006);
-      data.location = "New York";
+      const data = await fetchWeatherByCoords(32.7767, -96.7970);
+      if (data.location === "Your Area") data.location = "Dallas";
       setWeather(data);
       setLoading(false);
     };
@@ -105,7 +88,6 @@ export const useWeather = () => {
           setLoading(false);
         },
         async () => {
-          // Permission denied or error — use fallback
           await fallback();
         },
         { timeout: 5000 }
