@@ -33,10 +33,10 @@ const Dashboard = () => {
 
           <div className="grid lg:grid-cols-5 gap-4 lg:gap-6">
             <div className="lg:col-span-2">
-              <SignalFeedPanel signals={signals} loading={loading} />
+              <SignalFeedPanel signals={signals} loading={loading} limit={6} />
             </div>
             <div className="lg:col-span-3">
-              <PortfolioPanel whaleAlerts={whaleAlerts} loading={loading} />
+              <PortfolioPanel whaleAlerts={whaleAlerts} loading={loading} limit={6} />
             </div>
           </div>
         </main>
