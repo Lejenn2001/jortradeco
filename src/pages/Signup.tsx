@@ -77,7 +77,7 @@ const Signup = () => {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -85,6 +85,13 @@ const Signup = () => {
         emailRedirectTo: window.location.origin,
       },
     });
+    // Save selected plan and email to profile
+    if (!error && signUpData?.user?.id) {
+      await supabase.from("profiles").update({
+        selected_plan: selectedPlan,
+        email: email,
+      }).eq("id", signUpData.user.id);
+    }
     setLoading(false);
     if (error) {
       toast.error(error.message);
