@@ -19,7 +19,7 @@ const SignalFeedPanel = ({ signals, loading, limit }: Props) => {
         </div>
         <span className="text-xs bg-primary/20 text-primary px-2.5 py-0.5 rounded-full flex items-center gap-1">
           <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-          {signals.length} Active
+          {displaySignals.length} Active
         </span>
       </div>
 
