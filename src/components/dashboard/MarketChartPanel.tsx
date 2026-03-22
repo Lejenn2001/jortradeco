@@ -196,18 +196,27 @@ const MarketChartPanel = () => {
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-4 gap-3 border-t border-border/40 pt-3 mb-3">
-        {[
-          { label: "Asset", value: activeTicker || "—" },
-          { label: "Strategy", value: insight.strategy },
-          { label: "Expiration", value: insight.expiration },
-          { label: "AI Score", value: insight.score },
-        ].map((stat) => (
-          <div key={stat.label} className="text-center">
-            <div className="text-[10px] text-muted-foreground">{stat.label}</div>
-            <div className="font-bold text-foreground text-xs">{stat.value}</div>
+      <div className="space-y-3 border-t border-border/40 pt-3 mb-3">
+        <div className="grid grid-cols-4 gap-3">
+          {[
+            { label: "Asset", value: activeTicker || "—" },
+            { label: "Strategy", value: insight.strategy },
+            { label: "Expiration", value: insight.expiration },
+            { label: "AI Score", value: insight.score },
+          ].map((stat) => (
+            <div key={stat.label} className="text-center">
+              <div className="text-[10px] text-muted-foreground">{stat.label}</div>
+              <div className="font-bold text-foreground text-xs">{stat.value}</div>
+            </div>
+          ))}
+        </div>
+
+        {insight.contract && insight.contract !== "—" && (
+          <div className="bg-primary/5 border border-primary/20 rounded-lg px-3 py-2">
+            <div className="text-[10px] text-muted-foreground mb-0.5">Contract</div>
+            <div className="text-xs font-bold text-primary">{insight.contract}</div>
           </div>
-        ))}
+        )}
       </div>
 
       {/* Strategy Explanation */}
