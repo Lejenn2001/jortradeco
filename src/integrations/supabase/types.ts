@@ -96,6 +96,7 @@ export type Database = {
           premium: string | null
           put_call: string | null
           resolved_at: string | null
+          signal_source: string | null
           signal_type: string
           strike: string | null
           target_zone: string | null
@@ -113,6 +114,7 @@ export type Database = {
           premium?: string | null
           put_call?: string | null
           resolved_at?: string | null
+          signal_source?: string | null
           signal_type: string
           strike?: string | null
           target_zone?: string | null
@@ -130,6 +132,7 @@ export type Database = {
           premium?: string | null
           put_call?: string | null
           resolved_at?: string | null
+          signal_source?: string | null
           signal_type?: string
           strike?: string | null
           target_zone?: string | null
