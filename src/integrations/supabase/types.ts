@@ -83,6 +83,60 @@ export type Database = {
         }
         Relationships: []
       }
+      signal_outcomes: {
+        Row: {
+          confidence: number
+          created_at: string
+          description: string | null
+          entry_price: number | null
+          expiry: string | null
+          id: string
+          outcome: string
+          outcome_price: number | null
+          premium: string | null
+          put_call: string | null
+          resolved_at: string | null
+          signal_type: string
+          strike: string | null
+          target_zone: string | null
+          ticker: string
+        }
+        Insert: {
+          confidence: number
+          created_at?: string
+          description?: string | null
+          entry_price?: number | null
+          expiry?: string | null
+          id?: string
+          outcome?: string
+          outcome_price?: number | null
+          premium?: string | null
+          put_call?: string | null
+          resolved_at?: string | null
+          signal_type: string
+          strike?: string | null
+          target_zone?: string | null
+          ticker: string
+        }
+        Update: {
+          confidence?: number
+          created_at?: string
+          description?: string | null
+          entry_price?: number | null
+          expiry?: string | null
+          id?: string
+          outcome?: string
+          outcome_price?: number | null
+          premium?: string | null
+          put_call?: string | null
+          resolved_at?: string | null
+          signal_type?: string
+          strike?: string | null
+          target_zone?: string | null
+          ticker?: string
+        }
+        Relationships: []
+      }
       trades: {
         Row: {
           amount: number
