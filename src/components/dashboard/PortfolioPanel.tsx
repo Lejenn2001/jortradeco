@@ -295,6 +295,11 @@ const PortfolioPanel = ({ whaleAlerts, loading, limit }: Props) => {
           })}
         </div>
       )}
+      {limit && allAlerts.length > limit && (
+        <Link to="/dashboard/signals" className="block mt-3 text-center text-xs font-semibold text-primary hover:text-primary/80 transition-colors">
+          View All {allAlerts.length} Whale Alerts →
+        </Link>
+      )}
     </div>
   );
 };
