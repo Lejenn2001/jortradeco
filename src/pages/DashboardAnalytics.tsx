@@ -122,12 +122,17 @@ const DashboardAnalytics = () => {
       <div className="flex-1 flex flex-col min-w-0">
         <DashboardHeader />
         <main className="flex-1 overflow-y-auto p-4 lg:p-6 bg-mesh">
+          <div className="mb-6">
+            <h1 className="text-xl font-display font-bold text-foreground">Analytics</h1>
+            <p className="text-sm text-muted-foreground">Member activity and platform overview</p>
+          </div>
+
+          {loading ? (
             <div className="flex items-center justify-center h-40">
               <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
           ) : (
             <>
-              {/* Stats */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <StatCard icon={Users} label="Total Members" value={members.length} color="bg-primary" />
                 <StatCard icon={UserPlus} label="New Today" value={newToday} color="bg-emerald-500" />
@@ -135,7 +140,6 @@ const DashboardAnalytics = () => {
                 <StatCard icon={MessageSquare} label="Chat Messages" value={chatCount} color="bg-amber-500" />
               </div>
 
-              {/* Members Table */}
               <div className="glass-panel rounded-xl border-border/40 overflow-hidden">
                 <div className="px-5 py-4 border-b border-border/40 flex items-center gap-2">
                   <BarChart3 className="h-4 w-4 text-primary" />
