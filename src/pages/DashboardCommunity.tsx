@@ -208,8 +208,8 @@ const DashboardCommunity = () => {
                           {msg.user_name || "Trader"}
                         </p>
                       )}
-                      <p className="text-sm text-foreground break-words leading-relaxed">{msg.content}</p>
-                      <p className="text-[10px] text-muted-foreground/60 mt-1">{formatTime(msg.created_at)}</p>
+                      <p className="text-xs text-foreground break-words leading-relaxed">{msg.content}</p>
+                      <p className="text-[9px] text-muted-foreground/60 mt-0.5">{formatTime(msg.created_at)}</p>
                     </div>
 
                     {/* Delete button */}
