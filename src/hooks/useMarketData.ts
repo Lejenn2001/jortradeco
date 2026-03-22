@@ -168,3 +168,10 @@ function timeAgo(dateStr: string): string {
   if (hrs < 24) return `${hrs}h ago`;
   return `${Math.floor(hrs / 24)}d ago`;
 }
+
+function isToday(dateStr?: string): boolean {
+  if (!dateStr) return false;
+  const today = new Date();
+  const d = new Date(dateStr);
+  return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate();
+}
