@@ -1,30 +1,6 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Users, MessageCircle, TrendingUp, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
-
-const perks = [
-  {
-    icon: MessageCircle,
-    title: "1-on-1 Sessions",
-    desc: "Private calls to review your trades, strategies, and growth plan.",
-  },
-  {
-    icon: TrendingUp,
-    title: "Live Market Walkthroughs",
-    desc: "Watch real setups unfold with guided commentary and Q&A.",
-  },
-  {
-    icon: Users,
-    title: "Community Access",
-    desc: "Join a private group of serious traders sharing ideas and setups daily.",
-  },
-  {
-    icon: Calendar,
-    title: "Weekly Game Plans",
-    desc: "Start every week with a structured outlook and key levels to watch.",
-  },
-];
 
 const MentorshipSection = () => {
   return (
@@ -35,38 +11,34 @@ const MentorshipSection = () => {
         <div className="absolute inset-[80px] bg-[radial-gradient(ellipse,hsl(230_70%_45%_/_0.1)_0%,transparent_55%)]" />
       </div>
 
-      <div className="container mx-auto px-6 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          {/* Left — copy */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-          >
-            <span className="inline-block text-xs font-semibold text-foreground border border-muted-foreground/30 rounded-full px-4 py-1.5 mb-8">
-              Mentorship
-            </span>
+      <div className="container mx-auto px-6 relative z-10 text-center max-w-2xl">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
+        >
+          <span className="inline-block text-xs font-semibold text-foreground border border-muted-foreground/30 rounded-full px-4 py-1.5 mb-8">
+            Mentorship
+          </span>
 
-            <h2 className="text-4xl md:text-5xl font-extrabold text-foreground leading-[1.1] mb-6">
-              Need a Human Edge?
-              <br />
-              <span className="text-primary">We've Got You.</span>
-            </h2>
+          <h2 className="text-4xl md:text-5xl font-extrabold text-foreground leading-[1.1] mb-6">
+            Need a Human Edge?
+            <br />
+            <span className="text-primary">We've Got You.</span>
+          </h2>
 
-            <p className="text-muted-foreground text-base leading-relaxed mb-8 max-w-lg">
-              Biddie handles the data — but sometimes you need a real mentor in your corner.
-              Get direct access to experienced traders who'll help you level up faster.
-            </p>
+          <p className="text-muted-foreground text-base leading-relaxed mb-8 max-w-lg mx-auto">
+            Biddie handles the data — but sometimes you need a real mentor in your corner.
+            Get direct access to experienced traders who'll help you level up faster.
+          </p>
 
-            <Link to="/contact">
-              <Button className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-8 py-6 text-base font-semibold">
-                Inquire About Mentorship
-              </Button>
-            </Link>
-          </motion.div>
-
-        </div>
+          <Link to="/contact">
+            <Button className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-8 py-6 text-base font-semibold">
+              Inquire About Mentorship
+            </Button>
+          </Link>
+        </motion.div>
       </div>
     </section>
   );
