@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot, User, Loader2 } from "lucide-react";
+import { Send, Bot, User, Loader2, Flame } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -19,13 +19,13 @@ const quickPrompts = [
 ];
 
 const greetings = [
-  (name: string) => `Hey ${name}! 👋 Biddie is watching the flow. Things are heating up.`,
-  (name: string) => `Markets are moving ${name}. Let's find the edge. 🎯`,
-  (name: string) => `Hey ${name}! Let's scan the markets and see what's cooking. 🔥`,
-  (name: string) => `What's good ${name}? The whales are active today. 🐳`,
-  (name: string) => `${name}! The flow is looking interesting right now. Let's dive in. 📊`,
-  (name: string) => `Hey ${name}! Ready to spot some setups? I've been watching. 👀`,
-  (name: string) => `Good to see you ${name}. Let's break down what's moving. ⚡`,
+  (name: string) => `Hey ${name}! Biddie is watching the flow. Things are heating up.`,
+  (name: string) => `Markets are moving ${name}. Let's find the edge.`,
+  (name: string) => `Hey ${name}! Let's scan the markets and see what's cooking.`,
+  (name: string) => `What's good ${name}? The whales are active today.`,
+  (name: string) => `${name}! The flow is looking interesting right now. Let's dive in.`,
+  (name: string) => `Hey ${name}! Ready to spot some setups? I've been watching.`,
+  (name: string) => `Good to see you ${name}. Let's break down what's moving.`,
 ];
 
 const AIChatPanel = () => {
@@ -119,6 +119,7 @@ const AIChatPanel = () => {
           <div className="text-center py-8">
             <img src={biddieRobot} alt="Biddie" className="w-16 h-16 mx-auto mb-3 drop-shadow-[0_0_15px_hsl(230_85%_60%_/_0.4)]" />
             <p className="text-sm text-foreground font-medium">{greeting}</p>
+            <Flame className="h-4 w-4 text-primary mx-auto mt-2" />
             <p className="text-xs text-muted-foreground mt-2">Powered by real-time Unusual Whales data + Claude AI</p>
           </div>
         )}
