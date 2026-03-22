@@ -169,7 +169,8 @@ export function useMarketData() {
       }
 
       // Transform flow alerts into signals — live data replaces examples
-      const allSignals: MarketSignal[] = alerts.map((alert: any, i: number) => {
+      type SignalWithPremium = MarketSignal & { _totalPremium: number };
+      const allSignals: SignalWithPremium[] = alerts.map((alert: any, i: number) => {
         const putCall = alert.type === 'call' ? 'call' : 'put';
         const isBullish = putCall === 'call';
         const ticker = alert.ticker || alert.underlying_symbol || 'N/A';
