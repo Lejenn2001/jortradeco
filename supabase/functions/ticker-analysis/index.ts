@@ -1,4 +1,16 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+
+const logApiUsage = async (endpoints: string[]) => {
+  try {
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    const rows = endpoints.map(e => ({ api_name: "unusual_whales", endpoint: e }));
+    await supabase.from("api_usage_log").insert(rows);
+  } catch (e) { console.warn("Failed to log API usage:", e); }
+};
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
