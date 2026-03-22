@@ -99,7 +99,7 @@ const ChatRoomHeader = ({ onlineCount, firstName }: ChatRoomHeaderProps) => {
           className="flex-shrink-0"
         >
           <img
-            src={biddieImage}
+            src={biddieRobot}
             alt="Biddie"
             className="w-16 h-16 object-contain drop-shadow-[0_0_12px_hsl(230_85%_60%_/_0.4)]"
           />
