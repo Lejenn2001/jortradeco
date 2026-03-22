@@ -9,6 +9,7 @@ export interface FlowAlert {
   expiry: string;
   sentiment: "bullish" | "bearish";
   time: string;
+  explanation?: string;
 }
 
 export interface MarketSignal {
