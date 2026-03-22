@@ -26,6 +26,8 @@ export interface MarketSignal {
   suggestedTrade?: string;
   entryTrigger?: string;
   invalidation?: string;
+  keyLevel?: string;
+  targetZone?: string;
 }
 
 export interface TickerData {
@@ -49,7 +51,9 @@ const exampleSignals: MarketSignal[] = [
     putCall: "call",
     suggestedTrade: "Buy NVDA $145 Calls expiring March 27",
     entryTrigger: "Break above $143.50 with volume confirmation",
-    invalidation: "Close below $140 VWAP",
+    invalidation: "$138.00",
+    keyLevel: "$141.50",
+    targetZone: "$148.00 – $152.00",
   },
   {
     id: "ex-2",
@@ -64,8 +68,10 @@ const exampleSignals: MarketSignal[] = [
     premium: "$1.9M",
     putCall: "put",
     suggestedTrade: "Buy TSLA $250 Puts expiring March 27",
-    entryTrigger: "Rejection at $258-$260 resistance zone",
-    invalidation: "Sustained break above $265",
+    entryTrigger: "Rejection at $258 – $260 resistance zone",
+    invalidation: "$265.00",
+    keyLevel: "$255.00",
+    targetZone: "$242.00 – $245.00",
   },
   {
     id: "ex-3",
@@ -81,7 +87,9 @@ const exampleSignals: MarketSignal[] = [
     putCall: "call",
     suggestedTrade: "Buy AAPL $215 Calls expiring March 27",
     entryTrigger: "Hold above $212 support with increasing bid volume",
-    invalidation: "Break below $208",
+    invalidation: "$208.00",
+    keyLevel: "$213.00",
+    targetZone: "$218.00 – $222.00",
   },
   {
     id: "ex-4",
@@ -97,7 +105,9 @@ const exampleSignals: MarketSignal[] = [
     putCall: "put",
     suggestedTrade: "Buy SPY $570 Puts expiring March 27",
     entryTrigger: "Break below $572 with VIX expansion",
-    invalidation: "Reclaim above $576 with declining volume",
+    invalidation: "$578.00",
+    keyLevel: "$573.50",
+    targetZone: "$564.00 – $567.00",
   },
   {
     id: "ex-5",
@@ -113,7 +123,9 @@ const exampleSignals: MarketSignal[] = [
     putCall: "call",
     suggestedTrade: "Buy PLTR $120 Calls expiring March 27",
     entryTrigger: "Break above $118 with volume surge",
-    invalidation: "Rejection back below $114",
+    invalidation: "$114.00",
+    keyLevel: "$117.50",
+    targetZone: "$123.00 – $126.00",
   },
   {
     id: "ex-6",
@@ -129,7 +141,9 @@ const exampleSignals: MarketSignal[] = [
     putCall: "put",
     suggestedTrade: "Buy AMD $110 Puts expiring March 27",
     entryTrigger: "Breakdown below $112 support",
-    invalidation: "Recovery above $116 with call flow reversal",
+    invalidation: "$116.50",
+    keyLevel: "$112.00",
+    targetZone: "$105.00 – $107.00",
   },
 ];
 
@@ -186,7 +200,11 @@ export function useMarketData() {
           putCall: putCall as 'call' | 'put',
           suggestedTrade: `Buy ${ticker} $${strike} ${putCall === 'call' ? 'Calls' : 'Puts'} expiring ${expiry}`,
           entryTrigger: isBullish ? `Break above $${strike} with volume` : `Break below $${strike} with volume`,
-          invalidation: isBullish ? 'Back below VWAP' : 'Back above VWAP',
+          invalidation: isBullish ? `$${(parseFloat(strike) * 0.97).toFixed(2)}` : `$${(parseFloat(strike) * 1.03).toFixed(2)}`,
+          keyLevel: `$${(parseFloat(strike) * (isBullish ? 0.99 : 1.01)).toFixed(2)}`,
+          targetZone: isBullish 
+            ? `$${(parseFloat(strike) * 1.02).toFixed(2)} – $${(parseFloat(strike) * 1.05).toFixed(2)}`
+            : `$${(parseFloat(strike) * 0.95).toFixed(2)} – $${(parseFloat(strike) * 0.98).toFixed(2)}`,
         };
       });
 
