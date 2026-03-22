@@ -2,7 +2,7 @@ import { Activity, CheckCircle2, Send, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 
 const SignalFeed = () => (
-  <div className="glass-panel rounded-xl p-5 border-glow-blue flex-1 min-w-[280px]">
+  <div className="glass-panel rounded-xl p-5 border-glow-blue flex-1 min-w-0">
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
         <Activity className="h-4 w-4 text-primary" />
