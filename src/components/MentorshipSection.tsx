@@ -66,25 +66,6 @@ const MentorshipSection = () => {
             </Link>
           </motion.div>
 
-          {/* Right — perks grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {perks.map((perk, i) => (
-              <motion.div
-                key={perk.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="glass-panel rounded-xl p-6 border-glow-blue"
-              >
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                  <perk.icon className="h-5 w-5 text-primary" />
-                </div>
-                <h3 className="text-foreground font-bold text-sm mb-2">{perk.title}</h3>
-                <p className="text-muted-foreground text-xs leading-relaxed">{perk.desc}</p>
-              </motion.div>
-            ))}
-          </div>
         </div>
       </div>
     </section>

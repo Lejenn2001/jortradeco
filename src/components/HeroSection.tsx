@@ -21,12 +21,26 @@ const HeroSection = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="absolute top-0 left-0 right-0 z-20 flex items-center justify-end px-8 py-6"
+        className="absolute top-0 left-0 right-0 z-20 flex items-center justify-end px-6 md:px-8 py-4 md:py-6 gap-3"
       >
+        {/* Mobile: just Log In + Sign Up */}
+        <div className="flex md:hidden items-center gap-3">
+          <Link to="/login">
+            <Button size="sm" variant="ghost" className="rounded-full px-4 text-xs font-semibold text-muted-foreground hover:text-foreground">
+              Log In
+            </Button>
+          </Link>
+          <Link to="/signup">
+            <Button size="sm" className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-4 text-xs font-semibold">
+              Sign Up
+            </Button>
+          </Link>
+        </div>
+
+        {/* Desktop: full nav */}
         <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
           <span className="hover:text-foreground cursor-pointer transition-colors">Features</span>
           <Link to="/dashboard" className="hover:text-foreground cursor-pointer transition-colors">Dashboard</Link>
-          <span className="hover:text-foreground cursor-pointer transition-colors">Mentorship</span>
           <Link to="/signup" className="hover:text-foreground cursor-pointer transition-colors">Pricing</Link>
           <Link to="/contact" className="hover:text-foreground cursor-pointer transition-colors">Contact</Link>
           <Link to="/login">
