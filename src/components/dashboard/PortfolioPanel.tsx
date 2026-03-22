@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Fish, ArrowUpRight, ArrowDownRight, Clock, ChevronDown, ChevronUp, Info } from "lucide-react";
+import { Fish, ArrowUpRight, ArrowDownRight, Clock, ChevronDown, ChevronUp, Info, Copy, Check, Repeat2 } from "lucide-react";
 import type { FlowAlert } from "@/hooks/useMarketData";
+import { toast } from "sonner";
 
 interface Props {
   whaleAlerts: FlowAlert[];
@@ -237,15 +238,51 @@ const PortfolioPanel = ({ whaleAlerts, loading }: Props) => {
                       <Info className={`h-3.5 w-3.5 mt-0.5 shrink-0 ${
                         alert.sentiment === "bullish" ? "text-primary" : "text-destructive"
                       }`} />
-                      <div>
+                      <div className="flex-1">
                         <div className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${
                           alert.sentiment === "bullish" ? "text-primary" : "text-destructive"
                         }`}>
                           Why this trade?
                         </div>
-                        <p className="text-xs text-muted-foreground leading-relaxed">
+                        <p className="text-xs text-muted-foreground leading-relaxed mb-3">
                           {explanation}
                         </p>
+
+                        {/* Budget-friendly alternative */}
+                        {getAlternative(alert) && (
+                          <div className="bg-muted/30 rounded-lg p-2.5 mb-3 border border-border/30">
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <Repeat2 className="h-3 w-3 text-accent" />
+                              <span className="text-[10px] font-bold text-accent uppercase tracking-wider">
+                                Budget-Friendly Alternative
+                              </span>
+                            </div>
+                            <p className="text-xs text-foreground font-semibold">
+                              {getAlternative(alert)}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                              Same directional exposure at a fraction of the cost
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Copy Trade button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const tradeText = `${getActionLabel(alert)} — ${alert.ticker} ${alert.strike} ${alert.sentiment === "bullish" ? "Calls" : "Puts"} exp ${alert.expiry}${getAlternative(alert) ? ` | Alt: ${getAlternative(alert)}` : ""}`;
+                            navigator.clipboard.writeText(tradeText);
+                            toast.success("Trade copied to clipboard!");
+                          }}
+                          className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-colors ${
+                            alert.sentiment === "bullish"
+                              ? "bg-primary/20 text-primary hover:bg-primary/30"
+                              : "bg-destructive/20 text-destructive hover:bg-destructive/30"
+                          }`}
+                        >
+                          <Copy className="h-3 w-3" />
+                          Copy Trade
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -263,6 +300,45 @@ function generateExplanation(alert: FlowAlert): string {
   const direction = alert.sentiment === "bullish" ? "bullish" : "bearish";
   const contract = alert.sentiment === "bullish" ? "calls" : "puts";
   return `Large ${alert.type.toLowerCase()} detected on ${alert.ticker} — ${alert.premium} in premium on the ${alert.strike} ${contract}. When institutions place orders this size, they're making a high-conviction ${direction} bet. The ${alert.type.toLowerCase()} pattern indicates urgency — they want to get filled fast before the move happens. This level of premium commitment from smart money is a strong signal worth watching.`;
+}
+
+// Map expensive index/stock tickers to budget-friendly ETF or stock alternatives
+const alternativesMap: Record<string, (strike: string, sentiment: string) => string | null> = {
+  SPX: (strike, sentiment) => {
+    const spxPrice = parseFloat(strike.replace('$', ''));
+    const spyEquiv = Math.round(spxPrice / 10);
+    return `Buy SPY $${spyEquiv} ${sentiment === "bullish" ? "Calls" : "Puts"} — SPY tracks SPX at ~1/10th the price`;
+  },
+  SPXW: (strike, sentiment) => {
+    const spxPrice = parseFloat(strike.replace('$', ''));
+    const spyEquiv = Math.round(spxPrice / 10);
+    return `Buy SPY $${spyEquiv} ${sentiment === "bullish" ? "Calls" : "Puts"} — SPY tracks SPX at ~1/10th the price`;
+  },
+  NDX: (strike, sentiment) => {
+    const ndxPrice = parseFloat(strike.replace('$', ''));
+    const qqqEquiv = Math.round(ndxPrice / 40);
+    return `Buy QQQ $${qqqEquiv} ${sentiment === "bullish" ? "Calls" : "Puts"} — QQQ tracks Nasdaq-100 at ~1/40th the price`;
+  },
+  NQ: (strike, sentiment) => {
+    const nqPrice = parseFloat(strike.replace('$', ''));
+    const qqqEquiv = Math.round(nqPrice / 40);
+    return `Buy QQQ $${qqqEquiv} ${sentiment === "bullish" ? "Calls" : "Puts"} — QQQ tracks Nasdaq-100`;
+  },
+  AMZN: (strike, sentiment) => {
+    const price = parseFloat(strike.replace('$', ''));
+    return price >= 180 ? `Buy AMZN $${Math.round(price * 0.95)} ${sentiment === "bullish" ? "Calls" : "Puts"} closer to the money for lower premium` : null;
+  },
+  GOOGL: (strike, sentiment) => {
+    const price = parseFloat(strike.replace('$', ''));
+    return price >= 170 ? `Buy GOOG $${Math.round(price)} ${sentiment === "bullish" ? "Calls" : "Puts"} — same company, sometimes cheaper premiums` : null;
+  },
+};
+
+function getAlternative(alert: FlowAlert): string | null {
+  const ticker = alert.ticker.replace(/W$/, ''); // SPXW -> SPX
+  const mapFn = alternativesMap[alert.ticker] || alternativesMap[ticker];
+  if (mapFn) return mapFn(alert.strike, alert.sentiment);
+  return null;
 }
 
 function parsePremium(str: string): number {
