@@ -57,7 +57,7 @@ const HeroSection = () => {
       </motion.nav>
 
       {/* Content */}
-      <div className="relative z-10 text-center px-6 max-w-4xl mx-auto pt-16 md:pt-0">
+      <div className="relative z-10 text-center px-6 max-w-4xl mx-auto pt-28 md:pt-24">
 
 
         <motion.h1
