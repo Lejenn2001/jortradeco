@@ -23,6 +23,7 @@ const navItems = [
   { icon: MessageSquare, label: "Biddie AI", path: "/dashboard/chat" },
   { icon: Wallet, label: "P&L Calendar", path: "/dashboard/pnl" },
   { icon: Users, label: "JORTRADE Chat", path: "/dashboard/community" },
+  { icon: PieChart, label: "Analytics", path: "/dashboard/analytics" },
   { icon: Settings, label: "Settings", path: "/dashboard/settings" },
 ];
 
