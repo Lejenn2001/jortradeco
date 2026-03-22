@@ -56,7 +56,7 @@ Given real-time flow data for a ticker, generate a JSON response with these exac
   "bias": "Bullish Bias ↗" or "Bearish Bias ↘" or "Neutral ↔",
   "callZone": "Call Zone $XXX–$XXX" or "Put Zone $XXX–$XXX" (use real strikes from the data),
   "invalidation": "Invalidation: $XXX" (a logical stop-loss level based on flow),
-  "strategy": one of ONLY: "Long Call" | "Long Put" | "Long Call Butterfly" | "Long Put Butterfly" | "Bull Call Debit Spread" | "Bear Put Debit Spread",
+  "strategy": one of ONLY: "Call" | "Put" | "Call Butterfly" | "Put Butterfly" | "Bull Call Debit Spread" | "Bear Put Debit Spread",
   "contract": "the specific contract(s), e.g. 'Buy NVDA Mar 28 2026 $980 Call' or for spreads 'Buy NVDA Mar 28 $950 Call / Sell NVDA Mar 28 $970 Call' or for butterflies 'Buy 1x $940 Call / Sell 2x $960 Call / Buy 1x $980 Call'",
   "expiration": "the nearest expiration with heavy activity, format: Mon DD, YYYY",
   "score": "X.X / 10" (confidence score based on flow conviction),
