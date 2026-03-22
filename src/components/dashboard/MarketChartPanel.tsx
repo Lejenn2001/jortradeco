@@ -1,10 +1,23 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { TrendingUp, Search, Info, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
 const quickTickers = ["NQ", "SPX", "PLTR", "TSLA", "NVDA", "AAPL"];
+
+const popularTickers = [
+  "AAPL", "MSFT", "GOOGL", "AMZN", "META", "TSLA", "NVDA", "AMD", "INTC", "NFLX",
+  "SPY", "QQQ", "IWM", "DIA", "SPX", "NQ", "ES", "VIX",
+  "BA", "DIS", "PYPL", "SQ", "SHOP", "ROKU", "SNAP", "UBER", "LYFT", "COIN",
+  "PLTR", "SOFI", "NIO", "RIVN", "LCID", "F", "GM", "AAL", "UAL", "DAL",
+  "JPM", "BAC", "GS", "MS", "WFC", "C", "V", "MA", "AXP",
+  "XOM", "CVX", "COP", "OXY", "SLB", "HAL",
+  "JNJ", "PFE", "MRNA", "ABBV", "LLY", "UNH", "BMY",
+  "WMT", "TGT", "COST", "HD", "LOW", "SBUX", "MCD", "KO", "PEP",
+  "CRM", "ORCL", "NOW", "SNOW", "PANW", "CRWD", "ZS", "NET", "DDOG",
+  "ARM", "SMCI", "AVGO", "MU", "QCOM", "TSM", "MRVL", "LRCX", "AMAT",
+];
 
 interface TickerInsight {
   bias: string;
@@ -58,6 +71,8 @@ const MarketChartPanel = () => {
 
   const [activeTicker, setActiveTicker] = useState("");
   const [searchValue, setSearchValue] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
   const [insight, setInsight] = useState<TickerInsight>(defaultInsight);
   const [loading, setLoading] = useState(false);
 
@@ -99,12 +114,25 @@ const MarketChartPanel = () => {
     }
   }, [traderName]);
 
+  const filteredTickers = useMemo(() => {
+    if (!searchValue.trim()) return [];
+    const query = searchValue.toUpperCase();
+    return popularTickers.filter(t => t.startsWith(query) && t !== query).slice(0, 8);
+  }, [searchValue]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchValue.trim()) {
       fetchAnalysis(searchValue.trim().toUpperCase());
       setSearchValue("");
+      setShowSuggestions(false);
     }
+  };
+
+  const handleSelectTicker = (ticker: string) => {
+    setSearchValue("");
+    setShowSuggestions(false);
+    fetchAnalysis(ticker);
   };
 
   return (
@@ -127,15 +155,35 @@ const MarketChartPanel = () => {
 
       {/* Ticker search + quick picks */}
       <div className="flex flex-col sm:flex-row gap-2 mb-4">
-        <form onSubmit={handleSearch} className="relative flex-1 max-w-[200px]">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-          <Input
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            placeholder="Search ticker..."
-            className="pl-8 h-8 text-xs bg-muted/30 border-border/50 rounded-lg"
-          />
-        </form>
+        <div ref={searchRef} className="relative flex-1 max-w-[200px]">
+          <form onSubmit={handleSearch}>
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground z-10" />
+            <Input
+              value={searchValue}
+              onChange={(e) => {
+                setSearchValue(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => searchValue && setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+              placeholder="Search ticker..."
+              className="pl-8 h-8 text-xs bg-muted/30 border-border/50 rounded-lg"
+            />
+          </form>
+          {showSuggestions && filteredTickers.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg z-50 overflow-hidden">
+              {filteredTickers.map((ticker) => (
+                <button
+                  key={ticker}
+                  onMouseDown={() => handleSelectTicker(ticker)}
+                  className="w-full text-left px-3 py-1.5 text-xs text-foreground hover:bg-muted/50 transition-colors"
+                >
+                  {ticker}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <div className="flex flex-wrap gap-2">
           {quickTickers.map((ticker) => (
             <button
