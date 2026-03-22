@@ -8,7 +8,8 @@ const quickTickers = ["NQ", "SPX", "PLTR", "TSLA", "NVDA", "AAPL"];
 
 interface TickerInsight {
   bias: string;
-  callZone: string;
+  targetZone: string;
+  keyLevel: string;
   invalidation: string;
   strategy: string;
   contract?: string;
@@ -20,7 +21,8 @@ interface TickerInsight {
 
 const defaultInsight: TickerInsight = {
   bias: "Select a ticker ↗",
-  callZone: "—",
+  targetZone: "—",
+  keyLevel: "—",
   invalidation: "—",
   strategy: "—",
   expiration: "—",
@@ -32,18 +34,18 @@ const defaultInsight: TickerInsight = {
 // Generate candlesticks based on bias direction
 function generateCandles(isBearish: boolean) {
   const candles = [];
-  let basePrice = isBearish ? 50 : 170;
+  let basePrice = isBearish ? 50 : 180;
   const count = 18;
-  const spacing = 420 / (count + 2);
+  const spacing = 500 / (count + 2);
   for (let i = 0; i < count; i++) {
     const x = spacing * (i + 1.5);
     const trend = isBearish ? 0.35 : 0.65;
-    const move = (Math.random() - trend) * 12;
+    const move = (Math.random() - trend) * 14;
     const open = basePrice;
     const close = basePrice + move;
-    const high = Math.min(open, close) - Math.random() * 6 - 2;
-    const low = Math.max(open, close) + Math.random() * 6 + 2;
-    const bull = close < open; // SVG inverted y
+    const high = Math.min(open, close) - Math.random() * 7 - 2;
+    const low = Math.max(open, close) + Math.random() * 7 + 2;
+    const bull = close < open;
     candles.push({ x, o: open, c: close, h: high, l: low, bull });
     basePrice = close;
   }
@@ -162,35 +164,43 @@ const MarketChartPanel = () => {
         </div>
       </div>
 
-      {/* Chart - direction matches bias */}
-      <div className="relative h-48 w-full mb-4 bg-muted/20 rounded-lg overflow-hidden">
+      {/* Chart - matches reference image layout */}
+      <div className="relative h-56 w-full mb-4 bg-muted/10 rounded-lg overflow-hidden">
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         )}
-        <svg viewBox="0 0 420 200" className="w-full h-full" preserveAspectRatio="none">
-          {[50, 100, 150].map((y) => (
-            <line key={y} x1="0" y1={y} x2="420" y2={y} stroke="hsl(var(--border))" strokeWidth="0.5" opacity="0.3" />
+        <svg viewBox="0 0 500 220" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+          {/* Subtle grid lines */}
+          {[55, 110, 165].map((y) => (
+            <line key={y} x1="0" y1={y} x2="500" y2={y} stroke="hsl(var(--border))" strokeWidth="0.5" opacity="0.15" />
           ))}
 
-          {/* Key level line */}
-          <line x1="0" y1="100" x2="420" y2="100"
-            stroke={isBearish ? "hsl(var(--destructive))" : "hsl(var(--primary))"}
-            strokeWidth="1" strokeDasharray="6 4" opacity="0.5"
+          {/* Key Level dashed line */}
+          <line x1="0" y1="110" x2="500" y2="110"
+            stroke="hsl(var(--primary))"
+            strokeWidth="1" strokeDasharray="8 5" opacity="0.6"
           />
 
-          {/* Zone highlight - Put zone at bottom for bearish, Call zone at top for bullish */}
+          {/* Target zone rectangle (top for bullish, bottom for bearish) */}
           {isBearish ? (
             <>
-              <rect x="200" y="140" width="220" height="35" fill="hsl(var(--destructive))" opacity="0.08" rx="4" />
-              <rect x="100" y="30" width="220" height="25" fill="hsl(var(--primary))" opacity="0.04" rx="4" />
+              <rect x="250" y="155" width="250" height="40" fill="hsl(var(--destructive))" opacity="0.08" rx="4" />
+              <rect x="200" y="145" width="200" height="30" fill="hsl(var(--destructive))" opacity="0.04" rx="4" />
             </>
           ) : (
             <>
-              <rect x="200" y="30" width="220" height="35" fill="hsl(var(--primary))" opacity="0.08" rx="4" />
-              <rect x="100" y="150" width="220" height="25" fill="hsl(var(--destructive))" opacity="0.04" rx="4" />
+              <rect x="250" y="25" width="250" height="40" fill="hsl(var(--primary))" opacity="0.08" rx="4" />
+              <rect x="200" y="20" width="200" height="35" fill="hsl(var(--primary))" opacity="0.04" rx="4" />
             </>
+          )}
+
+          {/* Invalidation zone (opposite side) */}
+          {isBearish ? (
+            <rect x="150" y="25" width="200" height="25" fill="hsl(var(--primary))" opacity="0.03" rx="4" />
+          ) : (
+            <rect x="150" y="165" width="250" height="30" fill="hsl(var(--destructive))" opacity="0.06" rx="4" />
           )}
 
           {/* Candlesticks */}
@@ -207,21 +217,30 @@ const MarketChartPanel = () => {
           })}
         </svg>
 
-        {/* Zone labels */}
-        {insight.callZone !== "—" && (
-          <div className={`absolute text-[10px] font-medium px-2 py-0.5 rounded ${
+        {/* Target Zone label */}
+        {insight.targetZone !== "—" && (
+          <div className={`absolute text-[11px] font-semibold px-2 py-0.5 ${
             isBearish
-              ? "bottom-3 right-3 text-destructive bg-destructive/10"
-              : "top-3 right-3 text-primary bg-primary/10"
+              ? "bottom-4 right-4 text-destructive"
+              : "top-4 right-4 text-primary"
           }`}>
-            {insight.callZone}
+            {insight.targetZone}
           </div>
         )}
+
+        {/* Key Level label */}
+        {insight.keyLevel !== "—" && (
+          <div className="absolute right-4 top-[45%] text-[11px] text-primary font-medium">
+            {insight.keyLevel}
+          </div>
+        )}
+
+        {/* Invalidation label */}
         {insight.invalidation !== "—" && (
-          <div className={`absolute text-[10px] font-medium px-2 py-0.5 rounded ${
+          <div className={`absolute text-[11px] font-semibold px-2 py-0.5 ${
             isBearish
-              ? "top-3 right-3 text-primary bg-primary/10"
-              : "bottom-3 right-3 text-destructive bg-destructive/10"
+              ? "top-4 right-4 text-muted-foreground"
+              : "bottom-4 right-4 text-destructive"
           }`}>
             {insight.invalidation}
           </div>
