@@ -47,16 +47,14 @@ serve(async (req) => {
       await logApiUsage(["flow-alerts"]);
 
     } else if (action === 'ticker' && ticker) {
-      // Ticker-specific: options volume + recent flow
       const [volumeRes, flowRes] = await Promise.all([
         fetch(`${UW_BASE}/stock/${ticker}/options-volume`, { headers: uwHeaders }),
         fetch(`${UW_BASE}/stock/${ticker}/flow-recent`, { headers: uwHeaders }),
       ]);
-
       const volume = volumeRes.ok ? await volumeRes.json() : { data: [] };
       const flow = flowRes.ok ? await flowRes.json() : { data: [] };
-
       data = { volume: volume.data, flow: flow.data };
+      await logApiUsage(["options-volume", "flow-recent"]);
 
     } else if (action === 'market') {
       // Market Tide - overall sentiment
