@@ -195,11 +195,11 @@ export function useMarketData() {
       // Transform into whale alerts
       const newWhaleAlerts: FlowAlert[] = alerts.slice(0, 8).map((alert: any) => ({
         ticker: alert.ticker || alert.underlying_symbol || 'N/A',
-        type: `${alert.put_call === 'call' ? 'Call' : 'Put'} ${alert.type || 'Sweep'}`,
-        premium: `$${formatPremium(alert.premium)}`,
+        type: `${alert.type === 'call' ? 'Call' : 'Put'} ${alert.alert_rule?.includes('Sweep') ? 'Sweep' : 'Flow'}`,
+        premium: `$${formatPremium(alert.total_premium || alert.premium)}`,
         strike: `$${alert.strike || '—'}`,
         expiry: alert.expiry || alert.expires || '—',
-        sentiment: (alert.sentiment === 'bullish' || alert.put_call === 'call') ? 'bullish' : 'bearish',
+        sentiment: alert.type === 'call' ? 'bullish' : 'bearish',
         time: alert.created_at ? timeAgo(alert.created_at) : 'just now',
       }));
 
