@@ -78,7 +78,7 @@ serve(async (req) => {
         .from("chat_messages")
         .select("id")
         .eq("user_id", BIDDIE_USER_ID)
-        .gte("created_at", twoMinsAgo)
+        .gte("created_at", cooldownAgo)
         .limit(1);
 
       if (recentReply && recentReply.length > 0) {
