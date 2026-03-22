@@ -18,6 +18,8 @@ const quickPrompts = [
 ];
 
 const AIChatPanel = () => {
+  const { profile } = useAuth();
+  const firstName = profile?.full_name?.split(" ")[0] || "Trader";
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
