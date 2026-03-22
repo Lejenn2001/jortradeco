@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import biddieRobot from "@/assets/biddie-robot.png";
 
 const HeroSection = () => {
@@ -24,10 +25,11 @@ const HeroSection = () => {
       >
         <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
           <span className="hover:text-foreground cursor-pointer transition-colors">Features</span>
-          <span className="hover:text-foreground cursor-pointer transition-colors">Dashboard</span>
+          <Link to="/dashboard" className="hover:text-foreground cursor-pointer transition-colors">Dashboard</Link>
+          <span className="hover:text-foreground cursor-pointer transition-colors">Mentorship</span>
           <span className="hover:text-foreground cursor-pointer transition-colors">Pricing</span>
           <Button size="sm" className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-5 text-xs font-semibold">
-            Get Started
+            Sign Up
           </Button>
         </div>
       </motion.nav>
