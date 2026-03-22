@@ -130,6 +130,15 @@ serve(async (req) => {
     const message = error instanceof Error ? error.message : 'Unknown error';
     return new Response(JSON.stringify({ error: message }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+});
+
+function formatPremiumHelper(value: any): string {
+  if (!value) return '0';
+  const num = parseFloat(value);
+  if (isNaN(num)) return String(value);
+  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`;
+  if (num >= 1_000) return `${(num / 1_000).toFixed(0)}K`;
+  return num.toFixed(0);
+}
   }
 });
