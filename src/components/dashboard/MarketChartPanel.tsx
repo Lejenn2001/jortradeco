@@ -116,7 +116,7 @@ const MarketChartPanel = () => {
       {/* Stats */}
       <div className="grid grid-cols-4 gap-3 border-t border-border/40 pt-3">
         {[
-          { label: "Asset", value: "NQ Futures" },
+          { label: "Asset", value: activeTicker },
           { label: "Strategy", value: "Call Option" },
           { label: "Expiration", value: "Mar 27" },
           { label: "AI Score", value: "9.1 / 10" },
