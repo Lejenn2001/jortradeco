@@ -5,6 +5,40 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+// Extract ticker symbols from user message (e.g. "AAPL", "SPY", "$TSLA")
+function extractTickers(message: string): string[] {
+  const patterns = [
+    /\$([A-Z]{1,5})\b/g,           // $AAPL style
+    /\b([A-Z]{2,5})\b/g,            // plain AAPL style (2-5 uppercase letters)
+  ];
+  const found = new Set<string>();
+  for (const pattern of patterns) {
+    let match;
+    while ((match = pattern.exec(message)) !== null) {
+      found.add(match[1]);
+    }
+  }
+  // Filter out common non-ticker words
+  const excludeWords = new Set([
+    'AI', 'THE', 'FOR', 'AND', 'NOT', 'BUT', 'ARE', 'WAS', 'HAS', 'HAD',
+    'CAN', 'DID', 'GET', 'GOT', 'HIS', 'HER', 'HOW', 'ITS', 'LET', 'MAY',
+    'NEW', 'NOW', 'OLD', 'OUR', 'OUT', 'OWN', 'SAY', 'SHE', 'TOO', 'USE',
+    'WAY', 'WHO', 'BOY', 'DAY', 'EYE', 'FAR', 'FEW', 'RUN', 'SAT', 'SET',
+    'TOP', 'TRY', 'TWO', 'WAR', 'YES', 'YET', 'YOU', 'ANY', 'ASK', 'BIG',
+    'END', 'MAN', 'PUT', 'RAN', 'RED', 'CALL', 'CALLS', 'PUTS', 'BUY',
+    'SELL', 'LONG', 'SHORT', 'PLAY', 'WHAT', 'WHEN', 'WHERE', 'WHICH',
+    'WITH', 'WILL', 'WOULD', 'THAT', 'THIS', 'THEM', 'THEN', 'THAN',
+    'BEEN', 'HAVE', 'EACH', 'MAKE', 'LIKE', 'JUST', 'OVER', 'SUCH',
+    'TAKE', 'YEAR', 'ALSO', 'BACK', 'COME', 'COULD', 'GOOD', 'GIVE',
+    'MOST', 'VERY', 'SOME', 'TIME', 'LOOK', 'ONLY', 'WANT', 'TELL',
+    'SHOW', 'THINK', 'ABOUT', 'AFTER', 'AGAIN', 'HELP', 'SHOULD',
+    'STRIKE', 'ENTRY', 'EXIT', 'STOP', 'LOSS', 'GAIN', 'HOLD',
+    'FLOW', 'DARK', 'POOL', 'WHALES', 'DATA', 'PRICE', 'TRADE',
+    'HEY', 'BIDDIE', 'JORTRADE', 'HELLO', 'THANKS',
+  ]);
+  return Array.from(found).filter(t => !excludeWords.has(t) && t.length >= 2);
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -22,28 +56,72 @@ serve(async (req) => {
   try {
     const { message, history, userName } = await req.json();
 
+    // Extract tickers from user message to fetch specific data
+    const tickers = extractTickers(message || '');
+    console.log('Detected tickers:', tickers);
+
     // Fetch fresh market context
     let marketContext = '';
     if (uwKey) {
+      const uwHeaders = { 'Authorization': `Bearer ${uwKey}`, 'Accept': 'application/json' };
+
       try {
-        const uwHeaders = { 'Authorization': `Bearer ${uwKey}`, 'Accept': 'application/json' };
-        const [tideRes, flowRes] = await Promise.all([
+        // Always fetch general market data
+        const generalFetches = [
           fetch('https://api.unusualwhales.com/api/market/market-tide', { headers: uwHeaders }),
           fetch('https://api.unusualwhales.com/api/option-trades/flow-alerts?limit=5', { headers: uwHeaders }),
-        ]);
-        
+        ];
+
+        // Fetch ticker-specific data for each detected ticker
+        const tickerFetches: Promise<{ ticker: string; type: string; data: any }>[] = [];
+        for (const ticker of tickers.slice(0, 3)) { // max 3 tickers per request
+          tickerFetches.push(
+            fetch(`https://api.unusualwhales.com/api/stock/${ticker}/flow-recent`, { headers: uwHeaders })
+              .then(async r => ({ ticker, type: 'flow', data: r.ok ? await r.json() : null }))
+              .catch(() => ({ ticker, type: 'flow', data: null }))
+          );
+          tickerFetches.push(
+            fetch(`https://api.unusualwhales.com/api/stock/${ticker}/option-contracts`, { headers: uwHeaders })
+              .then(async r => ({ ticker, type: 'contracts', data: r.ok ? await r.json() : null }))
+              .catch(() => ({ ticker, type: 'contracts', data: null }))
+          );
+          tickerFetches.push(
+            fetch(`https://api.unusualwhales.com/api/stock/${ticker}/options-volume`, { headers: uwHeaders })
+              .then(async r => ({ ticker, type: 'volume', data: r.ok ? await r.json() : null }))
+              .catch(() => ({ ticker, type: 'volume', data: null }))
+          );
+        }
+
+        const [tideRes, flowRes] = await Promise.all(generalFetches);
+        const tickerResults = await Promise.all(tickerFetches);
+
         const tideData = tideRes.ok ? await tideRes.json() : null;
         const flowData = flowRes.ok ? await flowRes.json() : null;
 
         if (tideData?.data) {
-          marketContext += `\n\nMarket Tide (sentiment) data:\n${JSON.stringify(tideData.data, null, 2)}`;
+          marketContext += `\n\n=== LIVE MARKET TIDE DATA (current) ===\n${JSON.stringify(tideData.data, null, 2)}`;
         }
         if (flowData?.data) {
-          marketContext += `\n\nRecent flow alerts:\n${JSON.stringify(flowData.data.slice(0, 5), null, 2)}`;
+          marketContext += `\n\n=== LIVE FLOW ALERTS (current) ===\n${JSON.stringify(flowData.data.slice(0, 5), null, 2)}`;
         }
+
+        // Add ticker-specific data
+        for (const result of tickerResults) {
+          if (result.data?.data) {
+            marketContext += `\n\n=== LIVE ${result.ticker} ${result.type.toUpperCase()} DATA (current) ===\n${JSON.stringify(result.data.data, null, 2)}`;
+          }
+        }
+
+        if (tickers.length > 0 && tickerResults.every(r => !r.data?.data)) {
+          marketContext += `\n\n⚠️ WARNING: No live data found for tickers: ${tickers.join(', ')}. The Unusual Whales API returned no data for these tickers right now.`;
+        }
+
       } catch (e) {
         console.warn('Failed to fetch market context:', e);
+        marketContext += '\n\n⚠️ WARNING: Failed to fetch live market data. DO NOT provide any prices or trade setups.';
       }
+    } else {
+      marketContext += '\n\n⚠️ WARNING: No Unusual Whales API key configured. You have NO market data. DO NOT provide any prices or trade setups.';
     }
 
     const displayName = userName || 'Trader';
@@ -64,23 +142,31 @@ FORMATTING RULES:
 - NEVER use dashes or hyphens to separate ideas. Use commas instead.
 - Do not use bullet points with dashes. If you need to list things, use numbers or just write naturally.
 
-RESPONSE RULES, FOLLOW STRICTLY:
+CRITICAL DATA RULES (FOLLOW STRICTLY, NO EXCEPTIONS):
+1. You may ONLY reference prices, premiums, strikes, volumes, and flow data that appear in the LIVE DATA sections below.
+2. If the LIVE DATA sections do NOT contain data for a ticker the user asked about, say: "I don't have live data on [ticker] right now. Let me check again later or try a different ticker."
+3. NEVER guess, estimate, approximate, or use "general knowledge" for any price, strike, premium, or entry level. Every number you cite MUST come from the live data below.
+4. NEVER say "based on recent trends" or "typically trades around" — if the number isn't in the live data, don't say it.
+5. If the live data is missing or the API failed, tell the user honestly: "My data feed isn't returning info on that right now."
+6. When giving a trade setup, every single number (strike, entry, premium, target) MUST be directly from the Unusual Whales data provided below. If you can't find the exact data, don't make up a setup.
+
+RESPONSE RULES:
 1. Keep responses SHORT. 3 to 5 sentences max unless the user asks for detail.
-2. When a user asks what contract to buy or what play to make on ANY ticker, respond in this exact format:
+2. When a user asks what contract to buy or what play to make on ANY ticker, respond in this exact format (ONLY if you have live data):
    Direction (Calls or Puts)
-   Strike price
-   Expiration
-   Entry zone
+   Strike price (FROM LIVE DATA ONLY)
+   Expiration (FROM LIVE DATA ONLY)
+   Entry zone (FROM LIVE DATA ONLY)
    Invalidation level (where the play is dead)
-   One sentence on why
+   One sentence on why (referencing actual flow/volume data)
 3. Do NOT default to SPX. Answer about whatever ticker the user asks about.
 4. Never give financial advice, frame as analysis ("I'd look at..." or "The flow suggests...").
-5. Reference specific data when available: premium, flow direction, volume.
+5. Reference specific data when available: premium, flow direction, volume — but ONLY from the live data.
 6. No long paragraphs. Use numbered lists for multi-part answers.
 7. ALWAYS end trade setup responses with a disclaimer on its own line: "⚠️ Not financial advice, always manage your own risk."
+8. If no live data is available, DO NOT attempt to give a trade setup. Instead, let the user know.
 
-You have access to real-time options flow and market data.${marketContext}`;
-
+LIVE MARKET DATA (all data below is current and from Unusual Whales API):${marketContext}`;
 
     // Deduplicate: if history already contains the current message as last entry, don't add again
     const chatHistory = (history || []).map((h: any) => ({
@@ -97,7 +183,7 @@ You have access to real-time options flow and market data.${marketContext}`;
       ...(!isDuplicate ? [{ role: 'user', content: message }] : []),
     ];
 
-    console.log('Sending to AI gateway, message count:', messages.length);
+    console.log('Sending to AI gateway, message count:', messages.length, 'tickers:', tickers);
 
     const aiRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
