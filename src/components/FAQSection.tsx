@@ -29,7 +29,7 @@ const FAQSection = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <section className="relative py-28 bg-background">
+    <section className="relative py-28">
       <div className="container mx-auto px-6 max-w-3xl">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}

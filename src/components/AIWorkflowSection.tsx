@@ -21,7 +21,7 @@ const steps = [
 
 const AIWorkflowSection = () => {
   return (
-    <section id="workflow" className="relative py-28 bg-background">
+    <section id="workflow" className="relative py-28">
       <div className="container mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-16 items-start">
           {/* Left column */}

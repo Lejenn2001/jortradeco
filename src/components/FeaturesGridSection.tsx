@@ -29,7 +29,7 @@ const features = [
 
 const FeaturesGridSection = () => {
   return (
-    <section className="relative py-28 bg-background overflow-hidden">
+    <section className="relative py-28 overflow-hidden">
       {/* Center vertical glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200px] h-full">
         <div className="w-full h-full bg-[linear-gradient(to_bottom,transparent_0%,hsl(270_60%_40%_/_0.15)_20%,hsl(40_70%_45%_/_0.12)_50%,hsl(200_80%_40%_/_0.08)_80%,transparent_100%)]" />

@@ -5,7 +5,7 @@ const CTASection = () => {
   return (
     <section className="relative py-28 overflow-hidden">
       {/* Radial glow background */}
-      <div className="absolute inset-0 bg-background" />
+      <div className="absolute inset-0" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px]">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse,hsl(270_60%_35%_/_0.25)_0%,transparent_60%)]" />
         <div className="absolute inset-[40px] bg-[radial-gradient(ellipse,hsl(30_70%_40%_/_0.2)_0%,transparent_55%)]" />
