@@ -21,9 +21,8 @@ const HeroSection = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-8 py-6"
+        className="absolute top-0 left-0 right-0 z-20 flex items-center justify-end px-8 py-6"
       >
-        <span className="font-display text-lg font-bold tracking-wider text-foreground">JORTRADE</span>
         <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
           <span className="hover:text-foreground cursor-pointer transition-colors">Features</span>
           <span className="hover:text-foreground cursor-pointer transition-colors">Dashboard</span>
