@@ -87,18 +87,41 @@ const DashboardAnalytics = () => {
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
+  if (isAdmin === null) {
+    return (
+      <div className="h-screen flex bg-background overflow-hidden">
+        <DashboardSidebar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="h-screen flex bg-background overflow-hidden">
+        <DashboardSidebar />
+        <div className="flex-1 flex flex-col min-w-0">
+          <DashboardHeader />
+          <main className="flex-1 flex items-center justify-center bg-mesh">
+            <div className="text-center space-y-3">
+              <ShieldAlert className="h-12 w-12 text-destructive mx-auto" />
+              <h2 className="text-lg font-bold text-foreground">Admin Access Only</h2>
+              <p className="text-sm text-muted-foreground">You don't have permission to view this page.</p>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen flex bg-background overflow-hidden">
       <DashboardSidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <DashboardHeader />
         <main className="flex-1 overflow-y-auto p-4 lg:p-6 bg-mesh">
-          <div className="mb-6">
-            <h1 className="text-xl font-display font-bold text-foreground">Analytics</h1>
-            <p className="text-sm text-muted-foreground">Member activity and platform overview</p>
-          </div>
-
-          {loading ? (
             <div className="flex items-center justify-center h-40">
               <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
