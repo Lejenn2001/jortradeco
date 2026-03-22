@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Activity,
@@ -12,6 +12,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
@@ -24,11 +25,17 @@ const navItems = [
 
 const DashboardSidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
   const [open, setOpen] = useState(false);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/login");
+  };
 
   return (
     <>
-      {/* Mobile hamburger button */}
       <button
         onClick={() => setOpen(true)}
         className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-card border border-border/60"
@@ -36,7 +43,6 @@ const DashboardSidebar = () => {
         <Menu className="h-5 w-5 text-foreground" />
       </button>
 
-      {/* Overlay */}
       {open && (
         <div
           className="lg:hidden fixed inset-0 bg-black/60 z-40"
@@ -44,7 +50,6 @@ const DashboardSidebar = () => {
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={`
           fixed lg:static z-50 h-screen w-[240px] glass-panel border-r border-border/60 flex flex-col p-4 shrink-0
@@ -52,7 +57,6 @@ const DashboardSidebar = () => {
           ${open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}
       >
-        {/* Close on mobile */}
         <button
           onClick={() => setOpen(false)}
           className="lg:hidden absolute top-4 right-4"
@@ -60,7 +64,6 @@ const DashboardSidebar = () => {
           <X className="h-5 w-5 text-muted-foreground" />
         </button>
 
-        {/* Logo */}
         <Link to="/" className="flex items-center gap-2 px-2 mb-8">
           <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
             <Bot className="h-5 w-5 text-primary" />
@@ -68,7 +71,6 @@ const DashboardSidebar = () => {
           <span className="font-display text-sm font-bold text-foreground tracking-wider">JORTRADE</span>
         </Link>
 
-        {/* Nav */}
         <nav className="flex-1 space-y-1">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path ||
@@ -91,9 +93,11 @@ const DashboardSidebar = () => {
           })}
         </nav>
 
-        {/* Bottom */}
         <div className="border-t border-border/40 pt-4 mt-4">
-          <button className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-destructive transition-colors w-full">
+          <button
+            onClick={handleSignOut}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-destructive transition-colors w-full"
+          >
             <LogOut className="h-4 w-4" />
             Sign Out
           </button>
