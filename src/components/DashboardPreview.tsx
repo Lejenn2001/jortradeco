@@ -121,7 +121,7 @@ const AIAssistantPanel = () => (
     <div className="space-y-3">
       <div className="bg-muted/50 rounded-lg p-3">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-xs font-bold text-accent">Jennifer</span>
+          <span className="text-xs font-bold text-accent">Trader</span>
           <span className="text-xs text-muted-foreground">10:32 AM</span>
         </div>
         <p className="text-sm text-foreground">Is there a setup to watch?</p>
