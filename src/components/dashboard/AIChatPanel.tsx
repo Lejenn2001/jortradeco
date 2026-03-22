@@ -53,7 +53,7 @@ const AIChatPanel = () => {
       }));
 
       const { data, error } = await supabase.functions.invoke('ai-chat', {
-        body: { message: text.trim(), history },
+        body: { message: text.trim(), history, userName: firstName },
       });
 
       if (error) throw error;
