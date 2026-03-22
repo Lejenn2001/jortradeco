@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, UserPlus, MessageSquare, TrendingUp, BarChart3, ShieldAlert, Shield, ShieldCheck, ShieldX, Anchor, Gauge } from "lucide-react";
+import { Users, UserPlus, MessageSquare, TrendingUp, ShieldAlert, Shield, ShieldCheck, ShieldX, Anchor, Gauge, Download } from "lucide-react";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,9 +36,42 @@ const StatCard = ({ icon: Icon, label, value, subtitle, color }: StatCardProps) 
 interface MemberWithRoles {
   id: string;
   full_name: string;
+  email: string;
+  selected_plan: string | null;
   created_at: string;
   roles: string[];
 }
+
+const planLabel = (plan: string | null) => {
+  if (!plan) return "—";
+  if (plan === "founding") return "Founding 50";
+  if (plan === "lifetime") return "Lifetime";
+  if (plan === "monthly") return "Monthly";
+  return plan;
+};
+
+const exportToCSV = (members: MemberWithRoles[]) => {
+  const headers = ["Name", "Email", "Plan", "Role", "Joined"];
+  const rows = members.map((m) => [
+    m.full_name || "Unknown",
+    m.email || "",
+    planLabel(m.selected_plan),
+    m.roles.includes("admin") ? "Admin" : "Member",
+    new Date(m.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+  ]);
+
+  const csvContent = [headers, ...rows]
+    .map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(","))
+    .join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `jortrade-members-${new Date().toISOString().split("T")[0]}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+};
 
 const DashboardAnalytics = () => {
   const { session } = useAuth();
@@ -80,7 +113,6 @@ const DashboardAnalytics = () => {
     const chatRes = await supabase.from("chat_messages").select("id", { count: "exact", head: true });
     if (chatRes.count !== null) setChatCount(chatRes.count);
 
-    // Load API usage stats
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     const minuteAgo = new Date(Date.now() - 60 * 1000);
@@ -241,18 +273,28 @@ const DashboardAnalytics = () => {
                 </div>
               </div>
 
-              {/* Members Table with Role Management */}
+              {/* Members Table */}
               <div className="glass-panel rounded-xl border-border/40 overflow-hidden">
                 <div className="px-5 py-4 border-b border-border/40 flex items-center gap-2">
                   <Shield className="h-4 w-4 text-primary" />
                   <h2 className="text-sm font-semibold text-foreground">Members & Roles</h2>
-                  <span className="text-xs text-muted-foreground ml-auto">{members.length} total</span>
+                  <span className="text-xs text-muted-foreground ml-auto mr-3">{members.length} total</span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs h-7 px-3"
+                    onClick={() => exportToCSV(members)}
+                  >
+                    <Download className="h-3 w-3 mr-1" /> Export CSV
+                  </Button>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border/30">
                         <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground">Name</th>
+                        <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground">Email</th>
+                        <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground">Plan</th>
                         <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground">Joined</th>
                         <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground">Role</th>
                         <th className="text-right px-5 py-3 text-xs font-medium text-muted-foreground">Actions</th>
@@ -267,6 +309,22 @@ const DashboardAnalytics = () => {
                             <td className="px-5 py-3 text-foreground">
                               {m.full_name || "Unknown"}
                               {isSelf && <span className="text-xs text-muted-foreground ml-2">(you)</span>}
+                            </td>
+                            <td className="px-5 py-3 text-muted-foreground text-xs">{m.email || "—"}</td>
+                            <td className="px-5 py-3">
+                              {m.selected_plan ? (
+                                <span className={`inline-flex items-center text-xs font-medium px-2 py-1 rounded-full ${
+                                  m.selected_plan === "founding"
+                                    ? "text-amber-400 bg-amber-400/10"
+                                    : m.selected_plan === "lifetime"
+                                    ? "text-purple-400 bg-purple-400/10"
+                                    : "text-primary bg-primary/10"
+                                }`}>
+                                  {planLabel(m.selected_plan)}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">—</span>
+                              )}
                             </td>
                             <td className="px-5 py-3 text-muted-foreground">{formatDate(m.created_at)}</td>
                             <td className="px-5 py-3">
@@ -302,7 +360,7 @@ const DashboardAnalytics = () => {
                       })}
                       {members.length === 0 && (
                         <tr>
-                          <td colSpan={4} className="px-5 py-8 text-center text-muted-foreground">No members yet</td>
+                          <td colSpan={6} className="px-5 py-8 text-center text-muted-foreground">No members yet</td>
                         </tr>
                       )}
                     </tbody>

@@ -15,7 +15,6 @@ serve(async (req) => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!;
 
-  // Verify the caller is an admin
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
     return new Response(JSON.stringify({ error: "Not authenticated" }), {
@@ -33,7 +32,6 @@ serve(async (req) => {
     });
   }
 
-  // Use service role to check if caller is admin
   const adminClient = createClient(supabaseUrl, serviceKey);
   const { data: callerRole } = await adminClient
     .from("user_roles")
@@ -52,11 +50,18 @@ serve(async (req) => {
     const { action, user_id, role } = await req.json();
 
     if (action === "list") {
-      // Get all members with their roles
       const { data: profiles } = await adminClient
         .from("profiles")
-        .select("id, full_name, created_at")
+        .select("id, full_name, created_at, selected_plan, email")
         .order("created_at", { ascending: false });
+
+      // Also fetch emails from auth.users for profiles missing email
+      const { data: { users: authUsers } } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
+
+      const emailMap: Record<string, string> = {};
+      (authUsers || []).forEach((u: any) => {
+        emailMap[u.id] = u.email || "";
+      });
 
       const { data: roles } = await adminClient
         .from("user_roles")
@@ -70,6 +75,7 @@ serve(async (req) => {
 
       const members = (profiles || []).map((p: any) => ({
         ...p,
+        email: p.email || emailMap[p.id] || "",
         roles: roleMap[p.id] || [],
       }));
 
@@ -87,7 +93,6 @@ serve(async (req) => {
       const { error } = await adminClient
         .from("user_roles")
         .upsert({ user_id, role }, { onConflict: "user_id,role" });
-
       if (error) throw error;
       return new Response(JSON.stringify({ status: "granted" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -100,7 +105,6 @@ serve(async (req) => {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      // Prevent removing your own admin role
       if (user_id === user.id && role === "admin") {
         return new Response(JSON.stringify({ error: "Cannot remove your own admin role" }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -111,7 +115,6 @@ serve(async (req) => {
         .delete()
         .eq("user_id", user_id)
         .eq("role", role);
-
       if (error) throw error;
       return new Response(JSON.stringify({ status: "revoked" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
