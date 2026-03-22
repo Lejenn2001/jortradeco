@@ -44,7 +44,7 @@ const exampleSignals: MarketSignal[] = [
     confidence: 9.4,
     description: "Massive call sweep activity detected on NVDA. Over $2.8M in premium on the $145 calls expiring March 27. Institutional flow is heavily skewed bullish with repeat sweeps at the ask. Volume-to-open-interest ratio is 4.2x — indicating new positioning, not hedging.",
     timestamp: "Fri 3:42 PM",
-    tags: ["Call Flow", "Sweep"],
+    tags: ["Call Flow", "Sweep", "🔥 ACT NOW"],
     strike: "$145",
     expiry: "March 27, 2026",
     premium: "$2.8M",
@@ -62,7 +62,7 @@ const exampleSignals: MarketSignal[] = [
     confidence: 9.1,
     description: "Aggressive put sweeps on TSLA totaling $1.9M in premium. The $250 puts expiring March 27 saw 6 consecutive sweeps at the ask within 12 minutes. Dark pool prints confirm institutional selling pressure near $260 resistance.",
     timestamp: "Fri 2:58 PM",
-    tags: ["Put Flow", "Sweep"],
+    tags: ["Put Flow", "Sweep", "🔥 ACT NOW"],
     strike: "$250",
     expiry: "March 27, 2026",
     premium: "$1.9M",
@@ -80,7 +80,7 @@ const exampleSignals: MarketSignal[] = [
     confidence: 9.6,
     description: "Whale alert: single-block $3.1M call order on AAPL $215 strike. Unusual volume spike with 5.8x average call volume. Options market makers are actively hedging long delta — a strong signal of directional conviction from smart money.",
     timestamp: "Fri 1:15 PM",
-    tags: ["Call Flow", "Block"],
+    tags: ["Call Flow", "Block", "🔥 ACT NOW"],
     strike: "$215",
     expiry: "March 27, 2026",
     premium: "$3.1M",
@@ -98,7 +98,7 @@ const exampleSignals: MarketSignal[] = [
     confidence: 9.8,
     description: "Extreme put sweep cluster on SPY — $4.5M in $570 puts expiring March 27. 9 sweeps in under 20 minutes, all filled at the ask. Put/call ratio spiked to 2.1x. This is the highest conviction bearish flow seen this week across all indices.",
     timestamp: "Fri 12:30 PM",
-    tags: ["Put Flow", "Sweep"],
+    tags: ["Put Flow", "Sweep", "🔥 ACT NOW"],
     strike: "$570",
     expiry: "March 27, 2026",
     premium: "$4.5M",
@@ -116,7 +116,7 @@ const exampleSignals: MarketSignal[] = [
     confidence: 9.2,
     description: "Repeat call sweeps on PLTR at the $120 strike — $1.4M total premium across 4 sweeps. Unusual whales flagged this as top-tier flow. Open interest is building rapidly and the stock is consolidating near a breakout level.",
     timestamp: "Fri 11:45 AM",
-    tags: ["Call Flow", "Sweep"],
+    tags: ["Call Flow", "Sweep", "🔥 ACT NOW"],
     strike: "$120",
     expiry: "March 27, 2026",
     premium: "$1.4M",
@@ -134,7 +134,7 @@ const exampleSignals: MarketSignal[] = [
     confidence: 10.0,
     description: "Highest-conviction signal of the week: $5.2M in AMD $110 put sweeps. 12 consecutive sweeps at the ask, all within a 15-minute window. Dark pool short volume hit 62% — the highest level in 30 days. Smart money is positioning aggressively bearish.",
     timestamp: "Fri 10:22 AM",
-    tags: ["Put Flow", "Sweep"],
+    tags: ["Put Flow", "Sweep", "🔥 ACT NOW"],
     strike: "$110",
     expiry: "March 27, 2026",
     premium: "$5.2M",
@@ -169,13 +169,14 @@ export function useMarketData() {
       }
 
       // Transform flow alerts into signals — live data replaces examples
-      const newSignals: MarketSignal[] = alerts.slice(0, 6).map((alert: any, i: number) => {
-        // API returns "type" as "put" or "call", and "alert_rule" for the flow pattern
+      type SignalWithPremium = MarketSignal & { _totalPremium: number };
+      const allSignals: SignalWithPremium[] = alerts.map((alert: any, i: number) => {
         const putCall = alert.type === 'call' ? 'call' : 'put';
         const isBullish = putCall === 'call';
         const ticker = alert.ticker || alert.underlying_symbol || 'N/A';
         const strike = alert.strike || '—';
-        const premium = formatPremium(alert.total_premium || alert.premium);
+        const totalPremium = parseFloat(alert.total_premium || alert.premium || '0');
+        const premium = formatPremium(totalPremium);
         const expiry = alert.expiry || alert.expires || 'N/A';
         const flowType = alert.alert_rule?.includes('Sweep') ? 'Sweep' : 
                          alert.alert_rule?.includes('Block') ? 'Block' : 
@@ -183,17 +184,27 @@ export function useMarketData() {
         const volOiRatio = alert.volume_oi_ratio ? parseFloat(alert.volume_oi_ratio) : null;
         const tradeCount = alert.trade_count || 0;
 
+        const confidence = volOiRatio && volOiRatio > 10 ? 9.5 : 
+                          volOiRatio && volOiRatio > 3 ? 9.0 : 
+                          tradeCount > 8 ? 8.8 : 
+                          Math.round((Math.random() * 2 + 7.5) * 10) / 10;
+
+        const urgencyTag = confidence >= 9.0 ? '🔥 ACT NOW' : confidence >= 8.5 ? '⚡ HIGH CONVICTION' : null;
+        const tags = [
+          putCall === 'call' ? 'Call Flow' : 'Put Flow',
+          flowType,
+          ...(urgencyTag ? [urgencyTag] : []),
+        ].filter(Boolean);
+
         return {
           id: alert.id || String(i),
           ticker,
           type: isBullish ? 'bullish' as const : 'bearish' as const,
-          confidence: volOiRatio && volOiRatio > 10 ? 9.5 : 
-                      volOiRatio && volOiRatio > 3 ? 9.0 : 
-                      tradeCount > 8 ? 8.8 : 
-                      Math.round((Math.random() * 2 + 7.5) * 10) / 10,
+          confidence,
+          _totalPremium: totalPremium, // used for dedup sorting
           description: `${tradeCount} ${putCall} trades detected on ${ticker} at $${strike} strike. Total premium: $${premium}. Volume/OI ratio: ${volOiRatio ? volOiRatio.toFixed(1) + 'x' : 'N/A'} — ${volOiRatio && volOiRatio > 3 ? 'significant new positioning' : 'active flow'}.`,
           timestamp: alert.created_at ? timeAgo(alert.created_at) : `${i + 1} min ago`,
-          tags: [putCall === 'call' ? 'Call Flow' : 'Put Flow', flowType].filter(Boolean),
+          tags,
           strike: `$${strike}`,
           expiry,
           premium: `$${premium}`,
@@ -205,8 +216,26 @@ export function useMarketData() {
           targetZone: isBullish 
             ? `$${(parseFloat(strike) * 1.02).toFixed(2)} – $${(parseFloat(strike) * 1.05).toFixed(2)}`
             : `$${(parseFloat(strike) * 0.95).toFixed(2)} – $${(parseFloat(strike) * 0.98).toFixed(2)}`,
-        };
+        } as MarketSignal & { _totalPremium: number };
       });
+
+      // Filter to 8.5+ confidence only
+      const filtered = allSignals.filter(s => s.confidence >= 8.5);
+
+      // Deduplicate: per ticker, keep only the dominant side (highest total premium)
+      const tickerMap = new Map<string, (typeof allSignals)[0]>();
+      for (const signal of filtered) {
+        const existing = tickerMap.get(signal.ticker);
+        if (!existing || signal._totalPremium > existing._totalPremium) {
+          tickerMap.set(signal.ticker, signal);
+        }
+      }
+
+      // Sort by confidence descending, take top 6
+      const newSignals: MarketSignal[] = Array.from(tickerMap.values())
+        .sort((a, b) => b.confidence - a.confidence)
+        .slice(0, 6)
+        .map(({ _totalPremium, ...signal }) => signal);
 
       if (newSignals.length > 0) setSignals(newSignals);
 
