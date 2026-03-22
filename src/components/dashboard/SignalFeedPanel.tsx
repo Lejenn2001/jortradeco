@@ -151,15 +151,22 @@ const SignalFeedPanel = ({ signals, loading }: Props) => {
                 </div>
 
                 {/* Tags */}
-                <div className="flex gap-1.5">
-                  {signal.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="text-[10px] bg-muted/50 text-muted-foreground px-2 py-0.5 rounded-full"
-                    >
-                      {tag}
-                    </span>
-                  ))}
+                <div className="flex flex-wrap gap-1.5">
+                  {signal.tags.map((tag) => {
+                    const isUrgent = tag.includes('ACT NOW') || tag.includes('HIGH CONVICTION');
+                    return (
+                      <span
+                        key={tag}
+                        className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                          isUrgent
+                            ? "bg-destructive/20 text-destructive animate-pulse"
+                            : "bg-muted/50 text-muted-foreground"
+                        }`}
+                      >
+                        {tag}
+                      </span>
+                    );
+                  })}
                   {signal.premium && (
                     <span className="text-[10px] bg-accent/20 text-accent px-2 py-0.5 rounded-full font-medium">
                       Premium: {signal.premium}
