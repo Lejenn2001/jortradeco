@@ -79,6 +79,28 @@ const DashboardAnalytics = () => {
 
     const chatRes = await supabase.from("chat_messages").select("id", { count: "exact", head: true });
     if (chatRes.count !== null) setChatCount(chatRes.count);
+
+    // Load API usage stats
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const minuteAgo = new Date(Date.now() - 60 * 1000);
+
+    const [dailyRes, minuteRes] = await Promise.all([
+      supabase
+        .from("api_usage_log" as any)
+        .select("id", { count: "exact", head: true })
+        .eq("api_name", "unusual_whales")
+        .gte("created_at", todayStart.toISOString()),
+      supabase
+        .from("api_usage_log" as any)
+        .select("id", { count: "exact", head: true })
+        .eq("api_name", "unusual_whales")
+        .gte("created_at", minuteAgo.toISOString()),
+    ]);
+
+    if (dailyRes.count !== null) setApiUsageToday(dailyRes.count);
+    if (minuteRes.count !== null) setApiUsageMinute(minuteRes.count);
+
     setLoading(false);
   };
 
