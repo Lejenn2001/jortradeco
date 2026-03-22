@@ -43,7 +43,7 @@ const CTASection = () => {
             transition={{ duration: 0.5, delay: 0.3 }}
             src={biddieLeaning}
             alt="Biddie leaning casually"
-            className="absolute -left-12 md:-left-20 lg:-left-24 bottom-4 md:bottom-6 lg:bottom-8 w-20 h-20 md:w-32 md:h-32 lg:w-40 lg:h-40 object-contain drop-shadow-[0_0_30px_hsl(230_85%_60%_/_0.35)] -scale-x-100"
+            className="absolute -left-16 md:-left-24 lg:-left-28 bottom-0 w-20 h-20 md:w-32 md:h-32 lg:w-40 lg:h-40 object-contain drop-shadow-[0_0_30px_hsl(230_85%_60%_/_0.35)] -scale-x-100"
           />
         </div>
 
