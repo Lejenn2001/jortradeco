@@ -66,10 +66,10 @@ Given real-time flow data for a ticker, generate a JSON response with these exac
 
 Rules:
 - Use ONLY real data from the flow. Don't invent numbers.
-- ONLY recommend: Long Call, Long Put, Long Call Butterfly, Long Put Butterfly, Bull Call Debit Spread, or Bear Put Debit Spread.
-- Bullish flow → Long Call, Bull Call Debit Spread, or Long Call Butterfly.
-- Bearish flow → Long Put, Bear Put Debit Spread, or Long Put Butterfly.
-- Use spreads when the move looks measured/range-bound. Use butterflies for concentrated strike activity. Use Long Call/Put for strong directional conviction.
+- ONLY recommend: Call, Put, Call Butterfly, Put Butterfly, Bull Call Debit Spread, or Bear Put Debit Spread.
+- Bullish flow → Call, Bull Call Debit Spread, or Call Butterfly.
+- Bearish flow → Put, Bear Put Debit Spread, or Put Butterfly.
+- Use spreads when the move looks measured/range-bound. Use butterflies for concentrated strike activity. Use Call/Put for strong directional conviction.
 - The "contract" field MUST have exact ticker, expiration date, strike(s), and type. For multi-leg strategies, list each leg.
 - Use actual strike prices and expirations from the flow data.
 - ONLY use flow data from TODAY or this current trading week. Ignore any trades with past expirations or old dates.
