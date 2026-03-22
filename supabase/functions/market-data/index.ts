@@ -1,4 +1,16 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+
+const logApiUsage = async (endpoints: string[]) => {
+  try {
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    const rows = endpoints.map(e => ({ api_name: "unusual_whales", endpoint: e }));
+    await supabase.from("api_usage_log").insert(rows);
+  } catch (e) { console.warn("Failed to log API usage:", e); }
+};
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -29,45 +41,44 @@ serve(async (req) => {
     let data: any = {};
 
     if (action === 'flow') {
-      // Flow alerts - unusual options activity
       const res = await fetch(`${UW_BASE}/option-trades/flow-alerts?limit=15`, { headers: uwHeaders });
       if (!res.ok) throw new Error(`UW flow-alerts failed [${res.status}]: ${await res.text()}`);
       data = await res.json();
+      await logApiUsage(["flow-alerts"]);
 
     } else if (action === 'ticker' && ticker) {
-      // Ticker-specific: options volume + recent flow
       const [volumeRes, flowRes] = await Promise.all([
         fetch(`${UW_BASE}/stock/${ticker}/options-volume`, { headers: uwHeaders }),
         fetch(`${UW_BASE}/stock/${ticker}/flow-recent`, { headers: uwHeaders }),
       ]);
-
       const volume = volumeRes.ok ? await volumeRes.json() : { data: [] };
       const flow = flowRes.ok ? await flowRes.json() : { data: [] };
-
       data = { volume: volume.data, flow: flow.data };
+      await logApiUsage(["options-volume", "flow-recent"]);
 
     } else if (action === 'market') {
-      // Market Tide - overall sentiment
       const res = await fetch(`${UW_BASE}/market/market-tide`, { headers: uwHeaders });
       if (!res.ok) throw new Error(`UW market-tide failed [${res.status}]: ${await res.text()}`);
       data = await res.json();
+      await logApiUsage(["market-tide"]);
 
     } else if (action === 'whale-alerts') {
-      // Large premium flow alerts
       const res = await fetch(`${UW_BASE}/option-trades/flow-alerts?min_premium=500000&limit=10`, { headers: uwHeaders });
       if (!res.ok) throw new Error(`UW whale-alerts failed [${res.status}]: ${await res.text()}`);
       data = await res.json();
+      await logApiUsage(["whale-alerts"]);
 
     } else if (action === 'darkpool' && ticker) {
       const res = await fetch(`${UW_BASE}/darkpool/${ticker}`, { headers: uwHeaders });
       if (!res.ok) throw new Error(`UW darkpool failed [${res.status}]: ${await res.text()}`);
       data = await res.json();
+      await logApiUsage(["darkpool"]);
 
     } else if (action === 'hottest') {
-      // Hottest option chains
       const res = await fetch(`${UW_BASE}/screener/option-contracts?limit=10&min_premium=100000`, { headers: uwHeaders });
       if (!res.ok) throw new Error(`UW screener failed [${res.status}]: ${await res.text()}`);
       data = await res.json();
+      await logApiUsage(["screener"]);
 
     } else {
       return new Response(JSON.stringify({ error: 'Invalid action. Use: flow, ticker, market, whale-alerts, darkpool, hottest' }), {

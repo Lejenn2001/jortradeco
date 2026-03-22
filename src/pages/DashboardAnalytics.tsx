@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, UserPlus, MessageSquare, TrendingUp, BarChart3, ShieldAlert, Shield, ShieldCheck, ShieldX } from "lucide-react";
+import { Users, UserPlus, MessageSquare, TrendingUp, BarChart3, ShieldAlert, Shield, ShieldCheck, ShieldX, Anchor, Gauge } from "lucide-react";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,6 +47,8 @@ const DashboardAnalytics = () => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [apiUsageToday, setApiUsageToday] = useState(0);
+  const [apiUsageMinute, setApiUsageMinute] = useState(0);
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -77,6 +79,28 @@ const DashboardAnalytics = () => {
 
     const chatRes = await supabase.from("chat_messages").select("id", { count: "exact", head: true });
     if (chatRes.count !== null) setChatCount(chatRes.count);
+
+    // Load API usage stats
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const minuteAgo = new Date(Date.now() - 60 * 1000);
+
+    const [dailyRes, minuteRes] = await Promise.all([
+      supabase
+        .from("api_usage_log" as any)
+        .select("id", { count: "exact", head: true })
+        .eq("api_name", "unusual_whales")
+        .gte("created_at", todayStart.toISOString()),
+      supabase
+        .from("api_usage_log" as any)
+        .select("id", { count: "exact", head: true })
+        .eq("api_name", "unusual_whales")
+        .gte("created_at", minuteAgo.toISOString()),
+    ]);
+
+    if (dailyRes.count !== null) setApiUsageToday(dailyRes.count);
+    if (minuteRes.count !== null) setApiUsageMinute(minuteRes.count);
+
     setLoading(false);
   };
 
@@ -171,6 +195,50 @@ const DashboardAnalytics = () => {
                 <StatCard icon={UserPlus} label="New Today" value={newToday} color="bg-emerald-500" />
                 <StatCard icon={TrendingUp} label="This Week" value={newThisWeek} subtitle="New signups" color="bg-purple-500" />
                 <StatCard icon={MessageSquare} label="Chat Messages" value={chatCount} color="bg-amber-500" />
+              </div>
+
+              {/* Whale API Usage */}
+              <div className="glass-panel rounded-xl p-5 border-border/40 mb-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Anchor className="h-4 w-4 text-primary" />
+                  <h2 className="text-sm font-semibold text-foreground">Unusual Whales API Usage</h2>
+                </div>
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="bg-muted/20 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Gauge className="h-3.5 w-3.5 text-muted-foreground" />
+                      <p className="text-xs text-muted-foreground">Per Minute</p>
+                    </div>
+                    <p className="text-xl font-bold text-foreground">{apiUsageMinute} <span className="text-sm font-normal text-muted-foreground">/ 120</span></p>
+                    <div className="mt-2 h-1.5 bg-muted/30 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${apiUsageMinute > 100 ? "bg-destructive" : apiUsageMinute > 60 ? "bg-amber-500" : "bg-emerald-500"}`}
+                        style={{ width: `${Math.min((apiUsageMinute / 120) * 100, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="bg-muted/20 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Gauge className="h-3.5 w-3.5 text-muted-foreground" />
+                      <p className="text-xs text-muted-foreground">Today</p>
+                    </div>
+                    <p className="text-xl font-bold text-foreground">{apiUsageToday.toLocaleString()} <span className="text-sm font-normal text-muted-foreground">/ 15,000</span></p>
+                    <div className="mt-2 h-1.5 bg-muted/30 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${apiUsageToday > 12000 ? "bg-destructive" : apiUsageToday > 7500 ? "bg-amber-500" : "bg-emerald-500"}`}
+                        style={{ width: `${Math.min((apiUsageToday / 15000) * 100, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="bg-muted/20 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Gauge className="h-3.5 w-3.5 text-muted-foreground" />
+                      <p className="text-xs text-muted-foreground">Remaining Today</p>
+                    </div>
+                    <p className="text-xl font-bold text-foreground">{(15000 - apiUsageToday).toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground mt-1">requests left</p>
+                  </div>
+                </div>
               </div>
 
               {/* Members Table with Role Management */}

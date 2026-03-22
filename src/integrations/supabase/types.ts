@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_usage_log: {
+        Row: {
+          api_name: string
+          created_at: string
+          endpoint: string
+          id: string
+        }
+        Insert: {
+          api_name?: string
+          created_at?: string
+          endpoint: string
+          id?: string
+        }
+        Update: {
+          api_name?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           content: string
