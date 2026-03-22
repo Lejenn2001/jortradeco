@@ -1,40 +1,46 @@
-import { motion } from "framer-motion";
-import { Lock } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import StatsBar from "@/components/dashboard/StatsBar";
+import SignalFeedPanel from "@/components/dashboard/SignalFeedPanel";
+import MarketChartPanel from "@/components/dashboard/MarketChartPanel";
+import AIChatPanel from "@/components/dashboard/AIChatPanel";
+import PortfolioPanel from "@/components/dashboard/PortfolioPanel";
 
 const Dashboard = () => {
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="text-center max-w-lg"
-      >
-        <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-6">
-          <Lock className="h-7 w-7 text-primary" />
-        </div>
+    <div className="h-screen flex bg-background overflow-hidden">
+      {/* Sidebar */}
+      <DashboardSidebar />
 
-        <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-4">
-          Dashboard Coming Soon
-        </h1>
-        <p className="text-muted-foreground text-base leading-relaxed mb-8">
-          The full JORTRADE AI dashboard is being built. Sign up for early access
-          to be first in line when it launches.
-        </p>
+      {/* Main content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <DashboardHeader />
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-8 py-6 text-base font-semibold">
-            Sign Up for Early Access
-          </Button>
-          <Link to="/">
-            <Button variant="outline" className="rounded-full px-8 py-6 text-base font-semibold border-muted-foreground/30 hover:bg-muted/30 w-full">
-              ← Back to Home
-            </Button>
-          </Link>
-        </div>
-      </motion.div>
+        <main className="flex-1 overflow-y-auto p-6 space-y-6">
+          {/* Stats */}
+          <StatsBar />
+
+          {/* Main grid: signals + chart */}
+          <div className="grid lg:grid-cols-5 gap-6">
+            <div className="lg:col-span-2">
+              <SignalFeedPanel />
+            </div>
+            <div className="lg:col-span-3">
+              <MarketChartPanel />
+            </div>
+          </div>
+
+          {/* Bottom grid: chat + portfolio */}
+          <div className="grid lg:grid-cols-5 gap-6">
+            <div className="lg:col-span-3">
+              <AIChatPanel />
+            </div>
+            <div className="lg:col-span-2">
+              <PortfolioPanel />
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
   );
 };
