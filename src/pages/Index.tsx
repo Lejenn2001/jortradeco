@@ -18,6 +18,7 @@ const Index = () => {
       <AIWorkflowSection />
       <RealTimeGuidanceSection />
       <FeaturesGridSection />
+      <MentorshipSection />
       <CTASection />
       <FAQSection />
       <Footer />
