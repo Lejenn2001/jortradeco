@@ -200,8 +200,8 @@ const MarketChartPanel = () => {
             const color = c.bull ? "hsl(var(--primary))" : "hsl(var(--destructive))";
             return (
               <g key={i}>
-                <line x1={c.x} y1={c.h} x2={c.x} y2={c.l} stroke={color} strokeWidth="2" />
-                <rect x={c.x - 8} y={top} width="16" height={Math.max(bottom - top, 3)} fill={color} rx="2" />
+                <line x1={c.x} y1={c.h} x2={c.x} y2={c.l} stroke={color} strokeWidth="1.5" />
+                <rect x={c.x - 6} y={top} width="12" height={Math.max(bottom - top, 3)} fill={color} rx="1.5" />
               </g>
             );
           })}
