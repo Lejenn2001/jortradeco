@@ -80,7 +80,7 @@ const exampleSignals: MarketSignal[] = [
     confidence: 9.6,
     description: "Whale alert: single-block $3.1M call order on AAPL $215 strike. Unusual volume spike with 5.8x average call volume. Options market makers are actively hedging long delta — a strong signal of directional conviction from smart money.",
     timestamp: "Fri 1:15 PM",
-    tags: ["Call Flow", "Block"],
+    tags: ["Call Flow", "Block", "🔥 ACT NOW"],
     strike: "$215",
     expiry: "March 27, 2026",
     premium: "$3.1M",
