@@ -39,11 +39,32 @@ interface MemberRow {
 }
 
 const DashboardAnalytics = () => {
+  const { session } = useAuth();
+  const navigate = useNavigate();
   const [members, setMembers] = useState<MemberRow[]>([]);
   const [chatCount, setChatCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
   useEffect(() => {
+    const checkAdmin = async () => {
+      if (!session?.user?.id) {
+        setIsAdmin(false);
+        return;
+      }
+      const { data } = await supabase
+        .from("user_roles" as any)
+        .select("role")
+        .eq("user_id", session.user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      setIsAdmin(!!data);
+    };
+    checkAdmin();
+  }, [session?.user?.id]);
+
+  useEffect(() => {
+    if (isAdmin !== true) return;
     const load = async () => {
       const [profilesRes, chatRes] = await Promise.all([
         supabase.from("profiles").select("id, full_name, created_at").order("created_at", { ascending: false }),
@@ -54,7 +75,7 @@ const DashboardAnalytics = () => {
       setLoading(false);
     };
     load();
-  }, []);
+  }, [isAdmin]);
 
   const today = new Date().toISOString().split("T")[0];
   const newToday = members.filter((m) => m.created_at.startsWith(today)).length;
