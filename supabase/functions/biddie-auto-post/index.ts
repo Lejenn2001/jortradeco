@@ -42,6 +42,23 @@ serve(async (req) => {
       }
     }
 
+    // For alerts, check if Biddie posted in last 30 minutes to avoid spam
+    if (action === "alert") {
+      const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+      const { data: recent } = await supabase
+        .from("chat_messages")
+        .select("id")
+        .eq("user_id", BIDDIE_USER_ID)
+        .gte("created_at", thirtyMinsAgo)
+        .limit(1);
+
+      if (recent && recent.length > 0) {
+        return new Response(JSON.stringify({ status: "too_recent" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // Fetch market context
     let marketContext = "";
     if (uwKey) {
