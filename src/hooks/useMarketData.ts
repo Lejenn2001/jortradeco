@@ -245,18 +245,62 @@ export function useMarketData() {
 
       if (merged.length > 0) setSignals(merged);
 
-      // Transform into whale alerts
-      const newWhaleAlerts: FlowAlert[] = alerts.slice(0, 8).map((alert: any) => ({
-        ticker: alert.ticker || alert.underlying_symbol || 'N/A',
-        type: `${alert.type === 'call' ? 'Call' : 'Put'} ${alert.alert_rule?.includes('Sweep') ? 'Sweep' : 'Flow'}`,
-        premium: `$${formatPremium(alert.total_premium || alert.premium)}`,
-        strike: `$${alert.strike || '—'}`,
-        expiry: alert.expiry || alert.expires || '—',
-        sentiment: alert.type === 'call' ? 'bullish' : 'bearish',
-        time: alert.created_at ? timeAgo(alert.created_at) : 'just now',
-      }));
+      // Whale alerts now fetched separately via fetchWhaleAlerts
+    } catch (e) {
+      console.error('Failed to fetch flow alerts:', e);
+    }
+  }, []);
 
-      if (newWhaleAlerts.length > 0) setWhaleAlerts(newWhaleAlerts);
+  const fetchWhaleAlerts = useCallback(async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('market-data', {
+        body: { action: 'whale-alerts' },
+      });
+      if (error) throw error;
+
+      const alerts = data?.data || [];
+      if (alerts.length === 0) return; // keep example fallbacks
+
+      const newWhaleAlerts: FlowAlert[] = alerts.map((alert: any) => {
+        const putCall = alert.type === 'call' ? 'Call' : 'Put';
+        const flowPattern = alert.alert_rule?.includes('Sweep') ? 'Sweep'
+          : alert.alert_rule?.includes('Block') ? 'Block'
+          : alert.alert_rule?.includes('Repeated') ? 'Repeated Hits' : 'Flow';
+        const ticker = alert.ticker || alert.underlying_symbol || 'N/A';
+        const strike = alert.strike || '—';
+        const premium = formatPremium(alert.total_premium || alert.premium);
+        const isBullish = alert.type === 'call';
+
+        return {
+          ticker,
+          type: `${putCall} ${flowPattern}`,
+          premium: `$${premium}`,
+          strike: `$${strike}`,
+          expiry: alert.expiry || alert.expires || '—',
+          sentiment: isBullish ? 'bullish' as const : 'bearish' as const,
+          time: alert.created_at ? timeAgo(alert.created_at) : 'just now',
+          explanation: `${alert.trade_count || 'Multiple'} ${putCall.toLowerCase()} ${flowPattern.toLowerCase()}${alert.trade_count > 1 ? 's' : ''} detected on ${ticker} at $${strike} strike with $${premium} total premium. ${alert.volume_oi_ratio ? `Volume/OI ratio is ${parseFloat(alert.volume_oi_ratio).toFixed(1)}x — ` : ''}${isBullish ? 'Bullish' : 'Bearish'} institutional positioning with significant capital commitment.`,
+        };
+      });
+
+      // Deduplicate: keep highest premium per ticker
+      const tickerMap = new Map<string, FlowAlert>();
+      for (const alert of newWhaleAlerts) {
+        const existing = tickerMap.get(alert.ticker);
+        if (!existing || parsePremium(alert.premium) > parsePremium(existing.premium)) {
+          tickerMap.set(alert.ticker, alert);
+        }
+      }
+
+      const deduped = Array.from(tickerMap.values())
+        .sort((a, b) => parsePremium(b.premium) - parsePremium(a.premium))
+        .slice(0, 8);
+
+      if (deduped.length > 0) setWhaleAlerts(deduped);
+    } catch (e) {
+      console.error('Failed to fetch whale alerts:', e);
+    }
+  }, []);
     } catch (e) {
       console.error('Failed to fetch flow alerts:', e);
     }
