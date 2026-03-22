@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import biddieRobot from "@/assets/biddie-robot.png";
 
 const HeroSection = () => {
   return (
