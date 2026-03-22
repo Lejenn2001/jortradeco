@@ -117,7 +117,7 @@ const AIChatPanel = () => {
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
         {messages.length === 0 && (
           <div className="text-center py-8">
-            <img src={biddieRobot} alt="Biddie" className="w-16 h-16 mx-auto mb-3 drop-shadow-[0_0_15px_hsl(230_85%_60%_/_0.4)]" />
+            <img src={biddieRobot} alt="Biddie" className="w-24 h-24 mx-auto mb-3 drop-shadow-[0_0_15px_hsl(230_85%_60%_/_0.4)]" />
             <p className="text-sm text-foreground font-medium">{greeting}</p>
             
             <p className="text-xs text-muted-foreground mt-2">Powered by JORTRADE</p>
