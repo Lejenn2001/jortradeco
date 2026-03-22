@@ -55,8 +55,6 @@ const ChatRoomHeader = ({ onlineCount, firstName }: ChatRoomHeaderProps) => {
 
   return (
     <div className="space-y-3">
-      {/* Market Status */}
-      <MarketStatusSign />
       {/* Top bar */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="glass-panel rounded-xl px-4 py-2.5 flex items-center gap-2.5">
@@ -85,6 +83,8 @@ const ChatRoomHeader = ({ onlineCount, firstName }: ChatRoomHeaderProps) => {
           <Users className="h-3.5 w-3.5 text-emerald-400" />
           <span className="text-sm font-medium text-emerald-400">{onlineCount} online</span>
         </div>
+
+        <MarketStatusSign />
 
         <div className="flex-1" />
 
