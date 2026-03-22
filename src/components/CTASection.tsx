@@ -31,15 +31,11 @@ const CTASection = () => {
         transition={{ duration: 0.7 }}
         className="relative z-10 container mx-auto px-6 text-center"
       >
-        <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-foreground leading-[1.1] max-w-2xl mx-auto">
-          Ready to Trade Smarter?
-        </h2>
-
-        {/* Biddie standing on the subtitle */}
-        <div className="relative inline-block mt-6">
-          <p className="text-muted-foreground max-w-xl mx-auto text-base leading-relaxed">
-            Let Biddie do the heavy lifting — you focus on pulling the trigger at the right time.
-          </p>
+        <div className="relative inline-block">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-foreground leading-[1.1] max-w-2xl mx-auto">
+            Ready to Trade<br />Smarter?
+          </h2>
+          {/* Biddie positioned at the end of "Smarter?" */}
           <motion.img
             initial={{ opacity: 0, scale: 0.8 }}
             whileInView={{ opacity: 1, scale: 1 }}
@@ -47,15 +43,13 @@ const CTASection = () => {
             transition={{ duration: 0.5, delay: 0.3 }}
             src={biddieLeaning}
             alt="Biddie leaning casually"
-            className="absolute -right-20 md:-right-28 -top-16 md:-top-24 w-24 h-24 md:w-36 md:h-36 object-contain drop-shadow-[0_0_30px_hsl(230_85%_60%_/_0.35)] rotate-[6deg]"
+            className="absolute -right-16 md:-right-24 lg:-right-28 bottom-0 w-20 h-20 md:w-32 md:h-32 lg:w-40 lg:h-40 object-contain drop-shadow-[0_0_30px_hsl(230_85%_60%_/_0.35)]"
           />
         </div>
 
-        <Link to="/signup">
-          <Button className="mt-10 bg-foreground text-background hover:bg-foreground/90 rounded-full px-10 py-6 text-base font-semibold">
-            Chat with Biddie
-          </Button>
-        </Link>
+        <p className="text-muted-foreground mt-6 max-w-xl mx-auto text-base leading-relaxed">
+          Let Biddie do the heavy lifting — you focus on pulling the trigger at the right time.
+        </p>
       </motion.div>
 
       {/* Stats bar */}
