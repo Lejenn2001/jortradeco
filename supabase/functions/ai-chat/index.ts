@@ -69,14 +69,22 @@ RESPONSE RULES — FOLLOW STRICTLY:
 
 You have access to real-time options flow and market data.${marketContext}`;
 
+    // Deduplicate: if history already contains the current message as last entry, don't add again
+    const chatHistory = (history || []).map((h: any) => ({
+      role: h.role,
+      content: h.content,
+    }));
+    
+    const lastHistoryMsg = chatHistory[chatHistory.length - 1];
+    const isDuplicate = lastHistoryMsg?.role === 'user' && lastHistoryMsg?.content === message;
+    
     const messages = [
       { role: 'system', content: systemPrompt },
-      ...(history || []).map((h: any) => ({
-        role: h.role,
-        content: h.content,
-      })),
-      { role: 'user', content: message },
+      ...chatHistory,
+      ...(!isDuplicate ? [{ role: 'user', content: message }] : []),
     ];
+
+    console.log('Sending to AI gateway, message count:', messages.length);
 
     const aiRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -102,11 +110,13 @@ You have access to real-time options flow and market data.${marketContext}`;
         });
       }
       const errText = await aiRes.text();
+      console.error('AI gateway error:', aiRes.status, errText);
       throw new Error(`AI gateway failed [${aiRes.status}]: ${errText}`);
     }
 
     const aiData = await aiRes.json();
-    const reply = aiData.choices?.[0]?.message?.content || 'No response generated.';
+    console.log('AI response keys:', JSON.stringify(Object.keys(aiData)));
+    const reply = aiData.choices?.[0]?.message?.content || aiData.choices?.[0]?.text || 'Sorry, I couldn\'t generate a response. Try again!';
 
     return new Response(JSON.stringify({ reply }), {
       status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
