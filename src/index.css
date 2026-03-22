@@ -6,49 +6,51 @@
 
 @layer base {
   :root {
-    --background: 225 25% 6%;
-    --foreground: 210 40% 95%;
+    --background: 230 25% 5%;
+    --foreground: 220 30% 95%;
 
-    --card: 225 30% 9%;
-    --card-foreground: 210 40% 95%;
+    --card: 232 30% 8%;
+    --card-foreground: 220 30% 95%;
 
-    --popover: 225 30% 9%;
-    --popover-foreground: 210 40% 95%;
+    --popover: 232 30% 8%;
+    --popover-foreground: 220 30% 95%;
 
-    --primary: 168 80% 48%;
-    --primary-foreground: 225 25% 6%;
+    --primary: 230 85% 60%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 225 30% 13%;
-    --secondary-foreground: 210 30% 85%;
+    --secondary: 232 30% 12%;
+    --secondary-foreground: 220 25% 85%;
 
-    --muted: 225 25% 15%;
-    --muted-foreground: 220 15% 55%;
+    --muted: 232 25% 14%;
+    --muted-foreground: 225 15% 50%;
 
-    --accent: 265 65% 58%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 270 75% 60%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 230 25% 16%;
-    --input: 230 25% 16%;
-    --ring: 168 80% 48%;
+    --border: 232 25% 14%;
+    --input: 232 25% 14%;
+    --ring: 230 85% 60%;
 
     --radius: 0.75rem;
     --warning: 38 92% 50%;
+    --success: 142 71% 45%;
 
-    --glow-cyan: 168 80% 48%;
-    --glow-purple: 265 65% 58%;
-    --surface-glass: 225 30% 10%;
+    --glow-blue: 230 85% 60%;
+    --glow-purple: 270 75% 60%;
+    --glow-cyan: 200 90% 55%;
+    --surface-glass: 232 30% 8%;
 
-    --sidebar-background: 225 30% 9%;
-    --sidebar-foreground: 210 30% 85%;
-    --sidebar-primary: 168 80% 48%;
-    --sidebar-primary-foreground: 225 25% 6%;
-    --sidebar-accent: 225 30% 13%;
-    --sidebar-accent-foreground: 210 30% 85%;
-    --sidebar-border: 230 25% 16%;
-    --sidebar-ring: 168 80% 48%;
+    --sidebar-background: 232 30% 8%;
+    --sidebar-foreground: 220 25% 85%;
+    --sidebar-primary: 230 85% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 232 30% 12%;
+    --sidebar-accent-foreground: 220 25% 85%;
+    --sidebar-border: 232 25% 14%;
+    --sidebar-ring: 230 85% 60%;
   }
 }
 
@@ -68,13 +70,13 @@
   }
 
   .glass-panel {
-    background: hsl(var(--surface-glass) / 0.6);
-    backdrop-filter: blur(12px);
-    border: 1px solid hsl(var(--border));
+    background: hsl(var(--surface-glass) / 0.65);
+    backdrop-filter: blur(16px);
+    border: 1px solid hsl(var(--border) / 0.6);
   }
 
-  .glow-green {
-    box-shadow: 0 0 20px hsl(var(--glow-cyan) / 0.3), 0 0 60px hsl(var(--glow-cyan) / 0.1);
+  .glow-blue {
+    box-shadow: 0 0 20px hsl(var(--glow-blue) / 0.3), 0 0 60px hsl(var(--glow-blue) / 0.1);
   }
 
   .glow-purple {
@@ -82,17 +84,48 @@
   }
 
   .border-glow-purple {
-    border-color: hsl(var(--glow-purple) / 0.5);
-    box-shadow: inset 0 0 30px hsl(var(--glow-purple) / 0.05), 0 0 15px hsl(var(--glow-purple) / 0.15);
+    border-color: hsl(var(--glow-purple) / 0.4);
+    box-shadow: inset 0 0 30px hsl(var(--glow-purple) / 0.04), 0 0 20px hsl(var(--glow-purple) / 0.12);
+  }
+
+  .border-glow-blue {
+    border-color: hsl(var(--glow-blue) / 0.35);
+    box-shadow: inset 0 0 20px hsl(var(--glow-blue) / 0.04), 0 0 15px hsl(var(--glow-blue) / 0.1);
   }
 
   .border-glow-green {
-    border-color: hsl(var(--glow-cyan) / 0.4);
-    box-shadow: inset 0 0 20px hsl(var(--glow-cyan) / 0.05), 0 0 10px hsl(var(--glow-cyan) / 0.1);
+    border-color: hsl(var(--success) / 0.35);
+    box-shadow: inset 0 0 20px hsl(var(--success) / 0.04), 0 0 10px hsl(var(--success) / 0.08);
+  }
+
+  .text-gradient-blue {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--glow-purple)));
   }
 
   .text-gradient-green {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(190 85% 60%));
+    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--glow-purple)));
+  }
+
+  .bg-gradient-hero {
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, hsl(var(--glow-blue) / 0.15) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 50% at 80% 20%, hsl(var(--glow-purple) / 0.1) 0%, transparent 50%),
+                hsl(var(--background));
+  }
+
+  .bg-mesh {
+    background-image: 
+      radial-gradient(at 20% 80%, hsl(var(--glow-purple) / 0.08) 0%, transparent 50%),
+      radial-gradient(at 80% 20%, hsl(var(--glow-blue) / 0.06) 0%, transparent 50%);
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
   }
 }
