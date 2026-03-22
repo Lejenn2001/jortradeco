@@ -62,7 +62,7 @@ const exampleSignals: MarketSignal[] = [
     confidence: 9.1,
     description: "Aggressive put sweeps on TSLA totaling $1.9M in premium. The $250 puts expiring March 27 saw 6 consecutive sweeps at the ask within 12 minutes. Dark pool prints confirm institutional selling pressure near $260 resistance.",
     timestamp: "Fri 2:58 PM",
-    tags: ["Put Flow", "Sweep"],
+    tags: ["Put Flow", "Sweep", "🔥 ACT NOW"],
     strike: "$250",
     expiry: "March 27, 2026",
     premium: "$1.9M",
