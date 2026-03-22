@@ -15,26 +15,24 @@ function getMarketState() {
   const isWeekday = day >= 1 && day <= 5;
   const isOpen = isWeekday && totalMin >= openMin && totalMin < closeMin;
 
-  // Calculate countdown
   let targetLabel = "";
+  let targetTime = "";
   let diffMs = 0;
 
   if (isOpen) {
-    // Counting down to close
-    targetLabel = "Closes in";
+    targetLabel = "Closes at";
+    targetTime = "4:00 PM ET";
     const closeToday = new Date(et);
     closeToday.setHours(16, 0, 0, 0);
     diffMs = closeToday.getTime() - et.getTime();
   } else {
-    // Counting down to next open
-    targetLabel = "Opens in";
+    targetLabel = "Opens at";
+    targetTime = "9:30 AM ET";
     const nextOpen = new Date(et);
     
     if (isWeekday && totalMin < openMin) {
-      // Before open today
       nextOpen.setHours(9, 30, 0, 0);
     } else {
-      // After close or weekend — find next weekday
       nextOpen.setDate(nextOpen.getDate() + 1);
       while (nextOpen.getDay() === 0 || nextOpen.getDay() === 6) {
         nextOpen.setDate(nextOpen.getDate() + 1);
@@ -50,7 +48,7 @@ function getMarketState() {
   const s = totalSec % 60;
   const countdown = `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 
-  return { isOpen, countdown, targetLabel };
+  return { isOpen, countdown, targetLabel, targetTime };
 }
 
 const MarketStatusSign = () => {
@@ -109,7 +107,7 @@ const MarketStatusSign = () => {
         {/* Countdown */}
         <div className="text-right">
           <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
-            {state.targetLabel}
+            {state.targetLabel} <span className="text-foreground font-medium">{state.targetTime}</span>
           </div>
           <div
             className={`text-sm font-mono font-bold tracking-wider ${
