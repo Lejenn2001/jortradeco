@@ -50,7 +50,6 @@ const CTASection = () => {
         <p className="text-muted-foreground mt-6 max-w-xl mx-auto text-base leading-relaxed">
           Let Biddie do the heavy lifting — you focus on pulling the trigger at the right time.
         </p>
-      </motion.div>
 
         <Link to="/signup">
           <Button className="mt-10 bg-foreground text-background hover:bg-foreground/90 rounded-full px-10 py-6 text-base font-semibold">
