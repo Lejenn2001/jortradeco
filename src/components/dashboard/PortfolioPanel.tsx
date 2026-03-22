@@ -238,15 +238,51 @@ const PortfolioPanel = ({ whaleAlerts, loading }: Props) => {
                       <Info className={`h-3.5 w-3.5 mt-0.5 shrink-0 ${
                         alert.sentiment === "bullish" ? "text-primary" : "text-destructive"
                       }`} />
-                      <div>
+                      <div className="flex-1">
                         <div className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${
                           alert.sentiment === "bullish" ? "text-primary" : "text-destructive"
                         }`}>
                           Why this trade?
                         </div>
-                        <p className="text-xs text-muted-foreground leading-relaxed">
+                        <p className="text-xs text-muted-foreground leading-relaxed mb-3">
                           {explanation}
                         </p>
+
+                        {/* Budget-friendly alternative */}
+                        {getAlternative(alert) && (
+                          <div className="bg-muted/30 rounded-lg p-2.5 mb-3 border border-border/30">
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <Repeat2 className="h-3 w-3 text-accent" />
+                              <span className="text-[10px] font-bold text-accent uppercase tracking-wider">
+                                Budget-Friendly Alternative
+                              </span>
+                            </div>
+                            <p className="text-xs text-foreground font-semibold">
+                              {getAlternative(alert)}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                              Same directional exposure at a fraction of the cost
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Copy Trade button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const tradeText = `${getActionLabel(alert)} — ${alert.ticker} ${alert.strike} ${alert.sentiment === "bullish" ? "Calls" : "Puts"} exp ${alert.expiry}${getAlternative(alert) ? ` | Alt: ${getAlternative(alert)}` : ""}`;
+                            navigator.clipboard.writeText(tradeText);
+                            toast.success("Trade copied to clipboard!");
+                          }}
+                          className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-colors ${
+                            alert.sentiment === "bullish"
+                              ? "bg-primary/20 text-primary hover:bg-primary/30"
+                              : "bg-destructive/20 text-destructive hover:bg-destructive/30"
+                          }`}
+                        >
+                          <Copy className="h-3 w-3" />
+                          Copy Trade
+                        </button>
                       </div>
                     </div>
                   </div>
