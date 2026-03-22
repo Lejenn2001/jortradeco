@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Trash2, Users, Bot } from "lucide-react";
+import { Send, Trash2, Bot } from "lucide-react";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import ChatRoomHeader from "@/components/dashboard/ChatRoomHeader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ChatMessage {
   id: string;
@@ -15,6 +17,8 @@ interface ChatMessage {
   content: string;
   created_at: string;
 }
+
+const BIDDIE_USER_ID = "00000000-0000-0000-0000-000000000000";
 
 const DashboardCommunity = () => {
   const { session, profile } = useAuth();
@@ -117,9 +121,6 @@ const DashboardCommunity = () => {
     return new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
   };
 
-  const BIDDIE_USER_ID = "00000000-0000-0000-0000-000000000000";
-
-  // Generate a consistent color for each user
   const userColor = (userId: string) => {
     if (userId === BIDDIE_USER_ID) return "text-primary";
     const colors = [
@@ -137,83 +138,98 @@ const DashboardCommunity = () => {
       <DashboardSidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <DashboardHeader />
-        <main className="flex-1 flex flex-col overflow-hidden p-4 lg:p-6">
-          {/* Header */}
-          <div className="glass-panel rounded-xl p-4 mb-4 flex items-center justify-between">
-            <div>
-              <h1 className="text-lg font-bold text-foreground">JORTRADE Chat Room</h1>
-              <p className="text-xs text-muted-foreground">Talk trades, share setups, build together</p>
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30">
-              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <Users className="h-3.5 w-3.5 text-emerald-400" />
-              <span className="text-xs font-medium text-emerald-400">{onlineCount} online</span>
-            </div>
+        <main className="flex-1 flex flex-col overflow-hidden p-4 lg:p-6 bg-mesh">
+          {/* Enhanced Header */}
+          <div className="mb-3">
+            <ChatRoomHeader onlineCount={onlineCount} firstName={firstName} />
           </div>
 
           {/* Messages */}
           <div
             ref={scrollRef}
-            className="flex-1 glass-panel rounded-xl border-glow-purple p-4 overflow-y-auto space-y-3 mb-4"
+            className="flex-1 glass-panel rounded-xl border-glow-purple p-4 overflow-y-auto space-y-2 mb-3"
           >
             {messages.length === 0 && (
               <div className="flex-1 flex items-center justify-center h-full">
-                <div className="text-center">
-                  <p className="text-muted-foreground text-sm">No messages yet. Be the first to say something!</p>
-                </div>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="text-center space-y-3"
+                >
+                  <div className="text-5xl animate-float">🤖</div>
+                  <p className="text-muted-foreground text-sm">Biddie's waiting for the first message...</p>
+                  <p className="text-muted-foreground/60 text-xs">Be the one to break the ice!</p>
+                </motion.div>
               </div>
             )}
-            {messages.map((msg) => {
-              const isOwn = msg.user_id === session?.user?.id;
-              const isBiddie = msg.user_id === BIDDIE_USER_ID;
-              return (
-                <div
-                  key={msg.id}
-                  className={`group flex gap-3 ${isOwn ? "flex-row-reverse" : ""}`}
-                >
-                  {isBiddie && (
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center">
-                      <Bot className="h-4 w-4 text-primary" />
-                    </div>
-                  )}
-                  <div
-                    className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
-                      isBiddie
-                        ? "bg-primary/10 border border-primary/30 rounded-bl-md"
-                        : isOwn
-                        ? "bg-primary/20 border border-primary/30 rounded-br-md"
-                        : "bg-muted/30 border border-border/40 rounded-bl-md"
-                    }`}
+            <AnimatePresence initial={false}>
+              {messages.map((msg) => {
+                const isOwn = msg.user_id === session?.user?.id;
+                const isBiddie = msg.user_id === BIDDIE_USER_ID;
+                return (
+                  <motion.div
+                    key={msg.id}
+                    initial={{ opacity: 0, y: 10, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className={`group flex gap-2.5 ${isOwn ? "flex-row-reverse" : ""}`}
                   >
-                    {!isOwn && (
-                      <p className={`text-xs font-semibold mb-0.5 ${userColor(msg.user_id)}`}>
-                        {msg.user_name || "Trader"}
-                      </p>
-                    )}
-                    <p className="text-sm text-foreground break-words">{msg.content}</p>
-                    <p className="text-[10px] text-muted-foreground mt-1">{formatTime(msg.created_at)}</p>
-                  </div>
-                  {isOwn && (
-                    <button
-                      onClick={() => deleteMessage(msg.id)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity self-center p-1 rounded hover:bg-destructive/20"
+                    {/* Avatar */}
+                    {isBiddie ? (
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center">
+                        <Bot className="h-4 w-4 text-primary" />
+                      </div>
+                    ) : !isOwn ? (
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted/50 border border-border/50 flex items-center justify-center">
+                        <span className="text-xs font-bold text-muted-foreground">
+                          {(msg.user_name || "T")[0].toUpperCase()}
+                        </span>
+                      </div>
+                    ) : null}
+
+                    {/* Message Bubble */}
+                    <div
+                      className={`max-w-[70%] rounded-2xl px-4 py-2.5 ${
+                        isBiddie
+                          ? "bg-primary/10 border border-primary/25 rounded-bl-sm"
+                          : isOwn
+                          ? "bg-primary/20 border border-primary/30 rounded-br-sm"
+                          : "bg-muted/30 border border-border/40 rounded-bl-sm"
+                      }`}
                     >
-                      <Trash2 className="h-3 w-3 text-destructive" />
-                    </button>
-                  )}
-                </div>
-              );
-            })}
+                      {!isOwn && (
+                        <p className={`text-[11px] font-semibold mb-0.5 ${userColor(msg.user_id)}`}>
+                          {msg.user_name || "Trader"}
+                        </p>
+                      )}
+                      <p className="text-sm text-foreground break-words leading-relaxed">{msg.content}</p>
+                      <p className="text-[10px] text-muted-foreground/60 mt-1">{formatTime(msg.created_at)}</p>
+                    </div>
+
+                    {/* Delete button */}
+                    {isOwn && (
+                      <button
+                        onClick={() => deleteMessage(msg.id)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity self-center p-1 rounded hover:bg-destructive/20"
+                      >
+                        <Trash2 className="h-3 w-3 text-destructive" />
+                      </button>
+                    )}
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
           </div>
 
           {/* Input */}
-          <div className="glass-panel rounded-xl p-3 flex gap-3">
+          <div className="glass-panel rounded-xl p-3 flex gap-3 border-glow-blue">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={`Message as ${firstName}...`}
-              className="bg-muted/30 border-border/50 flex-1"
+              className="bg-muted/30 border-border/50 flex-1 focus:border-primary/50 transition-colors"
               maxLength={500}
             />
             <Button
@@ -221,6 +237,7 @@ const DashboardCommunity = () => {
               disabled={!input.trim() || sending}
               variant="hero"
               size="icon"
+              className="rounded-xl"
             >
               <Send className="h-4 w-4" />
             </Button>
