@@ -52,7 +52,13 @@ const CTASection = () => {
         </p>
       </motion.div>
 
-      {/* Stats bar */}
+        <Link to="/signup">
+          <Button className="mt-10 bg-foreground text-background hover:bg-foreground/90 rounded-full px-10 py-6 text-base font-semibold">
+            Chat with Biddie
+          </Button>
+        </Link>
+      </motion.div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
