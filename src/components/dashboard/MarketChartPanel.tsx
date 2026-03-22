@@ -293,7 +293,7 @@ const MarketChartPanel = () => {
 
         {/* Target Zone label */}
         {insight.targetZone !== "—" && (
-          <div className={`absolute text-xs font-medium ${
+          <div className={`absolute text-xs font-medium z-20 px-2 py-0.5 rounded bg-background/80 backdrop-blur-sm ${
             isBearish
               ? "bottom-4 right-4 text-destructive"
               : "top-4 right-4 text-primary"
@@ -304,14 +304,14 @@ const MarketChartPanel = () => {
 
         {/* Key Level label - middle right */}
         {insight.keyLevel !== "—" && (
-          <div className="absolute right-4 top-[45%] text-xs text-primary">
+          <div className="absolute right-4 top-[45%] text-xs text-primary z-20 px-2 py-0.5 rounded bg-background/80 backdrop-blur-sm">
             {insight.keyLevel}
           </div>
         )}
 
         {/* Invalidation label */}
         {insight.invalidation !== "—" && (
-          <div className={`absolute text-xs font-medium ${
+          <div className={`absolute text-xs font-medium z-20 px-2 py-0.5 rounded bg-background/80 backdrop-blur-sm ${
             isBearish
               ? "top-4 right-4 text-muted-foreground"
               : "bottom-4 right-4 text-destructive"
