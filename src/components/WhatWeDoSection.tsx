@@ -22,12 +22,12 @@ const WhatWeDoSection = () => {
             </span>
 
             <h2 className="text-4xl md:text-5xl font-extrabold text-foreground leading-[1.1] mb-6">
-              AI-Powered Trading Intelligence That Keeps You One Step Ahead
+              Your Edge in Every Market Move
             </h2>
 
             <p className="text-muted-foreground text-base leading-relaxed mb-8">
-              JORTRADE identifies developing market opportunities using structure and liquidity signals.
-              Biddie translates them into simple, real-time guidance.
+              Biddie watches the markets so you don't have to — surfacing the setups that matter
+              and translating them into clear, actionable guidance.
             </p>
 
             <a href="#workflow" className="inline-flex items-center gap-2 text-foreground font-semibold text-sm hover:gap-3 transition-all group">
