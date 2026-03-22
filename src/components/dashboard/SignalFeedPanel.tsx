@@ -31,7 +31,7 @@ const SignalFeedPanel = ({ signals, loading, limit }: Props) => {
         </div>
       ) : (
         <div className="space-y-4">
-          {signals.map((signal) => (
+          {displaySignals.map((signal) => (
             <div
               key={signal.id}
               className={`rounded-xl border overflow-hidden ${
