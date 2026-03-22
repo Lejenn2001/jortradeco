@@ -21,7 +21,8 @@ const WhatWeDoSection = () => {
               What We Do
             </span>
 
-            <h2 className="text-4xl md:text-5xl font-extrabold text-foreground leading-[1.1] mb-6">
+            <h2 className="text-4xl md:text-5xl font-extrabold text-foreground leading-[1.1] mb-6 relative inline-block">
+              <span className="absolute -inset-4 rounded-2xl bg-gradient-to-r from-[hsl(var(--glow-blue)/0.15)] via-[hsl(var(--glow-purple)/0.1)] to-transparent blur-2xl -z-10" />
               Your Edge in Every Market Move
             </h2>
 
