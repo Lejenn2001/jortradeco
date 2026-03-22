@@ -10,6 +10,7 @@ import DashboardSignals from "./pages/DashboardSignals.tsx";
 import DashboardMarket from "./pages/DashboardMarket.tsx";
 import DashboardChat from "./pages/DashboardChat.tsx";
 import DashboardPnL from "./pages/DashboardPnL.tsx";
+import DashboardCommunity from "./pages/DashboardCommunity.tsx";
 import Login from "./pages/Login.tsx";
 import Signup from "./pages/Signup.tsx";
 import Contact from "./pages/Contact.tsx";
