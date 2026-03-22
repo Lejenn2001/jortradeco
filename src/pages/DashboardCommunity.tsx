@@ -117,8 +117,11 @@ const DashboardCommunity = () => {
     return new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
   };
 
+  const BIDDIE_USER_ID = "00000000-0000-0000-0000-000000000000";
+
   // Generate a consistent color for each user
   const userColor = (userId: string) => {
+    if (userId === BIDDIE_USER_ID) return "text-primary";
     const colors = [
       "text-blue-400", "text-emerald-400", "text-purple-400",
       "text-amber-400", "text-pink-400", "text-cyan-400",
