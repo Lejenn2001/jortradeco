@@ -3,6 +3,7 @@ import { Send, Bot, User, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import biddieRobot from "@/assets/biddie-robot.png";
 
 interface Message {
   id: string;
@@ -116,7 +117,7 @@ const AIChatPanel = () => {
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
         {messages.length === 0 && (
           <div className="text-center py-8">
-            <Bot className="h-8 w-8 text-primary/40 mx-auto mb-3" />
+            <img src={biddieRobot} alt="Biddie" className="w-16 h-16 mx-auto mb-3 drop-shadow-[0_0_15px_hsl(230_85%_60%_/_0.4)]" />
             <p className="text-sm text-foreground font-medium">{greeting}</p>
             <p className="text-xs text-muted-foreground mt-2">Powered by real-time Unusual Whales data + Claude AI</p>
           </div>
