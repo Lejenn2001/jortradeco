@@ -33,6 +33,7 @@ interface TickerInsight {
   callZone: string;
   invalidation: string;
   strategy: string;
+  contract?: string;
   expiration: string;
   score: string;
   description: string;
