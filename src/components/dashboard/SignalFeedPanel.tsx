@@ -119,6 +119,26 @@ const SignalFeedPanel = ({ signals, loading }: Props) => {
                     </div>
                   )}
 
+                  {signal.keyLevel && (
+                    <div className="flex items-start gap-2 bg-primary/10 rounded-lg px-3 py-2">
+                      <Crosshair className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
+                      <div>
+                        <span className="text-muted-foreground">Key level: </span>
+                        <span className="text-primary font-semibold">{signal.keyLevel}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {signal.targetZone && (
+                    <div className="flex items-start gap-2 bg-primary/10 rounded-lg px-3 py-2">
+                      <MapPin className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
+                      <div>
+                        <span className="text-muted-foreground">Target zone: </span>
+                        <span className="text-primary font-semibold">{signal.targetZone}</span>
+                      </div>
+                    </div>
+                  )}
+
                   {signal.invalidation && (
                     <div className="flex items-start gap-2 bg-destructive/10 rounded-lg px-3 py-2">
                       <ShieldX className="h-3.5 w-3.5 text-destructive mt-0.5 shrink-0" />
