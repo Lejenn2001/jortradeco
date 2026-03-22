@@ -41,10 +41,10 @@ serve(async (req) => {
     let data: any = {};
 
     if (action === 'flow') {
-      // Flow alerts - unusual options activity
       const res = await fetch(`${UW_BASE}/option-trades/flow-alerts?limit=15`, { headers: uwHeaders });
       if (!res.ok) throw new Error(`UW flow-alerts failed [${res.status}]: ${await res.text()}`);
       data = await res.json();
+      await logApiUsage(["flow-alerts"]);
 
     } else if (action === 'ticker' && ticker) {
       // Ticker-specific: options volume + recent flow
