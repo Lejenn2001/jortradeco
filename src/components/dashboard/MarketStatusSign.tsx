@@ -107,7 +107,7 @@ const MarketStatusSign = () => {
         {/* Countdown */}
         <div className="text-right">
           <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
-            {state.targetLabel}
+            {state.targetLabel} <span className="text-foreground font-medium">{state.targetTime}</span>
           </div>
           <div
             className={`text-sm font-mono font-bold tracking-wider ${
