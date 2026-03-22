@@ -44,7 +44,7 @@ const exampleSignals: MarketSignal[] = [
     confidence: 9.4,
     description: "Massive call sweep activity detected on NVDA. Over $2.8M in premium on the $145 calls expiring March 27. Institutional flow is heavily skewed bullish with repeat sweeps at the ask. Volume-to-open-interest ratio is 4.2x — indicating new positioning, not hedging.",
     timestamp: "Fri 3:42 PM",
-    tags: ["Call Flow", "Sweep"],
+    tags: ["Call Flow", "Sweep", "🔥 ACT NOW"],
     strike: "$145",
     expiry: "March 27, 2026",
     premium: "$2.8M",
