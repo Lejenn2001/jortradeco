@@ -72,13 +72,13 @@ serve(async (req) => {
         });
       }
 
-      // Rate limit: don't reply if Biddie replied in last 2 minutes
-      const twoMinsAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+      // Rate limit: don't reply if Biddie replied in last 45 seconds
+      const cooldownAgo = new Date(Date.now() - 45 * 1000).toISOString();
       const { data: recentReply } = await supabase
         .from("chat_messages")
         .select("id")
         .eq("user_id", BIDDIE_USER_ID)
-        .gte("created_at", twoMinsAgo)
+        .gte("created_at", cooldownAgo)
         .limit(1);
 
       if (recentReply && recentReply.length > 0) {
