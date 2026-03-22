@@ -57,27 +57,28 @@ serve(async (req) => {
       await logApiUsage(["options-volume", "flow-recent"]);
 
     } else if (action === 'market') {
-      // Market Tide - overall sentiment
       const res = await fetch(`${UW_BASE}/market/market-tide`, { headers: uwHeaders });
       if (!res.ok) throw new Error(`UW market-tide failed [${res.status}]: ${await res.text()}`);
       data = await res.json();
+      await logApiUsage(["market-tide"]);
 
     } else if (action === 'whale-alerts') {
-      // Large premium flow alerts
       const res = await fetch(`${UW_BASE}/option-trades/flow-alerts?min_premium=500000&limit=10`, { headers: uwHeaders });
       if (!res.ok) throw new Error(`UW whale-alerts failed [${res.status}]: ${await res.text()}`);
       data = await res.json();
+      await logApiUsage(["whale-alerts"]);
 
     } else if (action === 'darkpool' && ticker) {
       const res = await fetch(`${UW_BASE}/darkpool/${ticker}`, { headers: uwHeaders });
       if (!res.ok) throw new Error(`UW darkpool failed [${res.status}]: ${await res.text()}`);
       data = await res.json();
+      await logApiUsage(["darkpool"]);
 
     } else if (action === 'hottest') {
-      // Hottest option chains
       const res = await fetch(`${UW_BASE}/screener/option-contracts?limit=10&min_premium=100000`, { headers: uwHeaders });
       if (!res.ok) throw new Error(`UW screener failed [${res.status}]: ${await res.text()}`);
       data = await res.json();
+      await logApiUsage(["screener"]);
 
     } else {
       return new Response(JSON.stringify({ error: 'Invalid action. Use: flow, ticker, market, whale-alerts, darkpool, hottest' }), {
