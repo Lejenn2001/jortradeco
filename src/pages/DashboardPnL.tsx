@@ -1,39 +1,44 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Flame, Trophy, Calendar as CalendarIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Flame, Trophy, Calendar as CalendarIcon, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "@/hooks/use-toast";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-// Generate mock P&L data for the current month
-const generateMockPnL = (year: number, month: number) => {
-  const data: Record<string, number> = {};
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  
-  for (let d = 1; d <= daysInMonth; d++) {
-    const date = new Date(year, month, d);
-    const day = date.getDay();
-    // Skip weekends
-    if (day === 0 || day === 6) continue;
-    // Skip future dates
-    if (date > new Date()) continue;
-    
-    // Random P&L between -500 and 1500 (slightly bullish bias)
-    const pnl = Math.round((Math.random() * 2000 - 500) * 100) / 100;
-    const key = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-    data[key] = pnl;
-  }
-  return data;
-};
+interface Trade {
+  id: string;
+  trade_date: string;
+  amount: number;
+  ticker: string | null;
+  notes: string | null;
+}
 
 const DashboardPnL = () => {
-  const { profile } = useAuth();
+  const { profile, session } = useAuth();
   const firstName = profile?.full_name?.split(" ")[0] || "Trader";
   const [currentDate, setCurrentDate] = useState(new Date());
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
-  const [pnlData] = useState(() => generateMockPnL(year, month));
+  const [trades, setTrades] = useState<Trade[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Dialog state
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [amount, setAmount] = useState("");
+  const [ticker, setTicker] = useState("");
+  const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  // Detail dialog
+  const [detailDate, setDetailDate] = useState<string | null>(null);
 
   const monthName = currentDate.toLocaleString("default", { month: "long", year: "numeric" });
   const firstDayOfMonth = new Date(year, month, 1).getDay();
@@ -41,6 +46,35 @@ const DashboardPnL = () => {
 
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
+
+  // Fetch trades for current month
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    const fetchTrades = async () => {
+      setLoading(true);
+      const startDate = `${year}-${String(month + 1).padStart(2, "0")}-01`;
+      const endDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(daysInMonth).padStart(2, "0")}`;
+      const { data, error } = await supabase
+        .from("trades")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .gte("trade_date", startDate)
+        .lte("trade_date", endDate)
+        .order("trade_date", { ascending: true });
+      if (!error && data) setTrades(data as Trade[]);
+      setLoading(false);
+    };
+    fetchTrades();
+  }, [session?.user?.id, year, month, daysInMonth]);
+
+  // Aggregate P&L by date
+  const pnlData = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const t of trades) {
+      map[t.trade_date] = (map[t.trade_date] || 0) + Number(t.amount);
+    }
+    return map;
+  }, [trades]);
 
   // Stats
   const entries = Object.values(pnlData);
@@ -51,7 +85,6 @@ const DashboardPnL = () => {
   const bestDay = entries.length > 0 ? Math.max(...entries) : 0;
   const worstDay = entries.length > 0 ? Math.min(...entries) : 0;
 
-  // Streak calculation
   const sortedDates = Object.keys(pnlData).sort().reverse();
   let streak = 0;
   for (const d of sortedDates) {
@@ -59,23 +92,87 @@ const DashboardPnL = () => {
     else break;
   }
 
+  const handleDayClick = (d: number) => {
+    const date = new Date(year, month, d);
+    if (date.getDay() === 0 || date.getDay() === 6) return;
+    if (date > new Date()) return;
+    const key = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    // If trades exist for this date, show detail; otherwise open add dialog
+    const dayTrades = trades.filter((t) => t.trade_date === key);
+    if (dayTrades.length > 0) {
+      setDetailDate(key);
+    } else {
+      setSelectedDate(key);
+      setAmount("");
+      setTicker("");
+      setNotes("");
+      setDialogOpen(true);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!session?.user?.id || !amount) return;
+    setSaving(true);
+    const { error } = await supabase.from("trades").insert({
+      user_id: session.user.id,
+      trade_date: selectedDate,
+      amount: parseFloat(amount),
+      ticker: ticker || null,
+      notes: notes || null,
+    } as any);
+    if (error) {
+      toast({ title: "Error saving trade", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Trade logged!" });
+      // Refresh
+      const startDate = `${year}-${String(month + 1).padStart(2, "0")}-01`;
+      const endDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(daysInMonth).padStart(2, "0")}`;
+      const { data } = await supabase
+        .from("trades")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .gte("trade_date", startDate)
+        .lte("trade_date", endDate)
+        .order("trade_date", { ascending: true });
+      if (data) setTrades(data as Trade[]);
+      setDialogOpen(false);
+    }
+    setSaving(false);
+  };
+
+  const handleDelete = async (tradeId: string) => {
+    const { error } = await supabase.from("trades").delete().eq("id", tradeId);
+    if (!error) {
+      setTrades((prev) => prev.filter((t) => t.id !== tradeId));
+      toast({ title: "Trade deleted" });
+      // Close detail if no more trades for that date
+      const remaining = trades.filter((t) => t.id !== tradeId && t.trade_date === detailDate);
+      if (remaining.length === 0) setDetailDate(null);
+    }
+  };
+
+  const detailTrades = detailDate ? trades.filter((t) => t.trade_date === detailDate) : [];
+  const detailTotal = detailTrades.reduce((s, t) => s + Number(t.amount), 0);
+
   const calendarCells = [];
-  // Empty cells for days before the 1st
   for (let i = 0; i < firstDayOfMonth; i++) {
     calendarCells.push(<div key={`empty-${i}`} className="aspect-square" />);
   }
-  // Day cells
   for (let d = 1; d <= daysInMonth; d++) {
     const key = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
     const pnl = pnlData[key];
     const isToday = new Date().toDateString() === new Date(year, month, d).toDateString();
     const date = new Date(year, month, d);
     const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+    const isFuture = date > new Date();
+    const isClickable = !isWeekend && !isFuture;
 
     calendarCells.push(
       <div
         key={d}
+        onClick={() => isClickable && handleDayClick(d)}
         className={`aspect-square rounded-xl border transition-all flex flex-col items-center justify-center gap-0.5 text-xs
+          ${isClickable ? "cursor-pointer hover:border-primary/50 hover:scale-105" : ""}
           ${isToday ? "ring-2 ring-primary/50" : ""}
           ${isWeekend ? "bg-muted/20 border-border/20" : "border-border/40"}
           ${pnl !== undefined && pnl > 0 ? "bg-emerald-500/10 border-emerald-500/30" : ""}
@@ -88,6 +185,9 @@ const DashboardPnL = () => {
           <span className={`text-[10px] font-bold ${pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
             {pnl >= 0 ? "+" : ""}${Math.abs(pnl).toFixed(0)}
           </span>
+        )}
+        {!isWeekend && !isFuture && pnl === undefined && (
+          <Plus className="h-3 w-3 text-muted-foreground/30" />
         )}
       </div>
     );
@@ -150,7 +250,8 @@ const DashboardPnL = () => {
               </button>
             </div>
 
-            {/* Day headers */}
+            <p className="text-xs text-muted-foreground text-center mb-3">Click any weekday to log a trade</p>
+
             <div className="grid grid-cols-7 gap-2 mb-2">
               {DAYS.map((d) => (
                 <div key={d} className="text-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
@@ -158,8 +259,6 @@ const DashboardPnL = () => {
                 </div>
               ))}
             </div>
-
-            {/* Calendar grid */}
             <div className="grid grid-cols-7 gap-2">
               {calendarCells}
             </div>
@@ -170,14 +269,109 @@ const DashboardPnL = () => {
             <div className="flex items-center justify-center gap-2">
               <Trophy className="h-4 w-4 text-primary" />
               <p className="text-sm text-muted-foreground">
-                {totalPnL > 0
-                  ? `Great month so far ${firstName}! Keep the momentum going.`
-                  : `Stay disciplined ${firstName}. Every trader has rough patches.`}
+                {entries.length === 0
+                  ? `Start logging your trades ${firstName}! Click any day on the calendar.`
+                  : totalPnL > 0
+                    ? `Great month so far ${firstName}! Keep the momentum going.`
+                    : `Stay disciplined ${firstName}. Every trader has rough patches.`}
               </p>
             </div>
           </div>
         </main>
       </div>
+
+      {/* Add Trade Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="glass-panel border-border/50 max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Log Trade</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              {selectedDate && new Date(selectedDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-muted-foreground">Profit / Loss ($)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                placeholder="e.g. 250 or -100"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="bg-muted/30 border-border/50"
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">Use negative for losses</p>
+            </div>
+            <div>
+              <Label className="text-muted-foreground">Ticker (optional)</Label>
+              <Input
+                placeholder="e.g. SPY, AAPL"
+                value={ticker}
+                onChange={(e) => setTicker(e.target.value.toUpperCase())}
+                className="bg-muted/30 border-border/50"
+              />
+            </div>
+            <div>
+              <Label className="text-muted-foreground">Notes (optional)</Label>
+              <Input
+                placeholder="e.g. Caught the morning dip"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="bg-muted/30 border-border/50"
+              />
+            </div>
+            <Button onClick={handleSave} disabled={!amount || saving} className="w-full" variant="hero">
+              {saving ? "Saving..." : "Log Trade"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Day Detail Dialog */}
+      <Dialog open={!!detailDate} onOpenChange={(open) => !open && setDetailDate(null)}>
+        <DialogContent className="glass-panel border-border/50 max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">
+              {detailDate && new Date(detailDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+            </DialogTitle>
+            <DialogDescription>
+              <span className={`font-bold ${detailTotal >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                Day Total: {detailTotal >= 0 ? "+" : ""}${detailTotal.toFixed(2)}
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 max-h-60 overflow-y-auto">
+            {detailTrades.map((t) => (
+              <div key={t.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/20 border border-border/30">
+                <div>
+                  <span className={`font-bold text-sm ${Number(t.amount) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                    {Number(t.amount) >= 0 ? "+" : ""}${Number(t.amount).toFixed(2)}
+                  </span>
+                  {t.ticker && <span className="text-xs text-muted-foreground ml-2">{t.ticker}</span>}
+                  {t.notes && <p className="text-[10px] text-muted-foreground mt-0.5">{t.notes}</p>}
+                </div>
+                <button onClick={() => handleDelete(t.id)} className="p-1 hover:bg-red-500/20 rounded transition-colors">
+                  <Trash2 className="h-3.5 w-3.5 text-red-400" />
+                </button>
+              </div>
+            ))}
+          </div>
+          <Button
+            variant="hero"
+            className="w-full"
+            onClick={() => {
+              setSelectedDate(detailDate!);
+              setAmount("");
+              setTicker("");
+              setNotes("");
+              setDetailDate(null);
+              setDialogOpen(true);
+            }}
+          >
+            <Plus className="h-4 w-4 mr-1" /> Add Another Trade
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
