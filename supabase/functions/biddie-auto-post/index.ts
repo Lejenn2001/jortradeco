@@ -22,7 +22,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const action = body.action || "morning"; // "morning" or "alert"
+    const action = body.action || "morning"; // "morning", "alert", or "reply"
 
     // Check if Biddie already posted today (for morning message)
     if (action === "morning") {
@@ -59,6 +59,77 @@ serve(async (req) => {
       }
     }
 
+    // For reply action — Biddie responds to chat messages
+    if (action === "reply") {
+      const messageContent = body.message || "";
+      const userName = body.user_name || "someone";
+      const messageId = body.message_id || "";
+
+      // Don't reply to Biddie's own messages
+      if (body.user_id === BIDDIE_USER_ID) {
+        return new Response(JSON.stringify({ status: "skip_self" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Rate limit: don't reply if Biddie replied in last 2 minutes
+      const twoMinsAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+      const { data: recentReply } = await supabase
+        .from("chat_messages")
+        .select("id")
+        .eq("user_id", BIDDIE_USER_ID)
+        .gte("created_at", twoMinsAgo)
+        .limit(1);
+
+      if (recentReply && recentReply.length > 0) {
+        return new Response(JSON.stringify({ status: "cooldown" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Fetch recent chat history for context
+      const { data: recentMessages } = await supabase
+        .from("chat_messages")
+        .select("user_name, content, user_id")
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      const chatHistory = (recentMessages || []).reverse().map((m: any) =>
+        `${m.user_id === BIDDIE_USER_ID ? "Biddie" : m.user_name}: ${m.content}`
+      ).join("\n");
+
+      // Decide if Biddie should reply — only when it makes sense
+      const shouldReplyPrompt = `You are monitoring a trading chat room. Here's the recent conversation:\n\n${chatHistory}\n\nThe latest message is from ${userName}: "${messageContent}"\n\nShould you (Biddie, the AI trading assistant) jump in? Reply ONLY with "YES" or "NO".\nSay YES if: someone asks a trading question, mentions a ticker, asks for help, says something you can add value to, greets the room, or the vibe calls for it.\nSay NO if: it's a private convo between users, small talk that doesn't need you, or you just replied recently.`;
+
+      const decisionRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${lovableKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash-lite",
+          messages: [{ role: "user", content: shouldReplyPrompt }],
+        }),
+      });
+
+      if (!decisionRes.ok) {
+        console.error("Decision AI error:", decisionRes.status);
+        return new Response(JSON.stringify({ status: "decision_error" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const decisionData = await decisionRes.json();
+      const decision = (decisionData.choices?.[0]?.message?.content || "").trim().toUpperCase();
+
+      if (!decision.includes("YES")) {
+        return new Response(JSON.stringify({ status: "skip", decision }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // Fetch market context
     let marketContext = "";
     if (uwKey) {
@@ -84,6 +155,19 @@ serve(async (req) => {
     } else if (action === "alert") {
       const alertData = body.alertData || "";
       prompt = `A major options flow just came through. Summarize this alert for the JORTRADE chat room in 1-2 sentences. Be direct and informative — mention the ticker, direction, size, and what it might signal. Keep it casual but clear.${alertData ? `\n\nAlert data: ${JSON.stringify(alertData)}` : ""}${marketContext}`;
+    } else if (action === "reply") {
+      // Get recent chat for context
+      const { data: recentMessages } = await supabase
+        .from("chat_messages")
+        .select("user_name, content, user_id")
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      const chatHistory = (recentMessages || []).reverse().map((m: any) =>
+        `${m.user_id === BIDDIE_USER_ID ? "Biddie" : m.user_name}: ${m.content}`
+      ).join("\n");
+
+      prompt = `You're in the JORTRADE chat room. Here's the recent conversation:\n\n${chatHistory}\n\nJump in naturally. Keep it 1-3 sentences. Be helpful if someone asked a question, or just vibe if it's casual. You have market data access.${marketContext}`;
     }
 
     if (!lovableKey) {
