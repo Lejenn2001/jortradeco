@@ -46,6 +46,42 @@ serve(async (req) => {
       data = await res.json();
       await logApiUsage(["flow-alerts"]);
 
+      // Auto-log high-conviction signals for accuracy tracking
+      try {
+        const supabaseAdmin = createClient(
+          Deno.env.get("SUPABASE_URL")!,
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+        );
+        const alerts = data?.data || [];
+        const signalsToLog = alerts
+          .filter((a: any) => {
+            const volOi = a.volume_oi_ratio ? parseFloat(a.volume_oi_ratio) : 0;
+            const tradeCount = a.trade_count || 0;
+            return volOi > 3 || tradeCount > 5;
+          })
+          .map((a: any) => ({
+            ticker: a.ticker || a.underlying_symbol || 'N/A',
+            signal_type: a.type === 'call' ? 'bullish' : 'bearish',
+            put_call: a.type === 'call' ? 'call' : 'put',
+            confidence: a.volume_oi_ratio && parseFloat(a.volume_oi_ratio) > 10 ? 9.5 :
+                        a.volume_oi_ratio && parseFloat(a.volume_oi_ratio) > 3 ? 9.0 : 8.5,
+            strike: a.strike ? `$${a.strike}` : null,
+            expiry: a.expiry || a.expires || null,
+            premium: a.total_premium ? `$${formatPremiumHelper(a.total_premium)}` : null,
+            description: `${a.trade_count || 'Multiple'} ${a.type} trades at $${a.strike} strike. Vol/OI: ${a.volume_oi_ratio ? parseFloat(a.volume_oi_ratio).toFixed(1) + 'x' : 'N/A'}`,
+            outcome: 'pending',
+            signal_source: 'auto',
+          }));
+
+        if (signalsToLog.length > 0) {
+          await supabaseAdmin
+            .from("signal_outcomes")
+            .upsert(signalsToLog, { onConflict: "ticker,signal_type,strike,expiry,signal_source", ignoreDuplicates: true });
+        }
+      } catch (logErr) {
+        console.warn("Failed to auto-log signals:", logErr);
+      }
+
     } else if (action === 'ticker' && ticker) {
       const [volumeRes, flowRes] = await Promise.all([
         fetch(`${UW_BASE}/stock/${ticker}/options-volume`, { headers: uwHeaders }),
