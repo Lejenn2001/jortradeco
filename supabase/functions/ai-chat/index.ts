@@ -22,15 +22,24 @@ serve(async (req) => {
   try {
     const { message, history } = await req.json();
 
-    // Optionally fetch fresh market context for Claude
+    // Fetch fresh market context for Claude
     let marketContext = '';
     if (uwKey) {
       try {
         const uwHeaders = { 'Authorization': `Bearer ${uwKey}`, 'Accept': 'application/json' };
-        const marketRes = await fetch('https://api.unusualwhales.com/api/market/overview', { headers: uwHeaders });
-        if (marketRes.ok) {
-          const marketData = await marketRes.json();
-          marketContext = `\n\nCurrent market data from Unusual Whales:\n${JSON.stringify(marketData.data, null, 2)}`;
+        const [tideRes, flowRes] = await Promise.all([
+          fetch('https://api.unusualwhales.com/api/market/market-tide', { headers: uwHeaders }),
+          fetch('https://api.unusualwhales.com/api/option-trades/flow-alerts?limit=5', { headers: uwHeaders }),
+        ]);
+        
+        const tideData = tideRes.ok ? await tideRes.json() : null;
+        const flowData = flowRes.ok ? await flowRes.json() : null;
+
+        if (tideData?.data) {
+          marketContext += `\n\nMarket Tide (sentiment) data:\n${JSON.stringify(tideData.data, null, 2)}`;
+        }
+        if (flowData?.data) {
+          marketContext += `\n\nRecent flow alerts:\n${JSON.stringify(flowData.data.slice(0, 5), null, 2)}`;
         }
       } catch (e) {
         console.warn('Failed to fetch market context:', e);
@@ -83,8 +92,8 @@ You have access to real-time options flow and market data.${marketContext}`;
     });
   } catch (error) {
     console.error('ai-chat error:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: message }), {
+    const msg = error instanceof Error ? error.message : 'Unknown error';
+    return new Response(JSON.stringify({ error: msg }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
