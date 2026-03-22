@@ -180,7 +180,7 @@ const DashboardAnalytics = () => {
         <DashboardHeader />
         <main className="flex-1 overflow-y-auto p-4 lg:p-6 bg-mesh">
           <div className="mb-6">
-            <h1 className="text-xl font-display font-bold text-foreground">Analytics</h1>
+            <h1 className="text-xl font-display font-bold text-gradient-blue tracking-wider">ANALYTICS</h1>
             <p className="text-sm text-muted-foreground">Member activity and platform overview</p>
           </div>
 
