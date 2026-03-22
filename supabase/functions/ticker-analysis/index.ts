@@ -54,6 +54,8 @@ serve(async (req) => {
     const volumeData = volumeRes.ok ? await volumeRes.json() : { data: [] };
     const tideData = tideRes.ok ? await tideRes.json() : { data: {} };
 
+    await logApiUsage(["flow-recent", "options-volume", "market-tide"]);
+
     // Build context for AI
     const flowSummary = JSON.stringify((flowData.data || []).slice(0, 10));
     const volumeSummary = JSON.stringify((volumeData.data || []).slice(0, 5));
