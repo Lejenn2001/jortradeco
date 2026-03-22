@@ -5,6 +5,7 @@ import SignalFeedPanel from "@/components/dashboard/SignalFeedPanel";
 import MarketChartPanel from "@/components/dashboard/MarketChartPanel";
 import AIChatPanel from "@/components/dashboard/AIChatPanel";
 import PortfolioPanel from "@/components/dashboard/PortfolioPanel";
+import MarketStatusSign from "@/components/dashboard/MarketStatusSign";
 import { useMarketData } from "@/hooks/useMarketData";
 
 const Dashboard = () => {
@@ -18,6 +19,7 @@ const Dashboard = () => {
         <DashboardHeader />
 
         <main className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-4 lg:space-y-6">
+          <MarketStatusSign />
           <StatsBar signals={signals} marketOverview={marketOverview} />
 
           <div className="grid lg:grid-cols-5 gap-4 lg:gap-6">
