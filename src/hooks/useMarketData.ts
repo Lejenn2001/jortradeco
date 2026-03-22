@@ -365,6 +365,13 @@ function formatPremium(value: any): string {
   return num.toFixed(0);
 }
 
+function parsePremium(str: string): number {
+  const clean = str.replace(/[$,]/g, '');
+  if (clean.endsWith('M')) return parseFloat(clean) * 1_000_000;
+  if (clean.endsWith('K')) return parseFloat(clean) * 1_000;
+  return parseFloat(clean) || 0;
+}
+
 function timeAgo(dateStr: string): string {
   const now = new Date();
   const then = new Date(dateStr);
