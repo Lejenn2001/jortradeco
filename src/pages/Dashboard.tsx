@@ -16,12 +16,12 @@ const Dashboard = () => {
       <div className="flex-1 flex flex-col min-w-0">
         <DashboardHeader />
 
-        <main className="flex-1 overflow-y-auto p-6 space-y-6">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-4 lg:space-y-6">
           {/* Stats */}
           <StatsBar />
 
           {/* Main grid: signals + chart */}
-          <div className="grid lg:grid-cols-5 gap-6">
+          <div className="grid lg:grid-cols-5 gap-4 lg:gap-6">
             <div className="lg:col-span-2">
               <SignalFeedPanel />
             </div>
@@ -31,7 +31,7 @@ const Dashboard = () => {
           </div>
 
           {/* Bottom grid: chat + portfolio */}
-          <div className="grid lg:grid-cols-5 gap-6">
+          <div className="grid lg:grid-cols-5 gap-4 lg:gap-6">
             <div className="lg:col-span-3">
               <AIChatPanel />
             </div>

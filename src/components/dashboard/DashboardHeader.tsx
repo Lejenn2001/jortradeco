@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 
 const DashboardHeader = () => {
   return (
-    <header className="h-16 glass-panel border-b border-border/60 flex items-center justify-between px-6 shrink-0">
+    <header className="h-16 glass-panel border-b border-border/60 flex items-center justify-between px-6 pl-14 lg:pl-6 shrink-0">
       <div className="flex items-center gap-3 flex-1 max-w-md">
         <Search className="h-4 w-4 text-muted-foreground" />
         <Input
