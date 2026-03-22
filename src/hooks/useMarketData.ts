@@ -134,7 +134,7 @@ const exampleSignals: MarketSignal[] = [
     confidence: 10.0,
     description: "Highest-conviction signal of the week: $5.2M in AMD $110 put sweeps. 12 consecutive sweeps at the ask, all within a 15-minute window. Dark pool short volume hit 62% — the highest level in 30 days. Smart money is positioning aggressively bearish.",
     timestamp: "Fri 10:22 AM",
-    tags: ["Put Flow", "Sweep"],
+    tags: ["Put Flow", "Sweep", "🔥 ACT NOW"],
     strike: "$110",
     expiry: "March 27, 2026",
     premium: "$5.2M",
