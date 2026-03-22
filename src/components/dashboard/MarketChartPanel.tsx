@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { TrendingUp, Search } from "lucide-react";
+import { TrendingUp, Search, Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 const candlesticks = [
@@ -27,9 +27,77 @@ const candlesticks = [
 
 const quickTickers = ["NQ", "SPX", "PLTR", "TSLA"];
 
+interface TickerInsight {
+  bias: string;
+  callZone: string;
+  invalidation: string;
+  strategy: string;
+  expiration: string;
+  score: string;
+  description: string;
+  strategyExplanation: string;
+}
+
+const tickerInsights: Record<string, TickerInsight> = {
+  NQ: {
+    bias: "Bullish Bias ↗",
+    callZone: "Call Zone 18,950–19,050",
+    invalidation: "Invalidation: $18,800",
+    strategy: "Call Option",
+    expiration: "Mar 28, 2026",
+    score: "9.1 / 10",
+    description: "Hey Trader, the market structure for NQ is showing strong bullish momentum. Price is breaking above a key resistance level with heavy call flow volume backing the move. Institutional sweeps are confirming the directional bias.",
+    strategyExplanation: "A call option profits when the underlying moves higher. Given the bullish structure and sweep activity, calls positioned near the breakout level offer the best risk-to-reward setup.",
+  },
+  SPX: {
+    bias: "Bullish Bias ↗",
+    callZone: "Call Zone 5,220–5,250",
+    invalidation: "Invalidation: $5,180",
+    strategy: "Call Spread",
+    expiration: "Mar 28, 2026",
+    score: "8.4 / 10",
+    description: "Hey Trader, the market structure for SPX is consolidating near all-time highs with a bullish flag formation. Volume is compressing, which typically precedes an expansion move. Smart money flow is leaning bullish.",
+    strategyExplanation: "A call spread (buying a lower strike call and selling a higher strike call) reduces cost while capping profit. Ideal when you expect a measured move higher within a defined range.",
+  },
+  PLTR: {
+    bias: "Bullish Bias ↗",
+    callZone: "Call Zone 150–152.50",
+    invalidation: "Invalidation: $147",
+    strategy: "Call Option",
+    expiration: "Mar 28, 2026",
+    score: "8.7 / 10",
+    description: "Hey Trader, the market structure for PLTR is forming a higher-low pattern with increasing call sweep activity. Relative strength vs. the broader market is strong, and dark pool prints suggest accumulation.",
+    strategyExplanation: "Buying call options gives you leveraged exposure to PLTR's upside. The higher-low pattern and dark pool accumulation signal potential continuation — calls let you participate with defined risk.",
+  },
+  TSLA: {
+    bias: "Neutral / Watching ↔",
+    callZone: "Put Zone 240–235",
+    invalidation: "Invalidation: $260",
+    strategy: "Put Option",
+    expiration: "Apr 4, 2026",
+    score: "7.2 / 10",
+    description: "Hey Trader, the market structure for TSLA is showing weakness below a key support zone. Put flow is outpacing calls and the stock is lagging the sector. A breakdown below support could accelerate the move.",
+    strategyExplanation: "A put option profits when the stock moves lower. With bearish flow and weakening structure, puts positioned near the breakdown level capture downside momentum with limited risk.",
+  },
+};
+
+const defaultInsight: TickerInsight = {
+  bias: "Analyzing...",
+  callZone: "Calculating zones...",
+  invalidation: "Awaiting data",
+  strategy: "Pending",
+  expiration: "—",
+  score: "— / 10",
+  description: "Hey Trader, we're pulling the latest market structure data for this ticker. Check back in a moment for a full analysis.",
+  strategyExplanation: "Strategy details will populate once the market structure analysis is complete.",
+};
+
 const MarketChartPanel = () => {
   const [activeTicker, setActiveTicker] = useState("NQ");
   const [searchValue, setSearchValue] = useState("");
+
+  const insight = tickerInsights[activeTicker] || defaultInsight;
+  const isBearish = insight.strategy.toLowerCase().includes("put");
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,7 +114,11 @@ const MarketChartPanel = () => {
           <TrendingUp className="h-4 w-4 text-primary" />
           <span className="font-semibold text-sm text-foreground">Market Structure</span>
         </div>
-        <span className="text-xs bg-primary/20 text-primary px-2.5 py-0.5 rounded-full">Bullish Bias ↗</span>
+        <span className={`text-xs px-2.5 py-0.5 rounded-full ${
+          isBearish ? "bg-destructive/20 text-destructive" : "bg-primary/20 text-primary"
+        }`}>
+          {insight.bias}
+        </span>
       </div>
 
       {/* Ticker search + quick picks */}
@@ -77,20 +149,26 @@ const MarketChartPanel = () => {
         </div>
       </div>
 
+      {/* AI Market Insight */}
+      <div className="bg-muted/20 rounded-lg p-3 mb-4 border border-border/30">
+        <div className="flex items-start gap-2 mb-1">
+          <Info className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            {insight.description}
+          </p>
+        </div>
+      </div>
+
       {/* Chart */}
-      <div className="relative h-52 w-full mb-4 bg-muted/20 rounded-lg overflow-hidden">
+      <div className="relative h-48 w-full mb-4 bg-muted/20 rounded-lg overflow-hidden">
         <svg viewBox="0 0 420 200" className="w-full h-full" preserveAspectRatio="none">
-          {/* Grid lines */}
           {[50, 100, 150].map((y) => (
             <line key={y} x1="0" y1={y} x2="420" y2={y} stroke="hsl(var(--border))" strokeWidth="0.5" opacity="0.3" />
           ))}
-
-          {/* Key levels */}
           <line x1="0" y1="90" x2="420" y2="90" stroke="hsl(var(--primary))" strokeWidth="1" strokeDasharray="6 4" opacity="0.5" />
-          <rect x="200" y="30" width="220" height="35" fill="hsl(var(--primary))" opacity="0.06" rx="4" />
+          <rect x="200" y="30" width="220" height="35" fill={isBearish ? "hsl(var(--destructive))" : "hsl(var(--primary))"} opacity="0.06" rx="4" />
           <rect x="100" y="150" width="220" height="25" fill="hsl(var(--destructive))" opacity="0.06" rx="4" />
 
-          {/* Candlesticks */}
           {candlesticks.map((c, i) => {
             const top = Math.min(c.o, c.c);
             const bottom = Math.max(c.o, c.c);
@@ -104,28 +182,37 @@ const MarketChartPanel = () => {
           })}
         </svg>
 
-        {/* Labels */}
-        <div className="absolute top-3 right-3 text-[10px] text-primary font-medium bg-primary/10 px-2 py-0.5 rounded">
-          Call Zone 150–152.5
+        <div className={`absolute top-3 right-3 text-[10px] font-medium px-2 py-0.5 rounded ${
+          isBearish ? "text-destructive bg-destructive/10" : "text-primary bg-primary/10"
+        }`}>
+          {insight.callZone}
         </div>
         <div className="absolute bottom-3 right-3 text-[10px] text-destructive font-medium bg-destructive/10 px-2 py-0.5 rounded">
-          Invalidation: $147
+          {insight.invalidation}
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-3 border-t border-border/40 pt-3">
+      {/* Stats Row */}
+      <div className="grid grid-cols-4 gap-3 border-t border-border/40 pt-3 mb-3">
         {[
           { label: "Asset", value: activeTicker },
-          { label: "Strategy", value: "Call Option" },
-          { label: "Expiration", value: "Mar 27" },
-          { label: "AI Score", value: "9.1 / 10" },
+          { label: "Strategy", value: insight.strategy },
+          { label: "Expiration", value: insight.expiration },
+          { label: "AI Score", value: insight.score },
         ].map((stat) => (
           <div key={stat.label} className="text-center">
             <div className="text-[10px] text-muted-foreground">{stat.label}</div>
             <div className="font-bold text-foreground text-xs">{stat.value}</div>
           </div>
         ))}
+      </div>
+
+      {/* Strategy Explanation */}
+      <div className="bg-accent/5 border border-accent/20 rounded-lg p-3">
+        <div className="text-[10px] font-semibold text-accent uppercase tracking-wider mb-1">Why this strategy?</div>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          {insight.strategyExplanation}
+        </p>
       </div>
     </div>
   );
