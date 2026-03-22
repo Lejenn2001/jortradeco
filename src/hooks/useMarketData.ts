@@ -334,7 +334,7 @@ export function useMarketData() {
       setLoading(true);
       setError(null);
       try {
-        await Promise.all([fetchFlowAlerts(), fetchMarketOverview()]);
+        await Promise.all([fetchFlowAlerts(), fetchWhaleAlerts(), fetchMarketOverview()]);
       } catch (e) {
         setError('Failed to load market data');
       } finally {
@@ -344,14 +344,14 @@ export function useMarketData() {
 
     load();
 
-    // Refresh every 60 seconds
     const interval = setInterval(() => {
       fetchFlowAlerts();
+      fetchWhaleAlerts();
       fetchMarketOverview();
     }, 60000);
 
     return () => clearInterval(interval);
-  }, [fetchFlowAlerts, fetchMarketOverview]);
+  }, [fetchFlowAlerts, fetchWhaleAlerts, fetchMarketOverview]);
 
   return { signals, whaleAlerts, marketOverview, loading, error, fetchTickerData, refresh: fetchFlowAlerts };
 }
