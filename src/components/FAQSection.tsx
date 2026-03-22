@@ -1,0 +1,85 @@
+import { motion } from "framer-motion";
+import { Plus, Minus } from "lucide-react";
+import { useState } from "react";
+
+const faqs = [
+  {
+    q: "How does JORTRADE find trade opportunities?",
+    a: "JORTRADE uses AI to continuously scan market structure, liquidity activity, and price behavior across futures, options, and stocks to identify developing setups.",
+  },
+  {
+    q: "Does JORTRADE tell me exactly what to trade?",
+    a: "JORTRADE provides structured insights and guidance, but all trading decisions remain yours. Think of it as an intelligent second opinion that helps you stay disciplined.",
+  },
+  {
+    q: "Is this only for experienced traders?",
+    a: "No. JORTRADE is designed for traders of all experience levels. The AI simplifies complex market data into clear, actionable guidance anyone can understand.",
+  },
+  {
+    q: "What markets does JORTRADE monitor?",
+    a: "JORTRADE monitors futures (NQ, ES), options, and individual stocks with a focus on structured setups and high-probability opportunities.",
+  },
+  {
+    q: "Can I ask JORTRADE questions?",
+    a: "Yes! Biddie, your AI trading assistant, is available to answer questions about market conditions, review trade setups, and provide real-time guidance.",
+  },
+];
+
+const FAQSection = () => {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  return (
+    <section className="relative py-28 bg-background">
+      <div className="container mx-auto px-6 max-w-3xl">
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground text-center mb-12"
+        >
+          Frequently Asked Questions
+        </motion.h2>
+
+        <div className="space-y-0">
+          {faqs.map((faq, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: i * 0.05 }}
+              className="border-b border-border"
+            >
+              <button
+                onClick={() => setOpenIndex(openIndex === i ? null : i)}
+                className="w-full flex items-center justify-between py-6 text-left group"
+              >
+                <span className="text-base md:text-lg font-semibold text-muted-foreground group-hover:text-foreground transition-colors pr-8">
+                  {faq.q}
+                </span>
+                {openIndex === i ? (
+                  <Minus className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                ) : (
+                  <Plus className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                )}
+              </button>
+              {openIndex === i && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  transition={{ duration: 0.3 }}
+                  className="pb-6"
+                >
+                  <p className="text-muted-foreground text-sm leading-relaxed">{faq.a}</p>
+                </motion.div>
+              )}
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default FAQSection;

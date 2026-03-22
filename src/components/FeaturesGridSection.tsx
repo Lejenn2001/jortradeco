@@ -1,0 +1,83 @@
+import { motion } from "framer-motion";
+
+const features = [
+  {
+    title: "Opportunity Scanner",
+    desc: "Identifies structured high-probability trade setups across futures, options, and equities based on market behavior and liquidity activity.",
+  },
+  {
+    title: "Confidence Scoring Engine",
+    desc: "Evaluates potential opportunities using multiple market signals to help you focus on stronger trade ideas.",
+  },
+  {
+    title: "AI Trade Assistant",
+    desc: "Ask questions about market conditions, review trade ideas, and receive simple guidance before entering positions.",
+  },
+  {
+    title: "Execution Alerts",
+    desc: "Receive structured alerts with timing context, potential entry zones, and risk awareness considerations.",
+  },
+  {
+    title: "Market Structure Insights",
+    desc: "Highlights trend direction, key price levels, and liquidity zones to help traders better understand market conditions.",
+  },
+  {
+    title: "Performance Feedback",
+    desc: "Review past opportunities and outcomes to improve discipline, pattern recognition, and trading decisions over time.",
+  },
+];
+
+const FeaturesGridSection = () => {
+  return (
+    <section className="relative py-28 bg-background overflow-hidden">
+      {/* Center vertical glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200px] h-full">
+        <div className="w-full h-full bg-[linear-gradient(to_bottom,transparent_0%,hsl(270_60%_40%_/_0.15)_20%,hsl(40_70%_45%_/_0.12)_50%,hsl(200_80%_40%_/_0.08)_80%,transparent_100%)]" />
+      </div>
+
+      <div className="container mx-auto px-6 relative z-10">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
+          className="text-center mb-16"
+        >
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-foreground leading-[1.1] max-w-3xl mx-auto">
+            How JORTRADE Supports Your Trading Decisions
+          </h2>
+          <p className="text-muted-foreground mt-5 max-w-2xl mx-auto text-base leading-relaxed">
+            From opportunity scanning to real-time alerts and AI chat guidance,
+            JORTRADE helps you stay structured and confident in fast-moving markets.
+          </p>
+        </motion.div>
+
+        {/* 3x2 grid */}
+        <div className="grid md:grid-cols-2 gap-px bg-border/20 max-w-4xl mx-auto">
+          {features.map((f, i) => (
+            <motion.div
+              key={f.title}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: i * 0.08 }}
+              className="relative bg-background p-10"
+            >
+              {/* Corner crosses */}
+              <div className="absolute top-0 left-0 w-3 h-px bg-muted-foreground/30" />
+              <div className="absolute top-0 left-0 w-px h-3 bg-muted-foreground/30" />
+              <div className="absolute top-0 right-0 w-3 h-px bg-muted-foreground/30" />
+              <div className="absolute top-0 right-0 w-px h-3 bg-muted-foreground/30" />
+
+              <h3 className="text-lg font-bold text-foreground mb-3">{f.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default FeaturesGridSection;

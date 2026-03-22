@@ -1,18 +1,26 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import tradingBg from "@/assets/trading-bg.jpg";
-import { ArrowRight, Zap } from "lucide-react";
 
 const CTASection = () => {
   return (
     <section className="relative py-28 overflow-hidden">
-      <div className="absolute inset-0">
-        <img src={tradingBg} alt="" className="w-full h-full object-cover opacity-15" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/90 to-background/60" />
-        {/* Glow orbs */}
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-10 left-1/3 w-80 h-40 bg-accent/8 rounded-full blur-[100px]" />
+      {/* Radial glow background */}
+      <div className="absolute inset-0 bg-background" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px]">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse,hsl(270_60%_35%_/_0.25)_0%,transparent_60%)]" />
+        <div className="absolute inset-[40px] bg-[radial-gradient(ellipse,hsl(30_70%_40%_/_0.2)_0%,transparent_55%)]" />
+        <div className="absolute inset-[100px] bg-[radial-gradient(ellipse,hsl(300_50%_45%_/_0.15)_0%,transparent_50%)]" />
       </div>
+
+      {/* Corner decorations */}
+      <div className="absolute top-6 left-6 w-4 h-px bg-muted-foreground/20" />
+      <div className="absolute top-6 left-6 w-px h-4 bg-muted-foreground/20" />
+      <div className="absolute top-6 right-6 w-4 h-px bg-muted-foreground/20" />
+      <div className="absolute top-6 right-6 w-px h-4 bg-muted-foreground/20" />
+      <div className="absolute bottom-6 left-6 w-4 h-px bg-muted-foreground/20" />
+      <div className="absolute bottom-6 left-6 w-px h-4 bg-muted-foreground/20" />
+      <div className="absolute bottom-6 right-6 w-4 h-px bg-muted-foreground/20" />
+      <div className="absolute bottom-6 right-6 w-px h-4 bg-muted-foreground/20" />
 
       <motion.div
         initial={{ opacity: 0, y: 30 }}
@@ -21,33 +29,39 @@ const CTASection = () => {
         transition={{ duration: 0.7 }}
         className="relative z-10 container mx-auto px-6 text-center"
       >
-        <div className="inline-flex items-center gap-2 bg-primary/10 text-primary text-xs font-semibold px-4 py-1.5 rounded-full mb-6">
-          <Zap className="h-3 w-3" />
-          LIMITED EARLY ACCESS
-        </div>
-
-        <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground max-w-2xl mx-auto leading-tight">
-          Trade Smarter with{" "}
-          <span className="text-gradient-blue">JORTRADE</span>
+        <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-foreground leading-[1.1] max-w-2xl mx-auto">
+          Ready to Meet Your AI Trading Assistant?
         </h2>
 
-        <p className="text-muted-foreground mt-4 max-w-lg mx-auto">
-          Join the next generation of traders using AI-powered signals, real-time analysis, and intelligent guidance.
+        <p className="text-muted-foreground mt-6 max-w-xl mx-auto text-base leading-relaxed">
+          JORTRADE introduces Biddie, your real-time market guide helping you spot opportunities,
+          understand conditions, and trade with more structure and confidence.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-          <Button variant="hero" size="lg" className="px-10 text-base group">
-            Join Now
-            <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
-          </Button>
-          <Button variant="heroOutline" size="lg" className="px-10 text-base">
-            View Demo
-          </Button>
+        <Button className="mt-10 bg-foreground text-background hover:bg-foreground/90 rounded-full px-10 py-6 text-base font-semibold">
+          Chat with Biddie
+        </Button>
+      </motion.div>
+
+      {/* Stats bar */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6, delay: 0.3 }}
+        className="relative z-10 container mx-auto px-6 mt-20"
+      >
+        <div className="grid grid-cols-3 gap-8 border-t border-border pt-10">
+          {[
+            "24/7 Market Scanning",
+            "AI Confidence Scores",
+            "Futures • Options • Stocks",
+          ].map((text) => (
+            <div key={text} className="text-center">
+              <span className="text-xl md:text-2xl font-extrabold text-foreground">{text}</span>
+            </div>
+          ))}
         </div>
-
-        <p className="text-xs text-muted-foreground mt-6">
-          No credit card required • Cancel anytime
-        </p>
       </motion.div>
     </section>
   );
