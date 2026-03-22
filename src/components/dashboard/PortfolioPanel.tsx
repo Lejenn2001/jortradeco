@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Fish, ArrowUpRight, ArrowDownRight, Clock, ChevronDown, ChevronUp, Info, Copy, Check, Repeat2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import type { FlowAlert } from "@/hooks/useMarketData";
 import { toast } from "sonner";
 
 interface Props {
   whaleAlerts: FlowAlert[];
   loading: boolean;
+  limit?: number;
 }
 
 const exampleWhaleAlerts: FlowAlert[] = [
