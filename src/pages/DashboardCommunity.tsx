@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Trash2, Users } from "lucide-react";
+import { Send, Trash2, Users, Bot } from "lucide-react";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { Input } from "@/components/ui/input";
