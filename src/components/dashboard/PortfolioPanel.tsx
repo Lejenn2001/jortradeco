@@ -114,10 +114,10 @@ const PortfolioPanel = ({ whaleAlerts, loading, limit }: Props) => {
   const allAlerts = [...whaleAlerts, ...fillers].slice(0, 8);
   const displayAlerts = limit ? allAlerts.slice(0, limit) : allAlerts;
 
-  const bullishPremium = displayAlerts
+  const bullishPremium = allAlerts
     .filter((a) => a.sentiment === "bullish")
     .reduce((sum, a) => sum + parsePremium(a.premium), 0);
-  const bearishPremium = displayAlerts
+  const bearishPremium = allAlerts
     .filter((a) => a.sentiment === "bearish")
     .reduce((sum, a) => sum + parsePremium(a.premium), 0);
 
