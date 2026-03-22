@@ -1,10 +1,23 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { TrendingUp, Search, Info, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
 const quickTickers = ["NQ", "SPX", "PLTR", "TSLA", "NVDA", "AAPL"];
+
+const popularTickers = [
+  "AAPL", "MSFT", "GOOGL", "AMZN", "META", "TSLA", "NVDA", "AMD", "INTC", "NFLX",
+  "SPY", "QQQ", "IWM", "DIA", "SPX", "NQ", "ES", "VIX",
+  "BA", "DIS", "PYPL", "SQ", "SHOP", "ROKU", "SNAP", "UBER", "LYFT", "COIN",
+  "PLTR", "SOFI", "NIO", "RIVN", "LCID", "F", "GM", "AAL", "UAL", "DAL",
+  "JPM", "BAC", "GS", "MS", "WFC", "C", "V", "MA", "AXP",
+  "XOM", "CVX", "COP", "OXY", "SLB", "HAL",
+  "JNJ", "PFE", "MRNA", "ABBV", "LLY", "UNH", "BMY",
+  "WMT", "TGT", "COST", "HD", "LOW", "SBUX", "MCD", "KO", "PEP",
+  "CRM", "ORCL", "NOW", "SNOW", "PANW", "CRWD", "ZS", "NET", "DDOG",
+  "ARM", "SMCI", "AVGO", "MU", "QCOM", "TSM", "MRVL", "LRCX", "AMAT",
+];
 
 interface TickerInsight {
   bias: string;
