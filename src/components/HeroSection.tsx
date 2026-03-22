@@ -27,10 +27,18 @@ const HeroSection = () => {
           <span className="hover:text-foreground cursor-pointer transition-colors">Features</span>
           <Link to="/dashboard" className="hover:text-foreground cursor-pointer transition-colors">Dashboard</Link>
           <span className="hover:text-foreground cursor-pointer transition-colors">Mentorship</span>
-          <span className="hover:text-foreground cursor-pointer transition-colors">Pricing</span>
-          <Button size="sm" className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-5 text-xs font-semibold">
-            Sign Up
-          </Button>
+          <Link to="/signup" className="hover:text-foreground cursor-pointer transition-colors">Pricing</Link>
+          <Link to="/contact" className="hover:text-foreground cursor-pointer transition-colors">Contact</Link>
+          <Link to="/login">
+            <Button size="sm" variant="ghost" className="rounded-full px-5 text-xs font-semibold text-muted-foreground hover:text-foreground">
+              Log In
+            </Button>
+          </Link>
+          <Link to="/signup">
+            <Button size="sm" className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-5 text-xs font-semibold">
+              Sign Up
+            </Button>
+          </Link>
         </div>
       </motion.nav>
 

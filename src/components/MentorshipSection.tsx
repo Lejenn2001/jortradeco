@@ -59,9 +59,11 @@ const MentorshipSection = () => {
               Get direct access to experienced traders who'll help you level up faster.
             </p>
 
-            <Button className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-8 py-6 text-base font-semibold">
-              Learn About Mentorship
-            </Button>
+            <Link to="/contact">
+              <Button className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-8 py-6 text-base font-semibold">
+                Inquire About Mentorship
+              </Button>
+            </Link>
           </motion.div>
 
           {/* Right — perks grid */}
