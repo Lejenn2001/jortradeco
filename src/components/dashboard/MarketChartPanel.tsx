@@ -47,17 +47,22 @@ const defaultInsight: TickerInsight = {
 // Generate candlesticks based on bias direction
 function generateCandles(isBearish: boolean) {
   const candles = [];
-  let basePrice = isBearish ? 50 : 180;
-  const count = 18;
-  const spacing = 500 / (count + 2);
+  let basePrice = isBearish ? 160 : 160;
+  const count = 20;
+  const chartWidth = 500;
+  const margin = 20;
+  const spacing = (chartWidth - margin * 2) / count;
   for (let i = 0; i < count; i++) {
-    const x = spacing * (i + 1.5);
+    const x = margin + spacing * (i + 0.5);
     const trend = isBearish ? 0.35 : 0.65;
-    const move = (Math.random() - trend) * 14;
+    const move = (Math.random() - trend) * 8;
     const open = basePrice;
     const close = basePrice + move;
-    const high = Math.min(open, close) - Math.random() * 7 - 2;
-    const low = Math.max(open, close) + Math.random() * 7 + 2;
+    const bodyHeight = Math.abs(close - open);
+    const wickUp = Math.random() * 4 + 2;
+    const wickDown = Math.random() * 4 + 2;
+    const high = Math.min(open, close) - wickUp;
+    const low = Math.max(open, close) + wickDown;
     const bull = close < open;
     candles.push({ x, o: open, c: close, h: high, l: low, bull });
     basePrice = close;
