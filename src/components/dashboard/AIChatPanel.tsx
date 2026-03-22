@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Send, Bot, User, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Message {
   id: string;
@@ -17,6 +18,8 @@ const quickPrompts = [
 ];
 
 const AIChatPanel = () => {
+  const { profile } = useAuth();
+  const firstName = profile?.full_name?.split(" ")[0] || "Trader";
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -103,8 +106,9 @@ const AIChatPanel = () => {
         {messages.length === 0 && (
           <div className="text-center py-8">
             <Bot className="h-8 w-8 text-primary/40 mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground">Ask Biddie anything about the markets.</p>
-            <p className="text-xs text-muted-foreground mt-1">Powered by real-time Unusual Whales data + Claude AI</p>
+            <p className="text-sm text-foreground font-medium">Hey {firstName}! 👋 Hope your day is going well.</p>
+            <p className="text-sm text-muted-foreground mt-1">Let's make some money! Ask me anything about the markets.</p>
+            <p className="text-xs text-muted-foreground mt-2">Powered by real-time Unusual Whales data + Claude AI</p>
           </div>
         )}
 
