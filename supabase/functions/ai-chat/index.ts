@@ -20,7 +20,7 @@ serve(async (req) => {
   const uwKey = Deno.env.get('UNUSUAL_WHALES_API_KEY');
 
   try {
-    const { message, history } = await req.json();
+    const { message, history, userName } = await req.json();
 
     // Fetch fresh market context
     let marketContext = '';
