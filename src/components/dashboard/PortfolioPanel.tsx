@@ -302,6 +302,45 @@ function generateExplanation(alert: FlowAlert): string {
   return `Large ${alert.type.toLowerCase()} detected on ${alert.ticker} — ${alert.premium} in premium on the ${alert.strike} ${contract}. When institutions place orders this size, they're making a high-conviction ${direction} bet. The ${alert.type.toLowerCase()} pattern indicates urgency — they want to get filled fast before the move happens. This level of premium commitment from smart money is a strong signal worth watching.`;
 }
 
+// Map expensive index/stock tickers to budget-friendly ETF or stock alternatives
+const alternativesMap: Record<string, (strike: string, sentiment: string) => string | null> = {
+  SPX: (strike, sentiment) => {
+    const spxPrice = parseFloat(strike.replace('$', ''));
+    const spyEquiv = Math.round(spxPrice / 10);
+    return `Buy SPY $${spyEquiv} ${sentiment === "bullish" ? "Calls" : "Puts"} — SPY tracks SPX at ~1/10th the price`;
+  },
+  SPXW: (strike, sentiment) => {
+    const spxPrice = parseFloat(strike.replace('$', ''));
+    const spyEquiv = Math.round(spxPrice / 10);
+    return `Buy SPY $${spyEquiv} ${sentiment === "bullish" ? "Calls" : "Puts"} — SPY tracks SPX at ~1/10th the price`;
+  },
+  NDX: (strike, sentiment) => {
+    const ndxPrice = parseFloat(strike.replace('$', ''));
+    const qqqEquiv = Math.round(ndxPrice / 40);
+    return `Buy QQQ $${qqqEquiv} ${sentiment === "bullish" ? "Calls" : "Puts"} — QQQ tracks Nasdaq-100 at ~1/40th the price`;
+  },
+  NQ: (strike, sentiment) => {
+    const nqPrice = parseFloat(strike.replace('$', ''));
+    const qqqEquiv = Math.round(nqPrice / 40);
+    return `Buy QQQ $${qqqEquiv} ${sentiment === "bullish" ? "Calls" : "Puts"} — QQQ tracks Nasdaq-100`;
+  },
+  AMZN: (strike, sentiment) => {
+    const price = parseFloat(strike.replace('$', ''));
+    return price >= 180 ? `Buy AMZN $${Math.round(price * 0.95)} ${sentiment === "bullish" ? "Calls" : "Puts"} closer to the money for lower premium` : null;
+  },
+  GOOGL: (strike, sentiment) => {
+    const price = parseFloat(strike.replace('$', ''));
+    return price >= 170 ? `Buy GOOG $${Math.round(price)} ${sentiment === "bullish" ? "Calls" : "Puts"} — same company, sometimes cheaper premiums` : null;
+  },
+};
+
+function getAlternative(alert: FlowAlert): string | null {
+  const ticker = alert.ticker.replace(/W$/, ''); // SPXW -> SPX
+  const mapFn = alternativesMap[alert.ticker] || alternativesMap[ticker];
+  if (mapFn) return mapFn(alert.strike, alert.sentiment);
+  return null;
+}
+
 function parsePremium(str: string): number {
   const clean = str.replace(/[$,]/g, '');
   if (clean.endsWith('M')) return parseFloat(clean) * 1_000_000;
