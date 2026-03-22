@@ -44,28 +44,60 @@ const defaultInsight: TickerInsight = {
   strategyExplanation: "Biddie will analyze real-time options flow data to recommend the best strategy for the current market conditions.",
 };
 
-// Generate candlesticks based on bias direction
+// Generate candlesticks based on bias direction — matches homepage style
 function generateCandles(isBearish: boolean) {
   const candles = [];
-  let basePrice = isBearish ? 160 : 160;
-  const count = 20;
-  const chartWidth = 500;
-  const margin = 20;
-  const spacing = (chartWidth - margin * 2) / count;
+  const count = 19;
+  const startX = 30;
+  const spacingX = 25;
+
+  // Bullish: price goes from high y (bottom) to low y (top) — uptrend
+  // Bearish: price goes from low y (top) to high y (bottom) — downtrend
+  let price = isBearish ? 60 : 160;
+
   for (let i = 0; i < count; i++) {
-    const x = margin + spacing * (i + 0.5);
-    const trend = isBearish ? 0.35 : 0.65;
-    const move = (Math.random() - trend) * 8;
-    const open = basePrice;
-    const close = basePrice + move;
-    const bodyHeight = Math.abs(close - open);
-    const wickUp = Math.random() * 4 + 2;
-    const wickDown = Math.random() * 4 + 2;
-    const high = Math.min(open, close) - wickUp;
-    const low = Math.max(open, close) + wickDown;
-    const bull = close < open;
-    candles.push({ x, o: open, c: close, h: high, l: low, bull });
-    basePrice = close;
+    const x = startX + i * spacingX;
+    // Alternate bull/bear candles with overall trend
+    const isBullCandle = isBearish
+      ? (i % 3 !== 1) // mostly bearish (red), every 3rd is blue
+      : (i % 3 !== 1); // mostly bullish (blue), every 3rd is red
+
+    const bodySize = 8 + Math.random() * 10;
+    const wickUp = 3 + Math.random() * 5;
+    const wickDown = 3 + Math.random() * 5;
+
+    let open, close;
+    if (isBearish) {
+      // Downtrend: price increases in y (moves down visually)
+      if (isBullCandle) {
+        // Bear candle (red) — price drops (y increases)
+        open = price;
+        close = price + bodySize;
+      } else {
+        // Bull candle (blue) — small retracement up
+        open = price;
+        close = price - bodySize * 0.6;
+      }
+    } else {
+      // Uptrend: price decreases in y (moves up visually)
+      if (isBullCandle) {
+        // Bull candle (blue) — price rises (y decreases)
+        open = price;
+        close = price - bodySize;
+      } else {
+        // Bear candle (red) — small retracement down
+        open = price;
+        close = price + bodySize * 0.6;
+      }
+    }
+
+    const top = Math.min(open, close);
+    const bottom = Math.max(open, close);
+    const high = top - wickUp;
+    const low = bottom + wickDown;
+
+    candles.push({ x, o: open, c: close, h: high, l: low, bull: close < open });
+    price = close;
   }
   return candles;
 }
