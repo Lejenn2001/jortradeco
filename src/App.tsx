@@ -11,6 +11,7 @@ import DashboardMarket from "./pages/DashboardMarket.tsx";
 import DashboardChat from "./pages/DashboardChat.tsx";
 import DashboardPnL from "./pages/DashboardPnL.tsx";
 import DashboardCommunity from "./pages/DashboardCommunity.tsx";
+import DashboardAnalytics from "./pages/DashboardAnalytics.tsx";
 import Login from "./pages/Login.tsx";
 import Signup from "./pages/Signup.tsx";
 import Contact from "./pages/Contact.tsx";
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/dashboard/chat" element={<DashboardChat />} />
             <Route path="/dashboard/pnl" element={<DashboardPnL />} />
             <Route path="/dashboard/community" element={<DashboardCommunity />} />
+            <Route path="/dashboard/analytics" element={<DashboardAnalytics />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/contact" element={<Contact />} />
