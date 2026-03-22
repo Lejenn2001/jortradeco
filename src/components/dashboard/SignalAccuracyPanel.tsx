@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
-import { Target, CheckCircle, XCircle, Clock, TrendingUp, TrendingDown, Plus, Save } from "lucide-react";
+import { Target, CheckCircle, XCircle, Clock, TrendingUp, TrendingDown, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 
@@ -23,14 +21,15 @@ interface SignalOutcome {
   resolved_at: string | null;
   description: string | null;
   premium: string | null;
+  signal_source: string | null;
 }
 
 const outcomeIcon = (outcome: string) => {
   switch (outcome) {
-    case "hit": return <CheckCircle className="h-4 w-4 text-emerald-400" />;
-    case "missed": return <XCircle className="h-4 w-4 text-destructive" />;
-    case "expired": return <Clock className="h-4 w-4 text-muted-foreground" />;
-    default: return <Clock className="h-4 w-4 text-amber-400 animate-pulse" />;
+    case "hit": return <CheckCircle className="h-3.5 w-3.5 text-emerald-400" />;
+    case "missed": return <XCircle className="h-3.5 w-3.5 text-destructive" />;
+    case "expired": return <Clock className="h-3.5 w-3.5 text-muted-foreground" />;
+    default: return <Clock className="h-3.5 w-3.5 text-amber-400 animate-pulse" />;
   }
 };
 
@@ -51,16 +50,14 @@ interface Props {
 const SignalAccuracyPanel = ({ isAdmin }: Props) => {
   const [outcomes, setOutcomes] = useState<SignalOutcome[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAdd, setShowAdd] = useState(false);
-  const [newSignal, setNewSignal] = useState({ ticker: "", signal_type: "bullish", confidence: "9.0", strike: "", description: "" });
-  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState(false);
 
   const fetchOutcomes = async () => {
     const { data, error } = await supabase
       .from("signal_outcomes" as any)
       .select("*")
       .order("created_at", { ascending: false })
-      .limit(50);
+      .limit(100);
 
     if (!error && data) setOutcomes(data as any);
     setLoading(false);
@@ -83,73 +80,64 @@ const SignalAccuracyPanel = ({ isAdmin }: Props) => {
     return acc;
   }, {});
 
-  const addSignal = async () => {
-    if (!newSignal.ticker.trim()) return;
-    const { error } = await supabase.from("signal_outcomes" as any).insert({
-      ticker: newSignal.ticker.toUpperCase(),
-      signal_type: newSignal.signal_type,
-      confidence: parseFloat(newSignal.confidence),
-      strike: newSignal.strike || null,
-      description: newSignal.description || null,
-      outcome: "pending",
-    } as any);
-    if (error) {
-      toast({ title: "Error", description: "Failed to add signal", variant: "destructive" });
-    } else {
-      toast({ title: "Signal added", description: `${newSignal.ticker.toUpperCase()} signal tracked` });
-      setNewSignal({ ticker: "", signal_type: "bullish", confidence: "9.0", strike: "", description: "" });
-      setShowAdd(false);
+  const verifySignals = async () => {
+    setVerifying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-signals");
+      if (error) throw error;
+      toast({
+        title: "Signals Verified",
+        description: `${data.verified} signals checked — ${data.hits} hits, ${data.misses} misses`,
+      });
       fetchOutcomes();
+    } catch (e) {
+      toast({ title: "Error", description: "Failed to verify signals", variant: "destructive" });
     }
-  };
-
-  const updateOutcome = async (id: string, outcome: string) => {
-    setUpdatingId(id);
-    const { error } = await supabase
-      .from("signal_outcomes" as any)
-      .update({ outcome, resolved_at: new Date().toISOString() } as any)
-      .eq("id", id);
-    if (!error) {
-      toast({ title: "Updated", description: `Signal marked as ${outcome}` });
-      fetchOutcomes();
-    }
-    setUpdatingId(null);
+    setVerifying(false);
   };
 
   return (
-    <div className="glass-panel rounded-xl border-border/40 overflow-hidden">
-      <div className="px-5 py-4 border-b border-border/40 flex items-center gap-2">
+    <div className="glass-panel rounded-xl border-border/40 overflow-hidden mb-6">
+      <div className="px-5 py-4 border-b border-border/40 flex items-center gap-2 flex-wrap">
         <Target className="h-4 w-4 text-primary" />
         <h2 className="text-sm font-semibold text-foreground">Signal Accuracy Tracker</h2>
-        <span className="text-xs text-muted-foreground ml-auto">{outcomes.length} signals tracked</span>
+        <span className="text-xs text-muted-foreground ml-auto">{outcomes.length} tracked</span>
         {isAdmin && (
-          <Button size="sm" variant="outline" className="text-xs h-7 px-3 ml-2" onClick={() => setShowAdd(!showAdd)}>
-            <Plus className="h-3 w-3 mr-1" /> Log Signal
+          <Button
+            size="sm" variant="outline"
+            className="text-xs h-7 px-3 ml-2"
+            disabled={verifying}
+            onClick={verifySignals}
+          >
+            <RefreshCw className={`h-3 w-3 mr-1 ${verifying ? "animate-spin" : ""}`} />
+            {verifying ? "Checking..." : "Verify Now"}
           </Button>
         )}
       </div>
 
       {/* Summary Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 p-4">
-        <div className="bg-muted/20 rounded-lg p-3 text-center">
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-muted/20 rounded-lg p-3 text-center">
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Win Rate</p>
-          <p className={`text-xl font-bold ${winRate !== "—" && parseFloat(winRate as string) >= 50 ? "text-emerald-400" : "text-foreground"}`}>{winRate}{winRate !== "—" && "%"}</p>
-        </div>
+          <p className={`text-2xl font-bold ${winRate !== "—" && parseFloat(winRate as string) >= 50 ? "text-emerald-400" : winRate !== "—" ? "text-destructive" : "text-foreground"}`}>
+            {winRate}{winRate !== "—" && "%"}
+          </p>
+        </motion.div>
         <div className="bg-muted/20 rounded-lg p-3 text-center">
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Hits</p>
-          <p className="text-xl font-bold text-emerald-400">{hits}</p>
+          <p className="text-2xl font-bold text-emerald-400">{hits}</p>
         </div>
         <div className="bg-muted/20 rounded-lg p-3 text-center">
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Misses</p>
-          <p className="text-xl font-bold text-destructive">{misses}</p>
+          <p className="text-2xl font-bold text-destructive">{misses}</p>
         </div>
         <div className="bg-muted/20 rounded-lg p-3 text-center">
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Pending</p>
-          <p className="text-xl font-bold text-amber-400">{pending}</p>
+          <p className="text-2xl font-bold text-amber-400">{pending}</p>
         </div>
         <div className="bg-muted/20 rounded-lg p-3 text-center">
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Total</p>
-          <p className="text-xl font-bold text-foreground">{outcomes.length}</p>
+          <p className="text-2xl font-bold text-foreground">{outcomes.length}</p>
         </div>
       </div>
 
@@ -174,33 +162,7 @@ const SignalAccuracyPanel = ({ isAdmin }: Props) => {
         </div>
       )}
 
-      {/* Add Signal Form (admin only) */}
-      {showAdd && isAdmin && (
-        <div className="px-4 pb-4">
-          <div className="bg-muted/10 rounded-lg p-4 space-y-3 border border-border/30">
-            <p className="text-xs font-semibold text-foreground">Log New Signal</p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <Input placeholder="Ticker" value={newSignal.ticker} onChange={(e) => setNewSignal({ ...newSignal, ticker: e.target.value })} className="text-xs h-8" />
-              <select
-                value={newSignal.signal_type}
-                onChange={(e) => setNewSignal({ ...newSignal, signal_type: e.target.value })}
-                className="text-xs h-8 rounded-md border border-border/40 bg-background px-2 text-foreground"
-              >
-                <option value="bullish">Bullish</option>
-                <option value="bearish">Bearish</option>
-              </select>
-              <Input placeholder="Confidence" value={newSignal.confidence} onChange={(e) => setNewSignal({ ...newSignal, confidence: e.target.value })} className="text-xs h-8" />
-              <Input placeholder="Strike" value={newSignal.strike} onChange={(e) => setNewSignal({ ...newSignal, strike: e.target.value })} className="text-xs h-8" />
-            </div>
-            <Input placeholder="Description (optional)" value={newSignal.description} onChange={(e) => setNewSignal({ ...newSignal, description: e.target.value })} className="text-xs h-8" />
-            <Button size="sm" onClick={addSignal} className="text-xs h-7">
-              <Save className="h-3 w-3 mr-1" /> Save Signal
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Recent Signals List */}
+      {/* Signals Table */}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -209,8 +171,8 @@ const SignalAccuracyPanel = ({ isAdmin }: Props) => {
               <th className="text-left px-4 py-2.5 text-[10px] font-medium text-muted-foreground uppercase">Ticker</th>
               <th className="text-left px-4 py-2.5 text-[10px] font-medium text-muted-foreground uppercase">Direction</th>
               <th className="text-left px-4 py-2.5 text-[10px] font-medium text-muted-foreground uppercase">Score</th>
-              <th className="text-left px-4 py-2.5 text-[10px] font-medium text-muted-foreground uppercase">Date</th>
-              {isAdmin && <th className="text-right px-4 py-2.5 text-[10px] font-medium text-muted-foreground uppercase">Actions</th>}
+              <th className="text-left px-4 py-2.5 text-[10px] font-medium text-muted-foreground uppercase">Strike</th>
+              <th className="text-left px-4 py-2.5 text-[10px] font-medium text-muted-foreground uppercase">Resolved</th>
             </tr>
           </thead>
           <tbody>
@@ -218,9 +180,11 @@ const SignalAccuracyPanel = ({ isAdmin }: Props) => {
               <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-xs">Loading...</td></tr>
             )}
             {!loading && outcomes.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-xs">No signals tracked yet. {isAdmin && "Click 'Log Signal' to start tracking."}</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-xs">
+                No signals tracked yet. Signals are auto-logged when detected from live flow data.
+              </td></tr>
             )}
-            {outcomes.map((o) => (
+            {outcomes.slice(0, 25).map((o) => (
               <tr key={o.id} className="border-b border-border/20 hover:bg-muted/20 transition-colors">
                 <td className="px-4 py-2.5">
                   <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${outcomeBadge(o.outcome)}`}>
@@ -232,39 +196,22 @@ const SignalAccuracyPanel = ({ isAdmin }: Props) => {
                 <td className="px-4 py-2.5">
                   <span className="flex items-center gap-1 text-xs">
                     {o.signal_type === "bullish" ? <TrendingUp className="h-3 w-3 text-primary" /> : <TrendingDown className="h-3 w-3 text-destructive" />}
-                    <span className={o.signal_type === "bullish" ? "text-primary" : "text-destructive"}>{o.signal_type}</span>
+                    <span className={o.signal_type === "bullish" ? "text-primary" : "text-destructive"}>
+                      {o.put_call ? o.put_call.toUpperCase() : o.signal_type}
+                    </span>
                   </span>
                 </td>
                 <td className="px-4 py-2.5 text-xs font-semibold text-foreground">{o.confidence}</td>
+                <td className="px-4 py-2.5 text-xs text-muted-foreground">{o.strike || "—"}</td>
                 <td className="px-4 py-2.5 text-xs text-muted-foreground">
-                  {new Date(o.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                  {o.outcome_price ? (
+                    <span>${o.outcome_price.toFixed(2)}</span>
+                  ) : o.outcome === "pending" ? (
+                    <span className="text-amber-400">awaiting</span>
+                  ) : (
+                    "—"
+                  )}
                 </td>
-                {isAdmin && (
-                  <td className="px-4 py-2.5 text-right">
-                    {o.outcome === "pending" && (
-                      <div className="flex items-center gap-1 justify-end">
-                        <Button
-                          size="sm" variant="outline"
-                          className="text-[10px] h-6 px-2 text-emerald-400 border-emerald-400/30 hover:bg-emerald-400/10"
-                          disabled={updatingId === o.id}
-                          onClick={() => updateOutcome(o.id, "hit")}
-                        >✓ Hit</Button>
-                        <Button
-                          size="sm" variant="outline"
-                          className="text-[10px] h-6 px-2 text-destructive border-destructive/30 hover:bg-destructive/10"
-                          disabled={updatingId === o.id}
-                          onClick={() => updateOutcome(o.id, "missed")}
-                        >✗ Miss</Button>
-                        <Button
-                          size="sm" variant="outline"
-                          className="text-[10px] h-6 px-2"
-                          disabled={updatingId === o.id}
-                          onClick={() => updateOutcome(o.id, "expired")}
-                        >Expired</Button>
-                      </div>
-                    )}
-                  </td>
-                )}
               </tr>
             ))}
           </tbody>
