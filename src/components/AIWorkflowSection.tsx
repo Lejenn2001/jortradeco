@@ -5,17 +5,17 @@ const steps = [
   {
     num: "1",
     title: "Market Scan",
-    desc: "Biddie reviews market conditions in real time to highlight potential trading opportunities across futures, options, and stocks.",
+    desc: "Biddie continuously monitors price action, volume shifts, and liquidity activity to surface what's worth watching.",
   },
   {
     num: "2",
     title: "Opportunity Ranking",
-    desc: "Each setup is evaluated using structure, volatility behavior, and liquidity signals to help you focus on stronger trade ideas.",
+    desc: "Each setup is scored by strength so you spend time on the best ideas — not sorting through noise.",
   },
   {
     num: "3",
     title: "Execution Guidance",
-    desc: "You receive structured insights including potential entry areas, risk considerations, and timing context to support confident decisions.",
+    desc: "Get clear entry context, risk levels, and timing cues before you pull the trigger.",
   },
 ];
 
