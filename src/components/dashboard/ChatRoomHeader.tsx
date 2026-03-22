@@ -3,6 +3,9 @@ import { Users, Clock, MapPin } from "lucide-react";
 import { useWeather, getBiddieOutfit } from "@/hooks/useWeather";
 import { motion } from "framer-motion";
 import biddieRobot from "@/assets/biddie-robot.png";
+import MarketStatusSign from "@/components/dashboard/MarketStatusSign";
+import { motion } from "framer-motion";
+import biddieRobot from "@/assets/biddie-robot.png";
 
 const QUOTES = [
   "The stock market is a device for transferring money from the impatient to the patient.",
