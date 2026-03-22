@@ -182,8 +182,8 @@ const DashboardCommunity = () => {
                   >
                     {/* Avatar */}
                     {isBiddie ? (
-                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center">
-                        <Bot className="h-4 w-4 text-primary" />
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden bg-primary/20 border border-primary/40">
+                        <img src={biddieRobot} alt="Biddie" className="w-full h-full object-contain" />
                       </div>
                     ) : !isOwn ? (
                       <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted/50 border border-border/50 flex items-center justify-center">
