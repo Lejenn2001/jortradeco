@@ -8,7 +8,8 @@ const quickTickers = ["NQ", "SPX", "PLTR", "TSLA", "NVDA", "AAPL"];
 
 interface TickerInsight {
   bias: string;
-  callZone: string;
+  targetZone: string;
+  keyLevel: string;
   invalidation: string;
   strategy: string;
   contract?: string;
@@ -20,7 +21,8 @@ interface TickerInsight {
 
 const defaultInsight: TickerInsight = {
   bias: "Select a ticker ↗",
-  callZone: "—",
+  targetZone: "—",
+  keyLevel: "—",
   invalidation: "—",
   strategy: "—",
   expiration: "—",
