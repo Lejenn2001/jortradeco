@@ -19,6 +19,13 @@ export interface MarketSignal {
   description: string;
   timestamp: string;
   tags: string[];
+  strike?: string;
+  expiry?: string;
+  premium?: string;
+  putCall?: "call" | "put";
+  suggestedTrade?: string;
+  entryTrigger?: string;
+  invalidation?: string;
 }
 
 export interface TickerData {
