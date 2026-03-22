@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import biddieRobot from "@/assets/biddie-robot.png";
 
 const HeroSection = () => {
   return (
@@ -88,6 +89,28 @@ const HeroSection = () => {
           <Button variant="outline" className="rounded-full px-8 py-6 text-base font-semibold border-muted-foreground/30 hover:bg-muted/30">
             View AI Features
           </Button>
+        </motion.div>
+
+        {/* Biddie Robot */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, delay: 1 }}
+          className="mt-12"
+        >
+          <img
+            src={biddieRobot}
+            alt="Biddie - AI Trading Assistant"
+            className="w-32 h-32 md:w-40 md:h-40 mx-auto drop-shadow-[0_0_30px_hsl(230_85%_60%_/_0.4)]"
+          />
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.3 }}
+            className="mt-3 bg-primary/10 border border-primary/20 rounded-full px-4 py-1.5 text-xs text-primary font-medium inline-block"
+          >
+            👋 Meet Biddie, your AI trading assistant
+          </motion.div>
         </motion.div>
       </div>
     </section>
