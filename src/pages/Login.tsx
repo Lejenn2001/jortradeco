@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import Disclaimer from "@/components/Disclaimer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
@@ -86,6 +87,9 @@ const Login = () => {
           </Link>
         </div>
       </motion.div>
+      <div className="absolute bottom-0 left-0 right-0">
+        <Disclaimer />
+      </div>
     </div>
   );
 };

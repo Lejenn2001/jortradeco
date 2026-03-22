@@ -7,6 +7,7 @@ import FeaturesGridSection from "@/components/FeaturesGridSection";
 import MentorshipSection from "@/components/MentorshipSection";
 import CTASection from "@/components/CTASection";
 import FAQSection from "@/components/FAQSection";
+import Disclaimer from "@/components/Disclaimer";
 import Footer from "@/components/Footer";
 
 const Index = () => {
@@ -21,6 +22,7 @@ const Index = () => {
       <MentorshipSection />
       <CTASection />
       <FAQSection />
+      <Disclaimer />
       <Footer />
     </div>
   );

@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import Disclaimer from "@/components/Disclaimer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
@@ -217,6 +218,9 @@ const Signup = () => {
             </form>
           </div>
         </motion.div>
+      </div>
+      <div className="mt-8 w-full">
+        <Disclaimer />
       </div>
     </div>
   );
