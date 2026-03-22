@@ -74,11 +74,13 @@ const HeroSection = () => {
           className="flex flex-col sm:flex-row gap-4 justify-center mt-10"
         >
           <Button className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-8 py-6 text-base font-semibold">
-            Get Early Access
+            Sign Up Now
           </Button>
-          <Button variant="outline" className="rounded-full px-8 py-6 text-base font-semibold border-muted-foreground/30 hover:bg-muted/30">
-            View AI Features
-          </Button>
+          <Link to="/dashboard">
+            <Button variant="outline" className="rounded-full px-8 py-6 text-base font-semibold border-muted-foreground/30 hover:bg-muted/30 w-full">
+              Go to Dashboard
+            </Button>
+          </Link>
         </motion.div>
 
         {/* Biddie Robot */}
