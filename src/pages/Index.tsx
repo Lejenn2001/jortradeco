@@ -4,6 +4,7 @@ import AIWorkflowSection from "@/components/AIWorkflowSection";
 import RealTimeGuidanceSection from "@/components/RealTimeGuidanceSection";
 import DashboardPreview from "@/components/DashboardPreview";
 import FeaturesGridSection from "@/components/FeaturesGridSection";
+import MentorshipSection from "@/components/MentorshipSection";
 import CTASection from "@/components/CTASection";
 import FAQSection from "@/components/FAQSection";
 import Footer from "@/components/Footer";
