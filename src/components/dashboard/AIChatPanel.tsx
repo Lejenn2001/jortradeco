@@ -117,8 +117,7 @@ const AIChatPanel = () => {
         {messages.length === 0 && (
           <div className="text-center py-8">
             <Bot className="h-8 w-8 text-primary/40 mx-auto mb-3" />
-            <p className="text-sm text-foreground font-medium">Hey {firstName}! 👋 Hope your day is going well.</p>
-            <p className="text-sm text-muted-foreground mt-1">Let's make some money! Ask me anything about the markets.</p>
+            <p className="text-sm text-foreground font-medium">{greeting}</p>
             <p className="text-xs text-muted-foreground mt-2">Powered by real-time Unusual Whales data + Claude AI</p>
           </div>
         )}
