@@ -11,6 +11,7 @@ import {
   Bot,
   Menu,
   X,
+  Users,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
