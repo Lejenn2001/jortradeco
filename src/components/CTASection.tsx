@@ -25,10 +25,25 @@ const CTASection = () => {
       <div className="absolute bottom-6 right-6 w-px h-4 bg-muted-foreground/20" />
 
       <div className="relative z-10 container mx-auto px-6">
-        <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
-          {/* Text — left side */}
+        <div className="flex flex-col md:flex-row items-center gap-0 md:gap-0">
+          {/* Biddie — left side, leaning on the text */}
           <motion.div
-            initial={{ opacity: 0, x: -30 }}
+            initial={{ opacity: 0, x: -40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="flex-shrink-0 relative md:-mr-8 z-20"
+          >
+            <img
+              src={biddieLeaning}
+              alt="Biddie leaning casually"
+              className="w-52 h-52 md:w-72 md:h-72 lg:w-80 lg:h-80 object-contain drop-shadow-[0_0_40px_hsl(230_85%_60%_/_0.35)]"
+            />
+          </motion.div>
+
+          {/* Text — right side */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
@@ -47,21 +62,6 @@ const CTASection = () => {
                 Chat with Biddie
               </Button>
             </Link>
-          </motion.div>
-
-          {/* Biddie — right side, leaning */}
-          <motion.div
-            initial={{ opacity: 0, x: 40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="flex-shrink-0 relative"
-          >
-            <img
-              src={biddieLeaning}
-              alt="Biddie leaning casually"
-              className="w-52 h-52 md:w-72 md:h-72 lg:w-80 lg:h-80 object-contain drop-shadow-[0_0_40px_hsl(230_85%_60%_/_0.35)] -mb-6"
-            />
           </motion.div>
         </div>
 
