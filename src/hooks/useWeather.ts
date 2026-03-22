@@ -71,7 +71,7 @@ export const useWeather = () => {
     // Dallas fallback coords
     const fallback = async () => {
       const data = await fetchWeatherByCoords(32.7767, -96.7970);
-      if (data.location === "Your Area") data.location = "Dallas";
+      if (data.location === "Your Area") data.location = "Dallas, TX";
       setWeather(data);
       setLoading(false);
     };
