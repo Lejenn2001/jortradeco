@@ -39,12 +39,7 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="flex items-center justify-center gap-1 mb-4"
         >
-          {[...Array(5)].map((_, i) => (
-            <Star key={i} className="h-4 w-4 fill-foreground text-foreground" />
-          ))}
-        </motion.div>
 
         <motion.p
           initial={{ opacity: 0, y: 20 }}
