@@ -36,12 +36,11 @@ const AIWorkflowSection = () => {
             </span>
 
             <h2 className="text-4xl md:text-5xl font-extrabold text-foreground leading-[1.1] mb-6">
-              How your AI Trading Assistant Works
+              How Biddie Works For You
             </h2>
 
             <p className="text-muted-foreground text-base leading-relaxed mb-8 max-w-lg">
-              Your AI assistant continuously scans the markets, evaluates trade opportunities, and provides structured
-              guidance to help you make more confident trading decisions.
+              Three steps between you and smarter trades. Biddie handles the analysis — you make the call.
             </p>
 
             <a href="#" className="inline-flex items-center gap-2 text-foreground font-semibold text-sm hover:gap-3 transition-all group">

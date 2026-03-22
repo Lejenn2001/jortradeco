@@ -41,23 +41,23 @@ const WhatWeDoSection = () => {
             {[
               {
                 title: "1,000+",
-                subtitle: "Signals Reviewed Daily",
-                desc: "AI scans structured setups across key markets daily.",
+                subtitle: "Setups Scanned Daily",
+                desc: "AI combs through price action and volume across key markets every day.",
               },
               {
                 title: "Real-Time",
-                subtitle: "Market Monitoring",
-                desc: "Futures, stocks, and options tracked continuously.",
+                subtitle: "Always-On Monitoring",
+                desc: "Futures, equities, and options tracked around the clock.",
               },
               {
                 title: "Instant",
                 subtitle: "Confidence Scores",
-                desc: "Each opportunity ranked for clarity and alignment.",
+                desc: "Every opportunity ranked so you know where to focus.",
               },
               {
                 title: "Institutional",
                 subtitle: "Levels Tracked",
-                desc: "Liquidity zones and structure shifts monitored.",
+                desc: "Key zones where big money is active — surfaced automatically.",
               },
             ].map((item, i) => (
               <motion.div

@@ -45,11 +45,10 @@ const FeaturesGridSection = () => {
           className="text-center mb-16"
         >
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-foreground leading-[1.1] max-w-3xl mx-auto">
-            How JORTRADE Supports Your Trading Decisions
+            Everything Biddie Brings to Your Trading
           </h2>
           <p className="text-muted-foreground mt-5 max-w-2xl mx-auto text-base leading-relaxed">
-            From opportunity scanning to real-time alerts and AI chat guidance,
-            JORTRADE helps you stay structured and confident in fast-moving markets.
+            One platform. Six capabilities. Zero guesswork.
           </p>
         </motion.div>
 
