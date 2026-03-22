@@ -155,6 +155,15 @@ const MarketStatusSign = () => {
       bgGlow: "bg-[radial-gradient(ellipse_at_center,hsl(270_70%_60%/0.12),transparent_70%)]",
       countdownClass: "text-purple-400",
     },
+    futures: {
+      label: "Futures Open",
+      dotClass: "bg-cyan-400",
+      pingClass: "bg-cyan-400/60",
+      textClass: "text-cyan-400 drop-shadow-[0_0_8px_hsl(190_80%_55%/0.8)] drop-shadow-[0_0_20px_hsl(190_80%_55%/0.4)]",
+      textShadow: "0 0 7px hsl(190 80% 55% / 0.8), 0 0 20px hsl(190 80% 55% / 0.4), 0 0 40px hsl(190 80% 55% / 0.2)",
+      bgGlow: "bg-[radial-gradient(ellipse_at_center,hsl(190_80%_55%/0.12),transparent_70%)]",
+      countdownClass: "text-cyan-400",
+    },
     closed: {
       label: "Market Closed",
       dotClass: "bg-destructive",
