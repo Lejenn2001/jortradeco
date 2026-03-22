@@ -3,6 +3,7 @@ import { Users, Clock, MapPin } from "lucide-react";
 import { useWeather, getBiddieOutfit } from "@/hooks/useWeather";
 import { motion } from "framer-motion";
 import biddieRobot from "@/assets/biddie-robot.png";
+import MarketStatusSign from "@/components/dashboard/MarketStatusSign";
 
 const QUOTES = [
   "The stock market is a device for transferring money from the impatient to the patient.",
@@ -54,6 +55,8 @@ const ChatRoomHeader = ({ onlineCount, firstName }: ChatRoomHeaderProps) => {
 
   return (
     <div className="space-y-3">
+      {/* Market Status */}
+      <MarketStatusSign />
       {/* Top bar */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="glass-panel rounded-xl px-4 py-2.5 flex items-center gap-2.5">
