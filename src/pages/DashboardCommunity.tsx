@@ -156,7 +156,7 @@ const DashboardCommunity = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   className="text-center space-y-3"
                 >
-                  <div className="text-5xl animate-float">🤖</div>
+                  <img src={biddieRobot} alt="Biddie" className="w-20 h-20 mx-auto animate-float drop-shadow-[0_0_15px_hsl(230_85%_60%_/_0.4)]" />
                   <p className="text-muted-foreground text-sm">Biddie's waiting for the first message...</p>
                   <p className="text-muted-foreground/60 text-xs">Be the one to break the ice!</p>
                 </motion.div>
