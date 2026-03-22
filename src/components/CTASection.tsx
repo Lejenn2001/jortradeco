@@ -32,10 +32,10 @@ const CTASection = () => {
         className="relative z-10 container mx-auto px-6 text-center"
       >
         <div className="relative inline-block">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-foreground leading-[1.1] max-w-2xl mx-auto">
+          <h2 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-foreground leading-[1.1] max-w-2xl mx-auto">
             Ready to Trade<br />Smarter?
           </h2>
-          {/* Biddie positioned at the end of "Smarter?" */}
+          {/* Biddie positioned at the left of "Smarter?" */}
           <motion.img
             initial={{ opacity: 0, scale: 0.8 }}
             whileInView={{ opacity: 1, scale: 1 }}
@@ -43,7 +43,7 @@ const CTASection = () => {
             transition={{ duration: 0.5, delay: 0.3 }}
             src={biddieLeaning}
             alt="Biddie leaning casually"
-            className="absolute -right-16 md:-right-24 lg:-right-28 bottom-0 w-20 h-20 md:w-32 md:h-32 lg:w-40 lg:h-40 object-contain drop-shadow-[0_0_30px_hsl(230_85%_60%_/_0.35)]"
+            className="absolute -left-16 md:-left-24 lg:-left-28 bottom-0 w-20 h-20 md:w-32 md:h-32 lg:w-40 lg:h-40 object-contain drop-shadow-[0_0_30px_hsl(230_85%_60%_/_0.35)] -scale-x-100"
           />
         </div>
 
