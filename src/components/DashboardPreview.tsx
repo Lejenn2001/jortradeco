@@ -44,7 +44,7 @@ const SignalFeed = () => (
 );
 
 const MarketStructureView = () => (
-  <div className="glass-panel rounded-xl p-5 border-glow-purple flex-[2] min-w-[340px]">
+  <div className="glass-panel rounded-xl p-5 border-glow-purple flex-[2] min-w-0">
     <div className="flex items-center justify-between mb-4">
       <span className="font-semibold text-sm text-foreground">Market Structure View</span>
       <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">Bullish Bias ↗</span>
