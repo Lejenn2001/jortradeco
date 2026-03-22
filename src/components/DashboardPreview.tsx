@@ -112,7 +112,7 @@ const MarketStructureView = () => (
 );
 
 const AIAssistantPanel = () => (
-  <div className="glass-panel rounded-xl p-5 border-glow-purple min-w-[240px] flex-1">
+  <div className="glass-panel rounded-xl p-5 border-glow-purple min-w-0 flex-1">
     <div className="flex items-center justify-between mb-4">
       <span className="font-semibold text-sm text-foreground">AI Assistant</span>
       <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">● Online</span>
