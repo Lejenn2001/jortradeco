@@ -86,7 +86,7 @@ const ChatRoomHeader = ({ onlineCount, firstName }: ChatRoomHeaderProps) => {
         <div className="flex-1" />
 
         <div className="text-right">
-          <h1 className="text-lg font-display font-bold text-gradient-blue tracking-wider">JORTRADE CHAT</h1>
+          <h1 className="text-lg font-bold text-foreground">JORTRADE CHAT</h1>
           <p className="text-[10px] text-muted-foreground">Talk trades · Share setups · Build together</p>
         </div>
       </div>
