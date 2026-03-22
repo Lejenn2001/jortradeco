@@ -24,7 +24,7 @@ const Dashboard = () => {
 
           <div className="grid lg:grid-cols-5 gap-4 lg:gap-6">
             <div className="lg:col-span-2">
-              <SignalFeedPanel signals={signals} loading={loading} />
+              <AIChatPanel />
             </div>
             <div className="lg:col-span-3">
               <MarketChartPanel />
@@ -32,10 +32,10 @@ const Dashboard = () => {
           </div>
 
           <div className="grid lg:grid-cols-5 gap-4 lg:gap-6">
-            <div className="lg:col-span-3">
-              <AIChatPanel />
-            </div>
             <div className="lg:col-span-2">
+              <SignalFeedPanel signals={signals} loading={loading} />
+            </div>
+            <div className="lg:col-span-3">
               <PortfolioPanel whaleAlerts={whaleAlerts} loading={loading} />
             </div>
           </div>
