@@ -29,6 +29,7 @@ export interface MarketSignal {
   invalidation?: string;
   keyLevel?: string;
   targetZone?: string;
+  createdAt?: string;
 }
 
 export interface TickerData {
