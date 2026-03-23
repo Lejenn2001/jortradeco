@@ -204,7 +204,7 @@ export function useMarketData() {
           confidence,
           _totalPremium: totalPremium, // used for dedup sorting
           description: `${tradeCount} ${putCall} trades detected on ${ticker} at $${strike} strike. Total premium: $${premium}. Volume/OI ratio: ${volOiRatio ? volOiRatio.toFixed(1) + 'x' : 'N/A'} — ${volOiRatio && volOiRatio > 3 ? 'significant new positioning' : 'active flow'}.`,
-          timestamp: alert.created_at ? timeAgo(alert.created_at) : `${i + 1} min ago`,
+          timestamp: alert.created_at ? timeAgo(alert.created_at) : 'Recent',
           tags,
           strike: `$${strike}`,
           expiry,
@@ -396,11 +396,23 @@ function timeAgo(dateStr: string): string {
   const then = new Date(dateStr);
   const diffMs = now.getTime() - then.getTime();
   const mins = Math.floor(diffMs / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins} min ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
+
+  // If data is from today, show relative time
+  if (isToday(dateStr)) {
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins} min ago`;
+    const hrs = Math.floor(mins / 60);
+    return `${hrs}h ago`;
+  }
+
+  // If data is older than today, show actual day/time so users know it's not fresh
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const day = days[then.getDay()];
+  const h = then.getHours();
+  const m = then.getMinutes();
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const hour12 = h % 12 || 12;
+  return `${day} ${hour12}:${m.toString().padStart(2, '0')} ${ampm}`;
 }
 
 function isToday(dateStr?: string): boolean {
