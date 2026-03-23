@@ -80,7 +80,7 @@ serve(async (req) => {
         if (priceRangeMatch || isCheapStockQuery) {
           const maxPrice = priceRangeMatch ? priceRangeMatch[1] : '10';
           generalFetches.push(
-            fetch(`https://api.unusualwhales.com/api/screener/option-contracts?max_underlying_price=${maxPrice}&min_premium=10000&limit=15`, { headers: uwHeaders })
+            fetch(`https://api.unusualwhales.com/api/screener/option-contracts?max_stock_price=${maxPrice}&min_premium=5000&limit=15`, { headers: uwHeaders })
           );
         }
 
