@@ -10,6 +10,8 @@ import { useMarketData } from "@/hooks/useMarketData";
 
 const Dashboard = () => {
   const { signals, whaleAlerts, marketOverview, loading } = useMarketData();
+  // Main dashboard: only show highest conviction signals (9.5+)
+  const topSignals = signals.filter(s => s.confidence >= 9.5);
 
   return (
     <div className="h-screen flex bg-background overflow-hidden">
