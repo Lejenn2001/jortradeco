@@ -78,6 +78,7 @@ const exportToCSV = (members: MemberWithRoles[]) => {
 
 const DashboardAnalytics = () => {
   const { session } = useAuth();
+  const { signals, loading: signalsLoading } = useMarketData();
   const [members, setMembers] = useState<MemberWithRoles[]>([]);
   const [chatCount, setChatCount] = useState(0);
   const [loading, setLoading] = useState(true);
