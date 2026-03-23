@@ -98,7 +98,7 @@ serve(async (req) => {
       }
 
       let message = `${emoji} <b>JorTrade Alert</b>\n`;
-      message += `<b>[${sourceLabel}]</b>\n\n`;
+      message += `<b>${sourceLabel}</b>\n\n`;
       message += `<b>Ticker:</b> $${signal.ticker}\n`;
       message += `<b>Direction:</b> ${direction}\n`;
       message += `<b>Type:</b> ${putCall}\n`;
