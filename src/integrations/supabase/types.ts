@@ -170,6 +170,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_alert_preferences: {
+        Row: {
+          alert_signals: boolean
+          alert_whales: boolean
+          created_at: string
+          id: string
+          push_enabled: boolean
+          push_subscription: Json | null
+          telegram_chat_id: string | null
+          telegram_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          alert_signals?: boolean
+          alert_whales?: boolean
+          created_at?: string
+          id?: string
+          push_enabled?: boolean
+          push_subscription?: Json | null
+          telegram_chat_id?: string | null
+          telegram_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          alert_signals?: boolean
+          alert_whales?: boolean
+          created_at?: string
+          id?: string
+          push_enabled?: boolean
+          push_subscription?: Json | null
+          telegram_chat_id?: string | null
+          telegram_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
