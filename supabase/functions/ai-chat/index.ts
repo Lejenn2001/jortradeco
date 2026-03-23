@@ -5,8 +5,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-// Extract ticker symbols from user message (e.g. "AAPL", "SPY", "$TSLA")
+// Extract ticker symbols from user message (e.g. "AAPL", "SPY", "$TSLA", "msft")
 function extractTickers(message: string): string[] {
+  const upper = message.toUpperCase();
   const patterns = [
     /\$([A-Z]{1,5})\b/g,           // $AAPL style
     /\b([A-Z]{2,5})\b/g,            // plain AAPL style (2-5 uppercase letters)
@@ -14,7 +15,7 @@ function extractTickers(message: string): string[] {
   const found = new Set<string>();
   for (const pattern of patterns) {
     let match;
-    while ((match = pattern.exec(message)) !== null) {
+    while ((match = pattern.exec(upper)) !== null) {
       found.add(match[1]);
     }
   }
@@ -34,7 +35,10 @@ function extractTickers(message: string): string[] {
     'SHOW', 'THINK', 'ABOUT', 'AFTER', 'AGAIN', 'HELP', 'SHOULD',
     'STRIKE', 'ENTRY', 'EXIT', 'STOP', 'LOSS', 'GAIN', 'HOLD',
     'FLOW', 'DARK', 'POOL', 'WHALES', 'DATA', 'PRICE', 'TRADE',
-    'HEY', 'BIDDIE', 'JORTRADE', 'HELLO', 'THANKS',
+    'HEY', 'BIDDIE', 'JORTRADE', 'HELLO', 'THANKS', 'CURRENT',
+    'GIVE', 'STOCKS', 'UNDER', 'HIGH', 'VOLUME', 'OPTION', 'OPTIONS',
+    'BASED', 'UPON', 'INFO', 'PROVIDED', 'CONSIDER', 'RIGHT',
+    'MUCH', 'DOES', 'COST', 'WHAT', 'RECOMMENDING',
   ]);
   return Array.from(found).filter(t => !excludeWords.has(t) && t.length >= 2);
 }
