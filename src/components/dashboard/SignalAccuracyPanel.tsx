@@ -161,6 +161,38 @@ const SignalAccuracyPanel = ({ isAdmin, liveSignals = [] }: Props) => {
         )}
       </div>
 
+      {/* Legend */}
+      <div className="px-4 pt-4 pb-2 flex flex-wrap gap-x-5 gap-y-2 border-b border-border/20">
+        <div className="flex items-center gap-2">
+          <Zap className="h-3 w-3 text-primary" />
+          <div>
+            <span className="text-[10px] font-bold text-primary uppercase">Day Trade</span>
+            <p className="text-[10px] text-muted-foreground">What's happening now — act on it today</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Clock className="h-3 w-3 text-amber-400" />
+          <div>
+            <span className="text-[10px] font-bold text-amber-400 uppercase">Swing</span>
+            <p className="text-[10px] text-muted-foreground">Called earlier — did it play out?</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <CheckCircle className="h-3 w-3 text-emerald-400" />
+          <div>
+            <span className="text-[10px] font-bold text-emerald-400 uppercase">Hit</span>
+            <p className="text-[10px] text-muted-foreground">Signal played out as expected</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <XCircle className="h-3 w-3 text-destructive" />
+          <div>
+            <span className="text-[10px] font-bold text-destructive uppercase">Missed</span>
+            <p className="text-[10px] text-muted-foreground">Signal didn't hit target</p>
+          </div>
+        </div>
+      </div>
+
       {/* Summary Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 p-4">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-muted/20 rounded-lg p-3 text-center">
@@ -178,11 +210,11 @@ const SignalAccuracyPanel = ({ isAdmin, liveSignals = [] }: Props) => {
           <p className="text-2xl font-bold text-destructive">{misses}</p>
         </div>
         <div className="bg-muted/20 rounded-lg p-3 text-center">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Pending</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Swing</p>
           <p className="text-2xl font-bold text-amber-400">{pending}</p>
         </div>
         <div className="bg-muted/20 rounded-lg p-3 text-center">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Live</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Day Trade</p>
           <p className="text-2xl font-bold text-primary">{uniqueLive.length}</p>
         </div>
       </div>
