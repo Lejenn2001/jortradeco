@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Target, CheckCircle, XCircle, Clock, TrendingUp, TrendingDown, RefreshCw } from "lucide-react";
+import { Target, CheckCircle, XCircle, Clock, TrendingUp, TrendingDown, RefreshCw, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
+import type { MarketSignal } from "@/hooks/useMarketData";
 
 interface SignalOutcome {
   id: string;
@@ -29,6 +30,7 @@ const outcomeIcon = (outcome: string) => {
     case "hit": return <CheckCircle className="h-3.5 w-3.5 text-emerald-400" />;
     case "missed": return <XCircle className="h-3.5 w-3.5 text-destructive" />;
     case "expired": return <Clock className="h-3.5 w-3.5 text-muted-foreground" />;
+    case "live": return <Zap className="h-3.5 w-3.5 text-primary animate-pulse" />;
     default: return <Clock className="h-3.5 w-3.5 text-amber-400 animate-pulse" />;
   }
 };
@@ -39,15 +41,17 @@ const outcomeBadge = (outcome: string) => {
     missed: "text-destructive bg-destructive/10",
     expired: "text-muted-foreground bg-muted/20",
     pending: "text-amber-400 bg-amber-400/10",
+    live: "text-primary bg-primary/10",
   };
   return styles[outcome] || styles.pending;
 };
 
 interface Props {
   isAdmin: boolean;
+  liveSignals?: MarketSignal[];
 }
 
-const SignalAccuracyPanel = ({ isAdmin }: Props) => {
+const SignalAccuracyPanel = ({ isAdmin, liveSignals = [] }: Props) => {
   const [outcomes, setOutcomes] = useState<SignalOutcome[]>([]);
   const [loading, setLoading] = useState(true);
   const [verifying, setVerifying] = useState(false);
@@ -96,12 +100,43 @@ const SignalAccuracyPanel = ({ isAdmin }: Props) => {
     setVerifying(false);
   };
 
+  // Convert live signals to table rows
+  const liveRows: SignalOutcome[] = liveSignals.map((s) => ({
+    id: s.id,
+    created_at: new Date().toISOString(),
+    ticker: s.ticker,
+    signal_type: s.type,
+    put_call: s.putCall || null,
+    confidence: s.confidence,
+    strike: s.strike || null,
+    expiry: s.expiry || null,
+    target_zone: s.targetZone || null,
+    entry_price: null,
+    outcome: "live",
+    outcome_price: null,
+    resolved_at: null,
+    description: s.description,
+    premium: s.premium || null,
+    signal_source: "live_feed",
+  }));
+
+  // Deduplicate: exclude live signals that already exist in outcomes by ticker+confidence
+  const existingKeys = new Set(outcomes.map((o) => `${o.ticker}-${o.confidence}`));
+  const uniqueLive = liveRows.filter((l) => !existingKeys.has(`${l.ticker}-${l.confidence}`));
+  const allSignals = [...uniqueLive, ...outcomes];
+
   return (
     <div className="glass-panel rounded-xl border-border/40 overflow-hidden mb-6">
       <div className="px-5 py-4 border-b border-border/40 flex items-center gap-2 flex-wrap">
         <Target className="h-4 w-4 text-primary" />
         <h2 className="text-sm font-semibold text-foreground">Signal Accuracy Tracker</h2>
-        <span className="text-xs text-muted-foreground ml-auto">{outcomes.length} tracked</span>
+        {uniqueLive.length > 0 && (
+          <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            {uniqueLive.length} Live
+          </span>
+        )}
+        <span className="text-xs text-muted-foreground ml-auto">{allSignals.length} tracked</span>
         {isAdmin && (
           <Button
             size="sm" variant="outline"
@@ -136,8 +171,8 @@ const SignalAccuracyPanel = ({ isAdmin }: Props) => {
           <p className="text-2xl font-bold text-amber-400">{pending}</p>
         </div>
         <div className="bg-muted/20 rounded-lg p-3 text-center">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Total</p>
-          <p className="text-2xl font-bold text-foreground">{outcomes.length}</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Live</p>
+          <p className="text-2xl font-bold text-primary">{uniqueLive.length}</p>
         </div>
       </div>
 
@@ -179,13 +214,13 @@ const SignalAccuracyPanel = ({ isAdmin }: Props) => {
             {loading && (
               <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-xs">Loading...</td></tr>
             )}
-            {!loading && outcomes.length === 0 && (
+            {!loading && allSignals.length === 0 && (
               <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-xs">
                 No signals tracked yet. Signals are auto-logged when detected from live flow data.
               </td></tr>
             )}
-            {outcomes.slice(0, 25).map((o) => (
-              <tr key={o.id} className="border-b border-border/20 hover:bg-muted/20 transition-colors">
+            {allSignals.slice(0, 30).map((o) => (
+              <tr key={o.id} className={`border-b border-border/20 hover:bg-muted/20 transition-colors ${o.outcome === "live" ? "bg-primary/5" : ""}`}>
                 <td className="px-4 py-2.5">
                   <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${outcomeBadge(o.outcome)}`}>
                     {outcomeIcon(o.outcome)}
@@ -204,7 +239,12 @@ const SignalAccuracyPanel = ({ isAdmin }: Props) => {
                 <td className="px-4 py-2.5 text-xs font-semibold text-foreground">{o.confidence}</td>
                 <td className="px-4 py-2.5 text-xs text-muted-foreground">{o.strike || "—"}</td>
                 <td className="px-4 py-2.5 text-xs text-muted-foreground">
-                  {o.outcome_price ? (
+                  {o.outcome === "live" ? (
+                    <span className="text-primary flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                      active
+                    </span>
+                  ) : o.outcome_price ? (
                     <span>${o.outcome_price.toFixed(2)}</span>
                   ) : o.outcome === "pending" ? (
                     <span className="text-amber-400">awaiting</span>
