@@ -206,22 +206,27 @@ const SignalAccuracyPanel = ({ isAdmin, liveSignals = [] }: Props) => {
           <p className={`text-2xl font-bold ${winRate !== "—" && parseFloat(winRate as string) >= 50 ? "text-emerald-400" : winRate !== "—" ? "text-destructive" : "text-foreground"}`}>
             {winRate}{winRate !== "—" && "%"}
           </p>
+          <p className="text-[9px] text-muted-foreground mt-1">Overall accuracy</p>
         </motion.div>
         <div className="bg-muted/20 rounded-lg p-3 text-center">
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Hits</p>
           <p className="text-2xl font-bold text-emerald-400">{hits}</p>
+          <p className="text-[9px] text-muted-foreground mt-1">Played out as called</p>
         </div>
         <div className="bg-muted/20 rounded-lg p-3 text-center">
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Misses</p>
           <p className="text-2xl font-bold text-destructive">{misses}</p>
+          <p className="text-[9px] text-muted-foreground mt-1">Didn't hit target</p>
         </div>
         <div className="bg-muted/20 rounded-lg p-3 text-center">
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Swing</p>
           <p className="text-2xl font-bold text-amber-400">{pending}</p>
+          <p className="text-[9px] text-muted-foreground mt-1">Whale activity — did it play out?</p>
         </div>
         <div className="bg-muted/20 rounded-lg p-3 text-center">
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Day Trade</p>
           <p className="text-2xl font-bold text-primary">{uniqueLive.length}</p>
+          <p className="text-[9px] text-muted-foreground mt-1">Live flow — what's moving now</p>
         </div>
       </div>
 
