@@ -125,23 +125,32 @@ serve(async (req) => {
           .map(({ _totalPremium, ...s }: any) => s);
 
         if (dashboardSignals.length > 0) {
+          // Insert only truly new signals (ignoreDuplicates skips existing ones)
           await supabaseAdmin
             .from("signal_outcomes")
             .upsert(dashboardSignals, { onConflict: "ticker,signal_type,strike,expiry,signal_source", ignoreDuplicates: true });
 
-          // Only send Telegram alerts for signals created in the last 2 minutes (truly new)
-          const twoMinAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
-          const { data: newSignals } = await supabaseAdmin
+          // Find signals that haven't been alerted yet
+          const tickers = dashboardSignals.map((s: any) => s.ticker);
+          const { data: unalerted } = await supabaseAdmin
             .from("signal_outcomes")
             .select("*")
-            .gt("created_at", twoMinAgo)
+            .in("ticker", tickers)
             .eq("signal_source", "auto")
             .eq("outcome", "pending")
+            .eq("alerted", false)
             .gte("confidence", 8.5)
             .order("confidence", { ascending: false })
             .limit(6);
 
-          if (newSignals && newSignals.length > 0) {
+          if (unalerted && unalerted.length > 0) {
+            // Mark them as alerted FIRST to prevent duplicate sends
+            const ids = unalerted.map((s: any) => s.id);
+            await supabaseAdmin
+              .from("signal_outcomes")
+              .update({ alerted: true })
+              .in("id", ids);
+
             try {
               const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
               const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -151,7 +160,7 @@ serve(async (req) => {
                   "Content-Type": "application/json",
                   Authorization: `Bearer ${supabaseAnonKey}`,
                 },
-                body: JSON.stringify({ signals: newSignals }),
+                body: JSON.stringify({ signals: unalerted }),
               });
             } catch (tgErr) {
               console.warn("Failed to send Telegram alerts:", tgErr);
