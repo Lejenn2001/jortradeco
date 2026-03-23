@@ -32,13 +32,23 @@ const AIChatPanel = () => {
   const { profile } = useAuth();
   const firstName = profile?.full_name?.split(" ")[0] || "Trader";
   const [greeting] = useState(() => greetings[Math.floor(Math.random() * greetings.length)](firstName));
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    try {
+      const saved = sessionStorage.getItem('biddie-chat-messages');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+  }, [messages]);
+
+  // Persist messages to sessionStorage
+  useEffect(() => {
+    try { sessionStorage.setItem('biddie-chat-messages', JSON.stringify(messages)); } catch {}
   }, [messages]);
 
   const sendMessage = async (text: string) => {
