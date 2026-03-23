@@ -188,7 +188,7 @@ export function useMarketData() {
         const confidence = volOiRatio && volOiRatio > 10 ? 9.5 : 
                           volOiRatio && volOiRatio > 3 ? 9.0 : 
                           tradeCount > 8 ? 8.8 : 
-                          Math.round((Math.random() * 2 + 7.5) * 10) / 10;
+                          tradeCount > 5 ? 8.5 : 8.0;
 
         const urgencyTag = confidence >= 9.0 ? '🔥 ACT NOW' : confidence >= 8.5 ? '⚡ HIGH CONVICTION' : null;
         const tags = [
