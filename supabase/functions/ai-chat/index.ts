@@ -60,6 +60,10 @@ serve(async (req) => {
     const tickers = extractTickers(message || '');
     console.log('Detected tickers:', tickers);
 
+    // Detect if user is asking for stocks by price range (e.g. "under $10", "below 5", "cheap stocks")
+    const priceRangeMatch = (message || '').match(/(?:under|below|less than|cheaper than|beneath)\s*\$?(\d+)/i);
+    const isCheapStockQuery = /\b(cheap|penny|low.?price|small.?cap|under.?\$?\d)/i.test(message || '');
+
     // Fetch fresh market context
     let marketContext = '';
     if (uwKey) {
@@ -67,14 +71,22 @@ serve(async (req) => {
 
       try {
         // Always fetch general market data
-        const generalFetches = [
+        const generalFetches: Promise<Response>[] = [
           fetch('https://api.unusualwhales.com/api/market/market-tide', { headers: uwHeaders }),
           fetch('https://api.unusualwhales.com/api/option-trades/flow-alerts?limit=5', { headers: uwHeaders }),
         ];
 
+        // If user asks for stocks under a price, use the screener
+        if (priceRangeMatch || isCheapStockQuery) {
+          const maxPrice = priceRangeMatch ? priceRangeMatch[1] : '10';
+          generalFetches.push(
+            fetch(`https://api.unusualwhales.com/api/screener/option-contracts?max_underlying_price=${maxPrice}&min_premium=10000&limit=15`, { headers: uwHeaders })
+          );
+        }
+
         // Fetch ticker-specific data for each detected ticker
         const tickerFetches: Promise<{ ticker: string; type: string; data: any }>[] = [];
-        for (const ticker of tickers.slice(0, 3)) { // max 3 tickers per request
+        for (const ticker of tickers.slice(0, 3)) {
           tickerFetches.push(
             fetch(`https://api.unusualwhales.com/api/stock/${ticker}/flow-recent`, { headers: uwHeaders })
               .then(async r => ({ ticker, type: 'flow', data: r.ok ? await r.json() : null }))
@@ -92,17 +104,25 @@ serve(async (req) => {
           );
         }
 
-        const [tideRes, flowRes] = await Promise.all(generalFetches);
+        const generalResults = await Promise.all(generalFetches);
         const tickerResults = await Promise.all(tickerFetches);
 
-        const tideData = tideRes.ok ? await tideRes.json() : null;
-        const flowData = flowRes.ok ? await flowRes.json() : null;
+        const tideData = generalResults[0].ok ? await generalResults[0].json() : null;
+        const flowData = generalResults[1].ok ? await generalResults[1].json() : null;
 
         if (tideData?.data) {
           marketContext += `\n\n=== LIVE MARKET TIDE DATA (current) ===\n${JSON.stringify(tideData.data, null, 2)}`;
         }
         if (flowData?.data) {
           marketContext += `\n\n=== LIVE FLOW ALERTS (current) ===\n${JSON.stringify(flowData.data.slice(0, 5), null, 2)}`;
+        }
+
+        // Add screener results if we fetched them
+        if (generalResults.length > 2) {
+          const screenerData = generalResults[2].ok ? await generalResults[2].json() : null;
+          if (screenerData?.data) {
+            marketContext += `\n\n=== SCREENER RESULTS: STOCKS WITH OPTIONS FLOW (matching user price filter) ===\n${JSON.stringify(screenerData.data.slice(0, 15), null, 2)}`;
+          }
         }
 
         // Add ticker-specific data
@@ -160,6 +180,7 @@ RESPONSE RULES:
    Invalidation level (where the play is dead)
    One sentence on why (referencing actual flow/volume data)
 3. Do NOT default to SPX. Answer about whatever ticker the user asks about.
+4. When users ask for stocks under a certain price, cheap stocks, or penny stocks, use the SCREENER RESULTS data to find tickers with unusual options activity at those price levels. Present 3 to 5 interesting tickers with their flow details.
 4. Never give financial advice, frame as analysis ("I'd look at..." or "The flow suggests...").
 5. Reference specific data when available: premium, flow direction, volume — but ONLY from the live data.
 6. No long paragraphs. Use numbered lists for multi-part answers.
