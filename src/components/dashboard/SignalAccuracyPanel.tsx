@@ -267,7 +267,7 @@ const SignalAccuracyPanel = ({ isAdmin, liveSignals = [] }: Props) => {
                 <td className="px-4 py-2.5">
                   <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${outcomeBadge(o.outcome)}`}>
                     {outcomeIcon(o.outcome)}
-                    {o.outcome.toUpperCase()}
+                    {outcomeLabel(o.outcome)}
                   </span>
                 </td>
                 <td className="px-4 py-2.5 font-bold text-foreground">{o.ticker}</td>
