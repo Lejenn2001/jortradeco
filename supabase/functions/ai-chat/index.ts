@@ -5,20 +5,42 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-// Extract ticker symbols from user message (e.g. "AAPL", "SPY", "$TSLA", "msft")
+// Map common company names to their ticker symbols
+const companyToTicker: Record<string, string> = {
+  'TESLA': 'TSLA', 'APPLE': 'AAPL', 'AMAZON': 'AMZN', 'GOOGLE': 'GOOGL',
+  'ALPHABET': 'GOOGL', 'MICROSOFT': 'MSFT', 'NVIDIA': 'NVDA', 'META': 'META',
+  'FACEBOOK': 'META', 'NETFLIX': 'NFLX', 'PALANTIR': 'PLTR', 'COINBASE': 'COIN',
+  'ROBINHOOD': 'HOOD', 'GAMESTOP': 'GME', 'LUCID': 'LCID', 'RIVIAN': 'RIVN',
+  'DISNEY': 'DIS', 'BOEING': 'BA', 'WALMART': 'WMT', 'TARGET': 'TGT',
+  'COSTCO': 'COST', 'UBER': 'UBER', 'LYFT': 'LYFT', 'SNOWFLAKE': 'SNOW',
+  'SHOPIFY': 'SHOP', 'SOFI': 'SOFI', 'ROBLOX': 'RBLX', 'CROWDSTRIKE': 'CRWD',
+  'ARCHER': 'ACHR', 'MARATHON': 'MARA',
+};
+
+// Extract ticker symbols from user message (e.g. "AAPL", "SPY", "$TSLA", "msft", "tesla")
 function extractTickers(message: string): string[] {
   const upper = message.toUpperCase();
+  const found = new Set<string>();
+
+  // Check for company names first
+  for (const [name, ticker] of Object.entries(companyToTicker)) {
+    if (upper.includes(name)) {
+      found.add(ticker);
+    }
+  }
+
+  // Then check for ticker patterns
   const patterns = [
     /\$([A-Z]{1,5})\b/g,           // $AAPL style
     /\b([A-Z]{2,5})\b/g,            // plain AAPL style (2-5 uppercase letters)
   ];
-  const found = new Set<string>();
   for (const pattern of patterns) {
     let match;
     while ((match = pattern.exec(upper)) !== null) {
       found.add(match[1]);
     }
   }
+
   // Filter out common non-ticker words
   const excludeWords = new Set([
     'AI', 'THE', 'FOR', 'AND', 'NOT', 'BUT', 'ARE', 'WAS', 'HAS', 'HAD',
@@ -38,7 +60,13 @@ function extractTickers(message: string): string[] {
     'HEY', 'BIDDIE', 'JORTRADE', 'HELLO', 'THANKS', 'CURRENT',
     'GIVE', 'STOCKS', 'UNDER', 'HIGH', 'VOLUME', 'OPTION', 'OPTIONS',
     'BASED', 'UPON', 'INFO', 'PROVIDED', 'CONSIDER', 'RIGHT',
-    'MUCH', 'DOES', 'COST', 'WHAT', 'RECOMMENDING',
+    'MUCH', 'DOES', 'COST', 'WHAT', 'RECOMMENDING', 'WHATS',
+    'STOCK', 'TELL', 'KNOW', 'ABOUT', 'CHECK', 'PLEASE',
+    'TESLA', 'APPLE', 'AMAZON', 'GOOGLE', 'ALPHABET', 'MICROSOFT',
+    'NVIDIA', 'FACEBOOK', 'NETFLIX', 'PALANTIR', 'COINBASE',
+    'ROBINHOOD', 'GAMESTOP', 'LUCID', 'RIVIAN', 'DISNEY', 'BOEING',
+    'WALMART', 'COSTCO', 'UBER', 'LYFT', 'SNOWFLAKE', 'SHOPIFY',
+    'ROBLOX', 'CROWDSTRIKE', 'ARCHER', 'MARATHON',
   ]);
   return Array.from(found).filter(t => !excludeWords.has(t) && t.length >= 2);
 }
