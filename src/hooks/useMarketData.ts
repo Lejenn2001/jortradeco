@@ -234,7 +234,11 @@ export function useMarketData() {
 
       // Sort by confidence descending, take top 6
       const liveDeduped: MarketSignal[] = Array.from(tickerMap.values())
-        .sort((a, b) => b.confidence - a.confidence)
+        .sort((a, b) => {
+          // Sort by confidence first, then by newest timestamp
+          if (b.confidence !== a.confidence) return b.confidence - a.confidence;
+          return 0;
+        })
         .slice(0, 6)
         .map(({ _totalPremium, ...signal }) => signal);
 
