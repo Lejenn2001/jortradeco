@@ -85,6 +85,7 @@ export type Database = {
       }
       signal_outcomes: {
         Row: {
+          alerted: boolean
           confidence: number
           created_at: string
           description: string | null
@@ -103,6 +104,7 @@ export type Database = {
           ticker: string
         }
         Insert: {
+          alerted?: boolean
           confidence: number
           created_at?: string
           description?: string | null
@@ -121,6 +123,7 @@ export type Database = {
           ticker: string
         }
         Update: {
+          alerted?: boolean
           confidence?: number
           created_at?: string
           description?: string | null

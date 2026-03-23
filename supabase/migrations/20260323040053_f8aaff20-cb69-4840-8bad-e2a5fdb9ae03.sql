@@ -1,0 +1,1 @@
+ALTER TABLE public.signal_outcomes ADD COLUMN IF NOT EXISTS alerted boolean NOT NULL DEFAULT false;
