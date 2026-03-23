@@ -46,6 +46,11 @@ const AIChatPanel = () => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
 
+  // Persist messages to sessionStorage
+  useEffect(() => {
+    try { sessionStorage.setItem('biddie-chat-messages', JSON.stringify(messages)); } catch {}
+  }, [messages]);
+
   const sendMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;
 
