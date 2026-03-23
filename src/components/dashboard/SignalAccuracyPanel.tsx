@@ -35,6 +35,17 @@ const outcomeIcon = (outcome: string) => {
   }
 };
 
+const outcomeLabel = (outcome: string) => {
+  switch (outcome) {
+    case "live": return "DAY TRADE";
+    case "pending": return "SWING";
+    case "hit": return "HIT";
+    case "missed": return "MISSED";
+    case "expired": return "EXPIRED";
+    default: return outcome.toUpperCase();
+  }
+};
+
 const outcomeBadge = (outcome: string) => {
   const styles: Record<string, string> = {
     hit: "text-emerald-400 bg-emerald-400/10",
@@ -133,7 +144,7 @@ const SignalAccuracyPanel = ({ isAdmin, liveSignals = [] }: Props) => {
         {uniqueLive.length > 0 && (
           <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            {uniqueLive.length} Live
+            {uniqueLive.length} Day Trade
           </span>
         )}
         <span className="text-xs text-muted-foreground ml-auto">{allSignals.length} tracked</span>
@@ -148,6 +159,38 @@ const SignalAccuracyPanel = ({ isAdmin, liveSignals = [] }: Props) => {
             {verifying ? "Checking..." : "Verify Now"}
           </Button>
         )}
+      </div>
+
+      {/* Legend */}
+      <div className="px-4 pt-4 pb-2 flex flex-wrap gap-x-5 gap-y-2 border-b border-border/20">
+        <div className="flex items-center gap-2">
+          <Zap className="h-3 w-3 text-primary" />
+          <div>
+            <span className="text-[10px] font-bold text-primary uppercase">Day Trade</span>
+            <p className="text-[10px] text-muted-foreground">What's happening now — act on it today</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Clock className="h-3 w-3 text-amber-400" />
+          <div>
+            <span className="text-[10px] font-bold text-amber-400 uppercase">Swing</span>
+            <p className="text-[10px] text-muted-foreground">Called earlier — did it play out?</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <CheckCircle className="h-3 w-3 text-emerald-400" />
+          <div>
+            <span className="text-[10px] font-bold text-emerald-400 uppercase">Hit</span>
+            <p className="text-[10px] text-muted-foreground">Signal played out as expected</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <XCircle className="h-3 w-3 text-destructive" />
+          <div>
+            <span className="text-[10px] font-bold text-destructive uppercase">Missed</span>
+            <p className="text-[10px] text-muted-foreground">Signal didn't hit target</p>
+          </div>
+        </div>
       </div>
 
       {/* Summary Stats */}
@@ -167,11 +210,11 @@ const SignalAccuracyPanel = ({ isAdmin, liveSignals = [] }: Props) => {
           <p className="text-2xl font-bold text-destructive">{misses}</p>
         </div>
         <div className="bg-muted/20 rounded-lg p-3 text-center">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Pending</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Swing</p>
           <p className="text-2xl font-bold text-amber-400">{pending}</p>
         </div>
         <div className="bg-muted/20 rounded-lg p-3 text-center">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Live</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Day Trade</p>
           <p className="text-2xl font-bold text-primary">{uniqueLive.length}</p>
         </div>
       </div>
@@ -224,7 +267,7 @@ const SignalAccuracyPanel = ({ isAdmin, liveSignals = [] }: Props) => {
                 <td className="px-4 py-2.5">
                   <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${outcomeBadge(o.outcome)}`}>
                     {outcomeIcon(o.outcome)}
-                    {o.outcome.toUpperCase()}
+                    {outcomeLabel(o.outcome)}
                   </span>
                 </td>
                 <td className="px-4 py-2.5 font-bold text-foreground">{o.ticker}</td>
