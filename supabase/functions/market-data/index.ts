@@ -102,9 +102,28 @@ serve(async (req) => {
           }));
 
         if (signalsToLog.length > 0) {
-          await supabaseAdmin
+          const { data: upserted } = await supabaseAdmin
             .from("signal_outcomes")
-            .upsert(signalsToLog, { onConflict: "ticker,signal_type,strike,expiry,signal_source", ignoreDuplicates: true });
+            .upsert(signalsToLog, { onConflict: "ticker,signal_type,strike,expiry,signal_source", ignoreDuplicates: true })
+            .select();
+
+          // Send Telegram alerts for new high-conviction signals
+          if (upserted && upserted.length > 0) {
+            try {
+              const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+              const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+              await fetch(`${supabaseUrl}/functions/v1/telegram-alert`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${supabaseAnonKey}`,
+                },
+                body: JSON.stringify({ signals: upserted }),
+              });
+            } catch (tgErr) {
+              console.warn("Failed to send Telegram alerts:", tgErr);
+            }
+          }
         }
       } catch (logErr) {
         console.warn("Failed to auto-log signals:", logErr);
