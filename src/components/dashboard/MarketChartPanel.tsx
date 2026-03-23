@@ -173,13 +173,13 @@ const MarketChartPanel = () => {
   };
 
   return (
-    <div className="glass-panel rounded-xl p-5 border-glow-purple">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
+    <div className="glass-panel rounded-xl border-glow-purple p-4 sm:p-5">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2 min-w-0">
           <TrendingUp className="h-4 w-4 text-primary" />
           <span className="font-semibold text-sm text-foreground">Market Structure</span>
         </div>
-        <span className={`text-xs px-2.5 py-0.5 rounded-full flex items-center gap-1.5 ${
+        <span className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs ${
           loading ? "bg-muted/50 text-muted-foreground" :
           isBearish ? "bg-destructive/20 text-destructive" :
           isBullish ? "bg-primary/20 text-primary" :
@@ -191,8 +191,8 @@ const MarketChartPanel = () => {
       </div>
 
       {/* Ticker search + quick picks */}
-      <div className="flex flex-col sm:flex-row gap-2 mb-4">
-        <div ref={searchRef} className="relative flex-1 max-w-[200px]">
+      <div className="mb-5 flex flex-col gap-3">
+        <div ref={searchRef} className="relative w-full sm:max-w-[260px]">
           <form onSubmit={handleSearch}>
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground z-10" />
             <Input
@@ -204,7 +204,7 @@ const MarketChartPanel = () => {
               onFocus={() => searchValue && setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
               placeholder="Search ticker..."
-              className="pl-8 h-8 text-xs bg-muted/30 border-border/50 rounded-lg"
+              className="h-10 rounded-xl border-border/50 bg-muted/30 pl-8 text-sm"
             />
           </form>
           {showSuggestions && filteredTickers.length > 0 && (
@@ -221,13 +221,13 @@ const MarketChartPanel = () => {
             </div>
           )}
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
           {quickTickers.map((ticker) => (
             <button
               key={ticker}
               onClick={() => fetchAnalysis(ticker)}
               disabled={loading}
-              className={`text-xs px-3 py-1 rounded-full transition-colors ${
+              className={`shrink-0 rounded-full px-3.5 py-2 text-xs transition-colors ${
                 activeTicker === ticker
                   ? "bg-primary/20 text-primary font-medium"
                   : "bg-muted/50 text-muted-foreground hover:bg-muted"
@@ -240,17 +240,17 @@ const MarketChartPanel = () => {
       </div>
 
       {/* AI Market Insight */}
-      <div className="bg-muted/20 rounded-lg p-3 mb-4 border border-border/30">
+      <div className="mb-5 rounded-xl border border-border/30 bg-muted/20 p-4">
         <div className="flex items-start gap-2">
           <Info className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
-          <p className="text-xs text-muted-foreground leading-relaxed">
+          <p className="text-sm text-muted-foreground leading-relaxed">
             {insight.description}
           </p>
         </div>
       </div>
 
       {/* Chart - matching reference image exactly */}
-      <div className="relative h-56 w-full mb-4">
+      <div className="relative mb-5 h-52 w-full sm:h-56">
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -265,23 +265,23 @@ const MarketChartPanel = () => {
 
           {/* Target zone shaded rectangle */}
           {isBearish ? (
-            <rect x="150" y="150" width="250" height="30" fill="hsl(0 72% 51%)" opacity="0.06" rx="4" />
+            <rect x="150" y="150" width="250" height="30" fill="hsl(var(--destructive))" opacity="0.06" rx="4" />
           ) : (
-            <rect x="250" y="30" width="250" height="40" fill="hsl(230 85% 60%)" opacity="0.06" rx="4" />
+            <rect x="250" y="30" width="250" height="40" fill="hsl(var(--primary))" opacity="0.06" rx="4" />
           )}
 
           {/* Invalidation zone shaded rectangle */}
           {isBearish ? (
-            <rect x="250" y="30" width="250" height="40" fill="hsl(230 85% 60%)" opacity="0.03" rx="4" />
+            <rect x="250" y="30" width="250" height="40" fill="hsl(var(--primary))" opacity="0.03" rx="4" />
           ) : (
-            <rect x="150" y="150" width="250" height="30" fill="hsl(0 72% 51%)" opacity="0.06" rx="4" />
+            <rect x="150" y="150" width="250" height="30" fill="hsl(var(--destructive))" opacity="0.06" rx="4" />
           )}
 
           {/* Candlesticks */}
           {candles.map((c, i) => {
             const top = Math.min(c.o, c.c);
             const bottom = Math.max(c.o, c.c);
-            const color = c.bull ? "hsl(230 85% 60%)" : "hsl(0 72% 51%)";
+            const color = c.bull ? "hsl(var(--primary))" : "hsl(var(--destructive))";
             return (
               <g key={i}>
                 <line x1={c.x} y1={c.h} x2={c.x} y2={c.l} stroke={color} strokeWidth="2" />
@@ -293,10 +293,10 @@ const MarketChartPanel = () => {
 
         {/* Target Zone label */}
         {insight.targetZone !== "—" && (
-          <div className={`absolute text-xs font-medium z-20 px-2 py-0.5 rounded bg-background/80 backdrop-blur-sm ${
+          <div className={`absolute right-3 z-20 rounded bg-background/80 px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm sm:right-4 sm:text-xs ${
             isBearish
-              ? "bottom-4 right-4 text-destructive"
-              : "top-4 right-4 text-primary"
+              ? "bottom-3 text-destructive sm:bottom-4"
+              : "top-3 text-primary sm:top-4"
           }`}>
             {insight.targetZone}
           </div>
@@ -304,17 +304,17 @@ const MarketChartPanel = () => {
 
         {/* Key Level label - middle right */}
         {insight.keyLevel !== "—" && (
-          <div className="absolute right-4 top-[45%] text-xs text-primary z-20 px-2 py-0.5 rounded bg-background/80 backdrop-blur-sm">
+          <div className="absolute right-3 top-[45%] z-20 rounded bg-background/80 px-2 py-0.5 text-[10px] text-primary backdrop-blur-sm sm:right-4 sm:text-xs">
             {insight.keyLevel}
           </div>
         )}
 
         {/* Invalidation label */}
         {insight.invalidation !== "—" && (
-          <div className={`absolute text-xs font-medium z-20 px-2 py-0.5 rounded bg-background/80 backdrop-blur-sm ${
+          <div className={`absolute right-3 z-20 rounded bg-background/80 px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm sm:right-4 sm:text-xs ${
             isBearish
-              ? "top-4 right-4 text-muted-foreground"
-              : "bottom-4 right-4 text-destructive"
+              ? "top-3 text-muted-foreground sm:top-4"
+              : "bottom-3 text-destructive sm:bottom-4"
           }`}>
             {insight.invalidation}
           </div>
@@ -322,33 +322,33 @@ const MarketChartPanel = () => {
       </div>
 
       {/* Stats + Contract */}
-      <div className="space-y-3 border-t border-border/40 pt-3 mb-3">
-        <div className="grid grid-cols-4 gap-3">
+      <div className="mb-4 space-y-3 border-t border-border/40 pt-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
             { label: "Asset", value: activeTicker || "—" },
             { label: "Strategy", value: insight.strategy },
             { label: "Expiration", value: insight.expiration },
             { label: "AI Score", value: insight.score },
           ].map((stat) => (
-            <div key={stat.label} className="text-center">
-              <div className="text-[10px] text-muted-foreground">{stat.label}</div>
-              <div className="font-bold text-foreground text-xs">{stat.value}</div>
+            <div key={stat.label} className="rounded-xl border border-border/40 bg-muted/10 p-3 text-left sm:text-center">
+              <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{stat.label}</div>
+              <div className="mt-1 text-sm font-bold text-foreground break-words">{stat.value}</div>
             </div>
           ))}
         </div>
 
         {insight.contract && insight.contract !== "—" && (
-          <div className="bg-primary/5 border border-primary/20 rounded-lg px-3 py-2">
+          <div className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-3">
             <div className="text-[10px] text-muted-foreground mb-0.5">Contract</div>
-            <div className="text-xs font-bold text-primary">{insight.contract}</div>
+            <div className="text-sm font-bold text-primary break-words">{insight.contract}</div>
           </div>
         )}
       </div>
 
       {/* Strategy Explanation */}
-      <div className="bg-accent/5 border border-accent/20 rounded-lg p-3">
+      <div className="rounded-xl border border-accent/20 bg-accent/5 p-4">
         <div className="text-[10px] font-semibold text-accent uppercase tracking-wider mb-1">Why this strategy?</div>
-        <p className="text-xs text-muted-foreground leading-relaxed">
+        <p className="text-sm text-muted-foreground leading-relaxed">
           {insight.strategyExplanation}
         </p>
       </div>

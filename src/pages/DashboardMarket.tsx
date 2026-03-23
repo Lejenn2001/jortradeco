@@ -29,9 +29,9 @@ const DashboardMarket = () => {
       <DashboardSidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <DashboardHeader />
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-4">
+        <main className="flex-1 overflow-y-auto space-y-5 p-3 sm:p-4 lg:p-6">
           {/* Header */}
-          <div>
+          <div className="space-y-1">
             <h1 className="text-2xl font-extrabold text-foreground">Market View</h1>
             <p className="text-sm text-muted-foreground">Full market overview with sector breakdown</p>
           </div>
@@ -39,7 +39,7 @@ const DashboardMarket = () => {
           {/* Indices strip */}
           <div className="flex gap-3 overflow-x-auto pb-1">
             {indices.map((idx) => (
-              <div key={idx.name} className="glass-panel rounded-xl px-4 py-3 min-w-[140px] shrink-0">
+              <div key={idx.name} className="glass-panel min-w-[132px] shrink-0 rounded-xl px-3 py-3 sm:min-w-[140px] sm:px-4">
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{idx.name}</p>
                 <p className="text-lg font-extrabold text-foreground">{idx.value}</p>
                 <p className={`text-xs font-bold flex items-center gap-1 ${idx.up ? "text-emerald-400" : "text-red-400"}`}>
@@ -51,23 +51,23 @@ const DashboardMarket = () => {
           </div>
 
           {/* Main Chart */}
-          <div className="h-[400px]">
+          <div className="min-h-[520px] sm:min-h-0 sm:h-[400px]">
             <MarketChartPanel />
           </div>
 
           {/* Sector Heatmap */}
-          <div className="glass-panel rounded-xl border-glow-purple p-5">
+          <div className="glass-panel rounded-xl border-glow-purple p-4 sm:p-5">
             <div className="flex items-center gap-2 mb-4">
               <BarChart3 className="h-4 w-4 text-primary" />
               <h2 className="text-sm font-bold text-foreground">Sector Performance</h2>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
               {sectors.map((sector) => (
                 <button
                   key={sector.name}
                   onClick={() => setSelectedSector(selectedSector === sector.name ? null : sector.name)}
-                  className={`rounded-xl p-4 text-left transition-all border ${
+                  className={`rounded-xl border p-3 text-left transition-all sm:p-4 ${
                     selectedSector === sector.name ? "ring-2 ring-primary/50" : ""
                   } ${
                     sector.change >= 1
