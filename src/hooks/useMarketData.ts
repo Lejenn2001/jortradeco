@@ -203,9 +203,10 @@ export function useMarketData() {
           ticker,
           type: isBullish ? 'bullish' as const : 'bearish' as const,
           confidence,
-          _totalPremium: totalPremium, // used for dedup sorting
+          _totalPremium: totalPremium,
           description: `${tradeCount} ${putCall} trades detected on ${ticker} at $${strike} strike. Total premium: $${premium}. Volume/OI ratio: ${volOiRatio ? volOiRatio.toFixed(1) + 'x' : 'N/A'} — ${volOiRatio && volOiRatio > 3 ? 'significant new positioning' : 'active flow'}.`,
           timestamp: alert.created_at ? timeAgo(alert.created_at) : 'Time unavailable',
+          createdAt: alert.created_at || '',
           tags,
           strike: `$${strike}`,
           expiry,
