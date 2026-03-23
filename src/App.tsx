@@ -36,6 +36,7 @@ const App = () => (
             <Route path="/dashboard/pnl" element={<DashboardPnL />} />
             <Route path="/dashboard/community" element={<DashboardCommunity />} />
             <Route path="/dashboard/analytics" element={<DashboardAnalytics />} />
+            <Route path="/dashboard/settings" element={<DashboardSettings />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/contact" element={<Contact />} />
