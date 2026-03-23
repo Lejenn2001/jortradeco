@@ -35,7 +35,7 @@ const Dashboard = () => {
 
           <div className="grid lg:grid-cols-5 gap-4 lg:gap-6">
             <div className="lg:col-span-2">
-              <SignalFeedPanel signals={signals} loading={loading} limit={6} />
+              <SignalFeedPanel signals={topSignals} loading={loading} limit={4} />
             </div>
             <div className="lg:col-span-3">
               <PortfolioPanel whaleAlerts={whaleAlerts} loading={loading} limit={6} />
