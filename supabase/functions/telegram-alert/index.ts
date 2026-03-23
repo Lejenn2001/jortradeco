@@ -88,7 +88,7 @@ serve(async (req) => {
       const putCall = signal.put_call === "call" ? "📈 Call" : "📉 Put";
 
       // Determine source label
-      let sourceLabel = "📊 DASHBOARD SIGNAL";
+      let sourceLabel = "🚨 SIGNAL — ACT NOW";
       if (signal.signal_source === "whale") {
         sourceLabel = "🐳 WHALE PLAY";
       } else if (signal.signal_source === "manual") {
