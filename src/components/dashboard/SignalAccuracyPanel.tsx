@@ -161,6 +161,12 @@ const SignalAccuracyPanel = ({ isAdmin, liveSignals = [] }: Props) => {
         )}
       </div>
 
+      {/* Description */}
+      <div className="px-5 py-3 border-b border-border/20 text-xs text-muted-foreground leading-relaxed">
+        <span className="text-primary font-semibold">Day Trade</span> signals are detected from live options flow — what's moving right now. 
+        <span className="text-amber-400 font-semibold ml-1">Swing</span> signals are based on whale activity and prior market analysis — watching if big money bets play out over time.
+      </div>
+
       {/* Legend */}
       <div className="px-4 pt-4 pb-2 flex flex-wrap gap-x-5 gap-y-2 border-b border-border/20">
         <div className="flex items-center gap-2">
