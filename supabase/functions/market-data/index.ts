@@ -102,13 +102,20 @@ serve(async (req) => {
           }));
 
         if (signalsToLog.length > 0) {
-          const { data: upserted } = await supabaseAdmin
+          await supabaseAdmin
             .from("signal_outcomes")
-            .upsert(signalsToLog, { onConflict: "ticker,signal_type,strike,expiry,signal_source", ignoreDuplicates: true })
-            .select();
+            .upsert(signalsToLog, { onConflict: "ticker,signal_type,strike,expiry,signal_source", ignoreDuplicates: true });
 
-          // Send Telegram alerts for new high-conviction signals
-          if (upserted && upserted.length > 0) {
+          // Only send Telegram alerts for signals created in the last 2 minutes (truly new)
+          const twoMinAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+          const { data: newSignals } = await supabaseAdmin
+            .from("signal_outcomes")
+            .select("*")
+            .gt("created_at", twoMinAgo)
+            .eq("signal_source", "auto")
+            .eq("outcome", "pending");
+
+          if (newSignals && newSignals.length > 0) {
             try {
               const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
               const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -118,7 +125,7 @@ serve(async (req) => {
                   "Content-Type": "application/json",
                   Authorization: `Bearer ${supabaseAnonKey}`,
                 },
-                body: JSON.stringify({ signals: upserted }),
+                body: JSON.stringify({ signals: newSignals }),
               });
             } catch (tgErr) {
               console.warn("Failed to send Telegram alerts:", tgErr);
