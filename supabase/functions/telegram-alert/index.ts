@@ -87,7 +87,18 @@ serve(async (req) => {
       const direction = signal.signal_type === "bullish" ? "BULLISH" : "BEARISH";
       const putCall = signal.put_call === "call" ? "📈 Call" : "📉 Put";
 
-      let message = `${emoji} <b>JorTrade Signal Alert</b>\n\n`;
+      // Determine source label
+      let sourceLabel = "📊 DASHBOARD SIGNAL";
+      if (signal.signal_source === "whale") {
+        sourceLabel = "🐳 WHALE PLAY";
+      } else if (signal.signal_source === "manual") {
+        sourceLabel = "👤 MANUAL SIGNAL";
+      } else if (signal.signal_source === "test") {
+        sourceLabel = "🧪 TEST ALERT";
+      }
+
+      let message = `${emoji} <b>JorTrade Alert</b>\n`;
+      message += `<b>[${sourceLabel}]</b>\n\n`;
       message += `<b>Ticker:</b> $${signal.ticker}\n`;
       message += `<b>Direction:</b> ${direction}\n`;
       message += `<b>Type:</b> ${putCall}\n`;
