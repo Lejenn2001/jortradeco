@@ -144,7 +144,7 @@ const SignalAccuracyPanel = ({ isAdmin, liveSignals = [] }: Props) => {
         {uniqueLive.length > 0 && (
           <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            {uniqueLive.length} Live
+            {uniqueLive.length} Day Trade
           </span>
         )}
         <span className="text-xs text-muted-foreground ml-auto">{allSignals.length} tracked</span>
