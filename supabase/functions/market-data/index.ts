@@ -41,10 +41,38 @@ serve(async (req) => {
     let data: any = {};
 
     if (action === 'flow') {
-      const res = await fetch(`${UW_BASE}/option-trades/flow-alerts?limit=15`, { headers: uwHeaders });
-      if (!res.ok) throw new Error(`UW flow-alerts failed [${res.status}]: ${await res.text()}`);
-      data = await res.json();
-      await logApiUsage(["flow-alerts"]);
+      // Fetch both general flow alerts AND smaller-cap screener results in parallel
+      const [flowRes, screenerRes] = await Promise.all([
+        fetch(`${UW_BASE}/option-trades/flow-alerts?limit=15`, { headers: uwHeaders }),
+        fetch(`${UW_BASE}/screener/option-contracts?max_stock_price=50&min_premium=5000&limit=10`, { headers: uwHeaders }),
+      ]);
+      if (!flowRes.ok) throw new Error(`UW flow-alerts failed [${flowRes.status}]: ${await flowRes.text()}`);
+      data = await flowRes.json();
+
+      // Merge screener results so smaller tickers get tracked too
+      const screenerData = screenerRes.ok ? await screenerRes.json() : { data: [] };
+      const screenerAlerts = (screenerData?.data || []).map((s: any) => ({
+        ticker: s.ticker_symbol || 'N/A',
+        type: s.delta > 0 ? 'call' : 'put',
+        strike: s.option_symbol?.match(/[CP]0*(\d+?)0{3}$/)?.[1] || null,
+        total_premium: s.premium,
+        volume: s.volume,
+        open_interest: s.open_interest,
+        volume_oi_ratio: s.open_interest > 0 ? String(s.volume / s.open_interest) : '0',
+        trade_count: s.trades || 0,
+        expiry: null,
+        stock_price: s.stock_price,
+        source: 'screener',
+      }));
+
+      // Deduplicate — don't add screener tickers already in flow
+      const flowTickers = new Set((data?.data || []).map((a: any) => a.ticker));
+      const newAlerts = screenerAlerts.filter((a: any) => !flowTickers.has(a.ticker));
+      if (newAlerts.length > 0) {
+        data.data = [...(data.data || []), ...newAlerts];
+      }
+
+      await logApiUsage(["flow-alerts", "screener"]);
 
       // Auto-log high-conviction signals for accuracy tracking
       try {
@@ -60,7 +88,7 @@ serve(async (req) => {
             return volOi > 3 || tradeCount > 5;
           })
           .map((a: any) => ({
-            ticker: a.ticker || a.underlying_symbol || 'N/A',
+            ticker: a.ticker || a.underlying_symbol || a.ticker_symbol || 'N/A',
             signal_type: a.type === 'call' ? 'bullish' : 'bearish',
             put_call: a.type === 'call' ? 'call' : 'put',
             confidence: a.volume_oi_ratio && parseFloat(a.volume_oi_ratio) > 10 ? 9.5 :
