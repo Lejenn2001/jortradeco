@@ -41,10 +41,10 @@ serve(async (req) => {
     let data: any = {};
 
     if (action === 'flow') {
-      // Fetch both general flow alerts AND smaller-cap screener results in parallel
+      // Fetch flow alerts with higher minimum premium to reduce noise
       const [flowRes, screenerRes] = await Promise.all([
-        fetch(`${UW_BASE}/option-trades/flow-alerts?limit=15`, { headers: uwHeaders }),
-        fetch(`${UW_BASE}/screener/option-contracts?max_stock_price=50&min_premium=5000&limit=10`, { headers: uwHeaders }),
+        fetch(`${UW_BASE}/option-trades/flow-alerts?limit=20&min_premium=25000`, { headers: uwHeaders }),
+        fetch(`${UW_BASE}/screener/option-contracts?max_stock_price=50&min_premium=25000&limit=10`, { headers: uwHeaders }),
       ]);
       if (!flowRes.ok) throw new Error(`UW flow-alerts failed [${flowRes.status}]: ${await flowRes.text()}`);
       data = await flowRes.json();
