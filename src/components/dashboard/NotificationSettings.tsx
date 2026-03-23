@@ -124,8 +124,8 @@ const NotificationSettings = () => {
       {/* Telegram Alerts */}
       <div className="rounded-xl border border-border/60 bg-card p-6 space-y-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-blue-500/15 flex items-center justify-center">
-            <Send className="h-5 w-5 text-blue-400" />
+          <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center">
+            <Send className="h-5 w-5 text-primary" />
           </div>
           <div>
             <h3 className="font-semibold text-foreground">Telegram Alerts</h3>
