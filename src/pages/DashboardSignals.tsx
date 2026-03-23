@@ -5,14 +5,14 @@ import { useMarketData } from "@/hooks/useMarketData";
 import { Search, Filter, TrendingUp, TrendingDown, Zap, ArrowUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
-type SortField = "confidence" | "ticker";
+type SortField = "date" | "confidence" | "ticker";
 type FilterType = "all" | "call" | "put";
 
 const DashboardSignals = () => {
   const { signals, loading } = useMarketData();
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<FilterType>("all");
-  const [sortBy, setSortBy] = useState<SortField>("confidence");
+  const [sortBy, setSortBy] = useState<SortField>("date");
   const [sortDesc, setSortDesc] = useState(true);
 
   const filtered = useMemo(() => {
@@ -28,6 +28,11 @@ const DashboardSignals = () => {
     }
 
     list.sort((a, b) => {
+      if (sortBy === "date") {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return sortDesc ? dateB - dateA : dateA - dateB;
+      }
       if (sortBy === "confidence") return sortDesc ? b.confidence - a.confidence : a.confidence - b.confidence;
       if (sortBy === "ticker") return sortDesc ? b.ticker.localeCompare(a.ticker) : a.ticker.localeCompare(b.ticker);
       return 0;
