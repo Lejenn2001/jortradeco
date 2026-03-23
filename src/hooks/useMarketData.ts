@@ -342,12 +342,33 @@ export function useMarketData() {
       }
     };
 
+    // Always fetch once on mount so dashboard isn't empty
     load();
 
+    // Only poll when market-adjacent sessions are active (4 AM – 8 PM ET, weekdays + Sunday 6 PM+)
+    const shouldPoll = (): boolean => {
+      const now = new Date();
+      const fmt = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/New_York",
+        hour: "2-digit", minute: "2-digit", hour12: false, weekday: "short",
+      });
+      const parts = fmt.formatToParts(now);
+      const get = (t: string) => parts.find(p => p.type === t)?.value || "";
+      const weekday = get("weekday");
+      const hour = parseInt(get("hour")) % 24;
+      const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+      const isWeekday = weekdays.includes(weekday);
+      const isSundayEvening = weekday === "Sun" && hour >= 18;
+      // Poll during pre-market (4 AM) through after-hours (8 PM) on weekdays, or Sunday evening futures
+      return (isWeekday && hour >= 4 && hour < 20) || isSundayEvening;
+    };
+
     const interval = setInterval(() => {
-      fetchFlowAlerts();
-      fetchWhaleAlerts();
-      fetchMarketOverview();
+      if (shouldPoll()) {
+        fetchFlowAlerts();
+        fetchWhaleAlerts();
+        fetchMarketOverview();
+      }
     }, 60000);
 
     return () => clearInterval(interval);
