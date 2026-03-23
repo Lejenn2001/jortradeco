@@ -37,8 +37,8 @@ const AIChatPanel = () => {
       const saved = localStorage.getItem('biddie-chat-messages');
       if (!saved) return [];
       const { messages: msgs, timestamp } = JSON.parse(saved);
-      const fiveDays = 5 * 24 * 60 * 60 * 1000;
-      if (Date.now() - timestamp > fiveDays) { localStorage.removeItem('biddie-chat-messages'); return []; }
+      const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+      if (Date.now() - timestamp > thirtyDays) { localStorage.removeItem('biddie-chat-messages'); return []; }
       return msgs || [];
     } catch { return []; }
   });
