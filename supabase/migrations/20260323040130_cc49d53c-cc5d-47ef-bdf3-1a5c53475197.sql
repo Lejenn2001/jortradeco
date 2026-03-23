@@ -1,0 +1,1 @@
+UPDATE public.signal_outcomes SET alerted = true WHERE alerted = false;
