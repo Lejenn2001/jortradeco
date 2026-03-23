@@ -81,30 +81,53 @@ serve(async (req) => {
           Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
         );
         const alerts = data?.data || [];
-        const signalsToLog = alerts
+        
+        // Apply same filtering as dashboard: confidence >= 8.5, dedup per ticker (keep highest premium side), top 6
+        const signalsWithMeta = alerts
           .filter((a: any) => {
             const volOi = a.volume_oi_ratio ? parseFloat(a.volume_oi_ratio) : 0;
             const tradeCount = a.trade_count || 0;
             return volOi > 3 || tradeCount > 5;
           })
-          .map((a: any) => ({
-            ticker: a.ticker || a.underlying_symbol || a.ticker_symbol || 'N/A',
-            signal_type: a.type === 'call' ? 'bullish' : 'bearish',
-            put_call: a.type === 'call' ? 'call' : 'put',
-            confidence: a.volume_oi_ratio && parseFloat(a.volume_oi_ratio) > 10 ? 9.5 :
-                        a.volume_oi_ratio && parseFloat(a.volume_oi_ratio) > 3 ? 9.0 : 8.5,
-            strike: a.strike ? `$${a.strike}` : null,
-            expiry: a.expiry || a.expires || null,
-            premium: a.total_premium ? `$${formatPremiumHelper(a.total_premium)}` : null,
-            description: `${a.trade_count || 'Multiple'} ${a.type} trades at $${a.strike} strike. Vol/OI: ${a.volume_oi_ratio ? parseFloat(a.volume_oi_ratio).toFixed(1) + 'x' : 'N/A'}`,
-            outcome: 'pending',
-            signal_source: 'auto',
-          }));
+          .map((a: any) => {
+            const volOi = a.volume_oi_ratio ? parseFloat(a.volume_oi_ratio) : 0;
+            const tradeCount = a.trade_count || 0;
+            const confidence = volOi > 10 ? 9.5 : volOi > 3 ? 9.0 : tradeCount > 8 ? 8.8 : tradeCount > 5 ? 8.5 : 8.0;
+            return {
+              ticker: a.ticker || a.underlying_symbol || a.ticker_symbol || 'N/A',
+              signal_type: a.type === 'call' ? 'bullish' : 'bearish',
+              put_call: a.type === 'call' ? 'call' : 'put',
+              confidence,
+              strike: a.strike ? `$${a.strike}` : null,
+              expiry: a.expiry || a.expires || null,
+              premium: a.total_premium ? `$${formatPremiumHelper(a.total_premium)}` : null,
+              _totalPremium: parseFloat(a.total_premium || a.premium || '0'),
+              description: `${tradeCount || 'Multiple'} ${a.type} trades at $${a.strike} strike. Vol/OI: ${volOi ? volOi.toFixed(1) + 'x' : 'N/A'}`,
+              outcome: 'pending',
+              signal_source: 'auto',
+            };
+          })
+          .filter((s: any) => s.confidence >= 8.5);
 
-        if (signalsToLog.length > 0) {
+        // Dedup: per ticker keep highest premium side (matches dashboard logic)
+        const tickerMap = new Map<string, any>();
+        for (const s of signalsWithMeta) {
+          const existing = tickerMap.get(s.ticker);
+          if (!existing || s._totalPremium > existing._totalPremium) {
+            tickerMap.set(s.ticker, s);
+          }
+        }
+
+        // Top 6 by confidence (same as dashboard)
+        const dashboardSignals = Array.from(tickerMap.values())
+          .sort((a: any, b: any) => b.confidence - a.confidence)
+          .slice(0, 6)
+          .map(({ _totalPremium, ...s }: any) => s);
+
+        if (dashboardSignals.length > 0) {
           await supabaseAdmin
             .from("signal_outcomes")
-            .upsert(signalsToLog, { onConflict: "ticker,signal_type,strike,expiry,signal_source", ignoreDuplicates: true });
+            .upsert(dashboardSignals, { onConflict: "ticker,signal_type,strike,expiry,signal_source", ignoreDuplicates: true });
 
           // Only send Telegram alerts for signals created in the last 2 minutes (truly new)
           const twoMinAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
@@ -113,7 +136,10 @@ serve(async (req) => {
             .select("*")
             .gt("created_at", twoMinAgo)
             .eq("signal_source", "auto")
-            .eq("outcome", "pending");
+            .eq("outcome", "pending")
+            .gte("confidence", 8.5)
+            .order("confidence", { ascending: false })
+            .limit(6);
 
           if (newSignals && newSignals.length > 0) {
             try {
