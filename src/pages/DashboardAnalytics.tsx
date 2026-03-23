@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Users, UserPlus, MessageSquare, TrendingUp, ShieldAlert, Shield, ShieldCheck, ShieldX, Anchor, Gauge, Download } from "lucide-react";
 import SignalAccuracyPanel from "@/components/dashboard/SignalAccuracyPanel";
+import SignalFeedPanel from "@/components/dashboard/SignalFeedPanel";
+import { useMarketData } from "@/hooks/useMarketData";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { supabase } from "@/integrations/supabase/client";
@@ -76,6 +78,7 @@ const exportToCSV = (members: MemberWithRoles[]) => {
 
 const DashboardAnalytics = () => {
   const { session } = useAuth();
+  const { signals, loading: signalsLoading } = useMarketData();
   const [members, setMembers] = useState<MemberWithRoles[]>([]);
   const [chatCount, setChatCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -277,7 +280,11 @@ const DashboardAnalytics = () => {
               {/* Signal Accuracy Tracker */}
               <SignalAccuracyPanel isAdmin={!!isAdmin} />
 
-              {/* Members Table */}
+              {/* Live Signal Feed */}
+              <div className="mb-6">
+                <SignalFeedPanel signals={signals} loading={signalsLoading} />
+              </div>
+
               <div className="glass-panel rounded-xl border-border/40 overflow-hidden">
                 <div className="px-5 py-4 border-b border-border/40 flex items-center gap-2">
                   <Shield className="h-4 w-4 text-primary" />
