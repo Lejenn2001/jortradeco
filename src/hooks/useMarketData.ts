@@ -283,23 +283,27 @@ export function useMarketData() {
         }
       }
 
-      // Sort by confidence descending, take top 6
+      // Sort newest first, no hard limit — let the pages decide what to show
       const liveDeduped: MarketSignal[] = Array.from(tickerMap.values())
         .sort((a, b) => {
-          // Newest first by created_at
           const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
           const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
           return dateB - dateA;
         })
-        .slice(0, 6)
-        .map(({ _totalPremium, ...signal }) => signal);
+        .map(({ _totalPremium, ...signal }) => ({
+          ...signal,
+          timeframe: classifyTimeframe(signal),
+        }));
 
-      // Merge: live data takes priority, fill remaining slots with example signals for diversity
+      // Merge: live data takes priority, fill remaining with examples
       const liveTickers = new Set(liveDeduped.map(s => s.ticker));
       const fillerSignals = exampleSignals.filter(s => !liveTickers.has(s.ticker));
-      const merged = [...liveDeduped, ...fillerSignals].slice(0, 6);
+      const merged = [...liveDeduped, ...fillerSignals];
 
-      if (merged.length > 0) setSignals(merged);
+      if (merged.length > 0) {
+        setSignals(merged);
+        saveCachedSignals(merged);
+      }
 
       // Whale alerts now fetched separately via fetchWhaleAlerts
     } catch (e) {
