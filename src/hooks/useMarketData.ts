@@ -12,6 +12,8 @@ export interface FlowAlert {
   explanation?: string;
 }
 
+export type SignalTimeframe = "buy_now" | "short_term" | "swing";
+
 export interface MarketSignal {
   id: string;
   ticker: string;
@@ -30,6 +32,7 @@ export interface MarketSignal {
   keyLevel?: string;
   targetZone?: string;
   createdAt?: string;
+  timeframe?: SignalTimeframe;
 }
 
 export interface TickerData {
