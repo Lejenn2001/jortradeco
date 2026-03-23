@@ -219,64 +219,78 @@ export function useMarketData() {
         return;
       }
 
-      // Transform flow alerts into signals — live data replaces examples
+      // Transform flow alerts into signals with HIGH-CONVICTION filtering
+      // Based on Unusual Whales methodology:
+      // - Vol/OI >= 5x (new positions, not just existing trading)
+      // - Premium >= $25K (filters out retail noise)
+      // - Trade count >= 5 (repeated conviction)
       type SignalWithPremium = MarketSignal & { _totalPremium: number };
-      const allSignals: SignalWithPremium[] = alerts.map((alert: any, i: number) => {
-        const putCall = alert.type === 'call' ? 'call' : 'put';
-        const isBullish = putCall === 'call';
-        const ticker = alert.ticker || alert.underlying_symbol || 'N/A';
-        const strike = alert.strike || '—';
-        const totalPremium = parseFloat(alert.total_premium || alert.premium || '0');
-        const premium = formatPremium(totalPremium);
-        const expiry = alert.expiry || alert.expires || 'N/A';
-        const flowType = alert.alert_rule?.includes('Sweep') ? 'Sweep' : 
-                         alert.alert_rule?.includes('Block') ? 'Block' : 
-                         alert.alert_rule?.includes('Repeated') ? 'Repeated Hits' : 'Flow';
-        const volOiRatio = alert.volume_oi_ratio ? parseFloat(alert.volume_oi_ratio) : null;
-        const tradeCount = alert.trade_count || 0;
+      const allSignals: SignalWithPremium[] = alerts
+        .filter((alert: any) => {
+          const volOi = alert.volume_oi_ratio ? parseFloat(alert.volume_oi_ratio) : 0;
+          const totalPremium = parseFloat(alert.total_premium || alert.premium || '0');
+          const tradeCount = alert.trade_count || 0;
+          // Must meet ALL minimum criteria
+          return volOi >= 5 && totalPremium >= 25000 && tradeCount >= 5;
+        })
+        .map((alert: any, i: number) => {
+          const putCall = alert.type === 'call' ? 'call' : 'put';
+          const isBullish = putCall === 'call';
+          const ticker = alert.ticker || alert.underlying_symbol || 'N/A';
+          const strike = alert.strike || '—';
+          const totalPremium = parseFloat(alert.total_premium || alert.premium || '0');
+          const premium = formatPremium(totalPremium);
+          const expiry = alert.expiry || alert.expires || 'N/A';
+          const flowType = alert.alert_rule?.includes('Sweep') ? 'Sweep' : 
+                           alert.alert_rule?.includes('Block') ? 'Block' : 
+                           alert.alert_rule?.includes('Repeated') ? 'Repeated Hits' : 'Flow';
+          const volOiRatio = alert.volume_oi_ratio ? parseFloat(alert.volume_oi_ratio) : null;
+          const tradeCount = alert.trade_count || 0;
 
-        const confidence = volOiRatio && volOiRatio > 10 ? 9.5 : 
-                          volOiRatio && volOiRatio > 3 ? 9.0 : 
-                          tradeCount > 8 ? 8.8 : 
-                          tradeCount > 5 ? 8.5 : 8.0;
+          // Confidence scoring based on how many high-conviction criteria are met
+          let confidence = 8.5; // baseline (passed all minimum filters)
+          if (volOiRatio && volOiRatio >= 8) confidence += 0.5;    // strong new positioning
+          if (volOiRatio && volOiRatio >= 12) confidence += 0.3;   // extreme new positioning
+          if (totalPremium >= 100000) confidence += 0.3; // serious capital ($100K+)
+          if (totalPremium >= 500000) confidence += 0.2; // whale-level capital ($500K+)
+          if (tradeCount >= 8) confidence += 0.2; // repeated conviction
+          if (tradeCount >= 12) confidence += 0.2; // extreme clustering
+          confidence = Math.min(10, parseFloat(confidence.toFixed(1)));
 
-        const urgencyTag = confidence >= 9.0 ? '🔥 ACT NOW' : confidence >= 8.5 ? '⚡ HIGH CONVICTION' : null;
-        const tags = [
-          putCall === 'call' ? 'Call Flow' : 'Put Flow',
-          flowType,
-          ...(urgencyTag ? [urgencyTag] : []),
-        ].filter(Boolean);
+          const urgencyTag = confidence >= 9.5 ? '🔥 ACT NOW' : confidence >= 9.0 ? '⚡ HIGH CONVICTION' : null;
+          const tags = [
+            putCall === 'call' ? 'Call Flow' : 'Put Flow',
+            flowType,
+            ...(urgencyTag ? [urgencyTag] : []),
+          ].filter(Boolean);
 
-        return {
-          id: alert.id || String(i),
-          ticker,
-          type: isBullish ? 'bullish' as const : 'bearish' as const,
-          confidence,
-          _totalPremium: totalPremium,
-          description: `${tradeCount} ${putCall} trades detected on ${ticker} at $${strike} strike. Total premium: $${premium}. Volume/OI ratio: ${volOiRatio ? volOiRatio.toFixed(1) + 'x' : 'N/A'} — ${volOiRatio && volOiRatio > 3 ? 'significant new positioning' : 'active flow'}.`,
-          timestamp: alert.created_at ? timeAgo(alert.created_at) : 'Time unavailable',
-          createdAt: alert.created_at || '',
-          tags,
-          strike: `$${strike}`,
-          expiry: expiry && expiry !== 'N/A' ? expiry : undefined,
-          premium: `$${premium}`,
-          putCall: putCall as 'call' | 'put',
-          suggestedTrade: `Buy ${ticker} $${strike} ${putCall === 'call' ? 'Calls' : 'Puts'}${expiry && expiry !== 'N/A' ? ` expiring ${expiry}` : ''}`,
-          entryTrigger: isBullish ? `Break above $${strike} with volume` : `Break below $${strike} with volume`,
-          invalidation: isBullish ? `$${(parseFloat(strike) * 0.97).toFixed(2)}` : `$${(parseFloat(strike) * 1.03).toFixed(2)}`,
-          keyLevel: `$${(parseFloat(strike) * (isBullish ? 0.99 : 1.01)).toFixed(2)}`,
-          targetZone: isBullish 
-            ? `$${(parseFloat(strike) * 1.02).toFixed(2)} – $${(parseFloat(strike) * 1.05).toFixed(2)}`
-            : `$${(parseFloat(strike) * 0.95).toFixed(2)} – $${(parseFloat(strike) * 0.98).toFixed(2)}`,
-        } as MarketSignal & { _totalPremium: number };
-      });
-
-      // Filter to 8.5+ confidence only
-      const filtered = allSignals.filter(s => s.confidence >= 8.5);
+          return {
+            id: alert.id || String(i),
+            ticker,
+            type: isBullish ? 'bullish' as const : 'bearish' as const,
+            confidence,
+            _totalPremium: totalPremium,
+            description: `${tradeCount} ${putCall} trades detected on ${ticker} at $${strike} strike. Total premium: $${premium}. Volume/OI ratio: ${volOiRatio ? volOiRatio.toFixed(1) + 'x' : 'N/A'} — ${volOiRatio && volOiRatio >= 8 ? 'major new positioning' : 'significant new positioning'}.`,
+            timestamp: alert.created_at ? timeAgo(alert.created_at) : 'Time unavailable',
+            createdAt: alert.created_at || '',
+            tags,
+            strike: `$${strike}`,
+            expiry: expiry && expiry !== 'N/A' ? expiry : undefined,
+            premium: `$${premium}`,
+            putCall: putCall as 'call' | 'put',
+            suggestedTrade: `Buy ${ticker} $${strike} ${putCall === 'call' ? 'Calls' : 'Puts'}${expiry && expiry !== 'N/A' ? ` expiring ${expiry}` : ''}`,
+            entryTrigger: isBullish ? `Break above $${strike} with volume` : `Break below $${strike} with volume`,
+            invalidation: isBullish ? `$${(parseFloat(strike) * 0.97).toFixed(2)}` : `$${(parseFloat(strike) * 1.03).toFixed(2)}`,
+            keyLevel: `$${(parseFloat(strike) * (isBullish ? 0.99 : 1.01)).toFixed(2)}`,
+            targetZone: isBullish 
+              ? `$${(parseFloat(strike) * 1.02).toFixed(2)} – $${(parseFloat(strike) * 1.05).toFixed(2)}`
+              : `$${(parseFloat(strike) * 0.95).toFixed(2)} – $${(parseFloat(strike) * 0.98).toFixed(2)}`,
+          } as MarketSignal & { _totalPremium: number };
+        });
 
       // Deduplicate: per ticker, keep only the dominant side (highest total premium)
       const tickerMap = new Map<string, (typeof allSignals)[0]>();
-      for (const signal of filtered) {
+      for (const signal of allSignals) {
         const existing = tickerMap.get(signal.ticker);
         if (!existing || signal._totalPremium > existing._totalPremium) {
           tickerMap.set(signal.ticker, signal);

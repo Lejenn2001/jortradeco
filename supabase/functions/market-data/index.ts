@@ -41,10 +41,10 @@ serve(async (req) => {
     let data: any = {};
 
     if (action === 'flow') {
-      // Fetch both general flow alerts AND smaller-cap screener results in parallel
+      // Fetch flow alerts with higher minimum premium to reduce noise
       const [flowRes, screenerRes] = await Promise.all([
-        fetch(`${UW_BASE}/option-trades/flow-alerts?limit=15`, { headers: uwHeaders }),
-        fetch(`${UW_BASE}/screener/option-contracts?max_stock_price=50&min_premium=5000&limit=10`, { headers: uwHeaders }),
+        fetch(`${UW_BASE}/option-trades/flow-alerts?limit=20&min_premium=25000`, { headers: uwHeaders }),
+        fetch(`${UW_BASE}/screener/option-contracts?max_stock_price=50&min_premium=25000&limit=10`, { headers: uwHeaders }),
       ]);
       if (!flowRes.ok) throw new Error(`UW flow-alerts failed [${flowRes.status}]: ${await flowRes.text()}`);
       data = await flowRes.json();
@@ -82,17 +82,35 @@ serve(async (req) => {
         );
         const alerts = data?.data || [];
         
-        // Apply same filtering as dashboard: confidence >= 8.5, dedup per ticker (keep highest premium side), top 6
+        // HIGH-CONVICTION CRITERIA (based on Unusual Whales methodology):
+        // - Vol/OI >= 5x (new positions being opened, not just trading existing)
+        // - Premium >= $25K (filters out retail noise)
+        // - Trade count >= 5 (repeated conviction, not a one-off)
+        // Dashboard tier: Vol/OI >= 8x AND Premium >= $100K (only the absolute best)
         const signalsWithMeta = alerts
           .filter((a: any) => {
             const volOi = a.volume_oi_ratio ? parseFloat(a.volume_oi_ratio) : 0;
+            const totalPremium = parseFloat(a.total_premium || a.premium || '0');
             const tradeCount = a.trade_count || 0;
-            return volOi > 3 || tradeCount > 5;
+            // Must meet ALL: Vol/OI >= 5x AND premium >= $25K AND tradeCount >= 5
+            return volOi >= 5 && totalPremium >= 25000 && tradeCount >= 5;
           })
           .map((a: any) => {
             const volOi = a.volume_oi_ratio ? parseFloat(a.volume_oi_ratio) : 0;
             const tradeCount = a.trade_count || 0;
-            const confidence = volOi > 10 ? 9.5 : volOi > 3 ? 9.0 : tradeCount > 8 ? 8.8 : tradeCount > 5 ? 8.5 : 8.0;
+            const totalPremium = parseFloat(a.total_premium || a.premium || '0');
+            
+            // Confidence scoring based on how many high-conviction criteria are met
+            let confidence = 8.5; // baseline (passed all minimum filters)
+            if (volOi >= 8) confidence += 0.5;    // strong new positioning
+            if (volOi >= 12) confidence += 0.3;   // extreme new positioning
+            if (totalPremium >= 100000) confidence += 0.3; // serious capital
+            if (totalPremium >= 500000) confidence += 0.2; // whale-level capital
+            if (tradeCount >= 8) confidence += 0.2; // repeated conviction
+            if (tradeCount >= 12) confidence += 0.2; // extreme clustering
+            // Cap at 10
+            confidence = Math.min(10, parseFloat(confidence.toFixed(1)));
+
             return {
               ticker: a.ticker || a.underlying_symbol || a.ticker_symbol || 'N/A',
               signal_type: a.type === 'call' ? 'bullish' : 'bearish',
@@ -101,13 +119,12 @@ serve(async (req) => {
               strike: a.strike ? `$${a.strike}` : null,
               expiry: a.expiry || a.expires || null,
               premium: a.total_premium ? `$${formatPremiumHelper(a.total_premium)}` : null,
-              _totalPremium: parseFloat(a.total_premium || a.premium || '0'),
-              description: `${tradeCount || 'Multiple'} ${a.type} trades at $${a.strike} strike. Vol/OI: ${volOi ? volOi.toFixed(1) + 'x' : 'N/A'}`,
+              _totalPremium: totalPremium,
+              description: `${tradeCount || 'Multiple'} ${a.type} trades at $${a.strike} strike. Vol/OI: ${volOi ? volOi.toFixed(1) + 'x' : 'N/A'}. Premium: $${formatPremiumHelper(totalPremium)}`,
               outcome: 'pending',
               signal_source: 'auto',
             };
-          })
-          .filter((s: any) => s.confidence >= 8.5);
+          });
 
         // Dedup: per ticker keep highest premium side (matches dashboard logic)
         const tickerMap = new Map<string, any>();
@@ -118,7 +135,7 @@ serve(async (req) => {
           }
         }
 
-        // Top 6 by confidence (same as dashboard)
+        // Top 6 by confidence
         const dashboardSignals = Array.from(tickerMap.values())
           .sort((a: any, b: any) => b.confidence - a.confidence)
           .slice(0, 6)
