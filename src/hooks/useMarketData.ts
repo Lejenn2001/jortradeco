@@ -59,6 +59,7 @@ const exampleSignals: MarketSignal[] = [
     invalidation: "$138.00",
     keyLevel: "$141.50",
     targetZone: "$148.00 – $152.00",
+    timeframe: "buy_now",
   },
   {
     id: "ex-2",
@@ -77,6 +78,7 @@ const exampleSignals: MarketSignal[] = [
     invalidation: "$265.00",
     keyLevel: "$255.00",
     targetZone: "$242.00 – $245.00",
+    timeframe: "short_term",
   },
   {
     id: "ex-3",
@@ -95,6 +97,7 @@ const exampleSignals: MarketSignal[] = [
     invalidation: "$208.00",
     keyLevel: "$213.00",
     targetZone: "$218.00 – $222.00",
+    timeframe: "buy_now",
   },
   {
     id: "ex-4",
@@ -113,6 +116,7 @@ const exampleSignals: MarketSignal[] = [
     invalidation: "$578.00",
     keyLevel: "$573.50",
     targetZone: "$564.00 – $567.00",
+    timeframe: "buy_now",
   },
   {
     id: "ex-5",
@@ -131,6 +135,7 @@ const exampleSignals: MarketSignal[] = [
     invalidation: "$114.00",
     keyLevel: "$117.50",
     targetZone: "$123.00 – $126.00",
+    timeframe: "swing",
   },
   {
     id: "ex-6",
@@ -149,8 +154,49 @@ const exampleSignals: MarketSignal[] = [
     invalidation: "$116.50",
     keyLevel: "$112.00",
     targetZone: "$105.00 – $107.00",
+    timeframe: "buy_now",
   },
 ];
+
+function classifyTimeframe(signal: { confidence: number; expiry?: string; createdAt?: string }): SignalTimeframe {
+  // Highest conviction or same-day expiry = BUY NOW
+  if (signal.confidence >= 9.5) return "buy_now";
+  
+  if (signal.expiry) {
+    const expiryDate = new Date(signal.expiry);
+    const now = new Date();
+    const daysOut = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    if (daysOut <= 1) return "buy_now";
+    if (daysOut <= 3) return "short_term";
+    return "swing";
+  }
+  
+  // Default: use confidence as tiebreaker
+  if (signal.confidence >= 9.0) return "short_term";
+  return "swing";
+}
+
+const CACHE_KEY = 'jortrade-signals-cache';
+const CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+function loadCachedSignals(): MarketSignal[] | null {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const { signals, timestamp } = JSON.parse(raw);
+    if (Date.now() - timestamp > CACHE_TTL) {
+      localStorage.removeItem(CACHE_KEY);
+      return null;
+    }
+    return signals;
+  } catch { return null; }
+}
+
+function saveCachedSignals(signals: MarketSignal[]) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ signals, timestamp: Date.now() }));
+  } catch {}
+}
 
 export function useMarketData() {
   const [signals, setSignals] = useState<MarketSignal[]>(exampleSignals);
