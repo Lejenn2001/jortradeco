@@ -35,6 +35,17 @@ const outcomeIcon = (outcome: string) => {
   }
 };
 
+const outcomeLabel = (outcome: string) => {
+  switch (outcome) {
+    case "live": return "DAY TRADE";
+    case "pending": return "SWING";
+    case "hit": return "HIT";
+    case "missed": return "MISSED";
+    case "expired": return "EXPIRED";
+    default: return outcome.toUpperCase();
+  }
+};
+
 const outcomeBadge = (outcome: string) => {
   const styles: Record<string, string> = {
     hit: "text-emerald-400 bg-emerald-400/10",
