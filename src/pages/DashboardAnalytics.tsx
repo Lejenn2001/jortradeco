@@ -280,7 +280,11 @@ const DashboardAnalytics = () => {
               {/* Signal Accuracy Tracker */}
               <SignalAccuracyPanel isAdmin={!!isAdmin} />
 
-              {/* Members Table */}
+              {/* Live Signal Feed */}
+              <div className="mb-6">
+                <SignalFeedPanel signals={signals} loading={signalsLoading} />
+              </div>
+
               <div className="glass-panel rounded-xl border-border/40 overflow-hidden">
                 <div className="px-5 py-4 border-b border-border/40 flex items-center gap-2">
                   <Shield className="h-4 w-4 text-primary" />
