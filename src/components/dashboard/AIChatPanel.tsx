@@ -34,8 +34,12 @@ const AIChatPanel = () => {
   const [greeting] = useState(() => greetings[Math.floor(Math.random() * greetings.length)](firstName));
   const [messages, setMessages] = useState<Message[]>(() => {
     try {
-      const saved = sessionStorage.getItem('biddie-chat-messages');
-      return saved ? JSON.parse(saved) : [];
+      const saved = localStorage.getItem('biddie-chat-messages');
+      if (!saved) return [];
+      const { messages: msgs, timestamp } = JSON.parse(saved);
+      const fiveDays = 5 * 24 * 60 * 60 * 1000;
+      if (Date.now() - timestamp > fiveDays) { localStorage.removeItem('biddie-chat-messages'); return []; }
+      return msgs || [];
     } catch { return []; }
   });
   const [input, setInput] = useState("");
@@ -48,7 +52,7 @@ const AIChatPanel = () => {
 
   // Persist messages to sessionStorage
   useEffect(() => {
-    try { sessionStorage.setItem('biddie-chat-messages', JSON.stringify(messages)); } catch {}
+    try { localStorage.setItem('biddie-chat-messages', JSON.stringify({ messages, timestamp: Date.now() })); } catch {}
   }, [messages]);
 
   const sendMessage = async (text: string) => {
