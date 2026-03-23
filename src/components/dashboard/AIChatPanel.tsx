@@ -52,7 +52,7 @@ const AIChatPanel = () => {
 
   // Persist messages to sessionStorage
   useEffect(() => {
-    try { sessionStorage.setItem('biddie-chat-messages', JSON.stringify(messages)); } catch {}
+    try { localStorage.setItem('biddie-chat-messages', JSON.stringify({ messages, timestamp: Date.now() })); } catch {}
   }, [messages]);
 
   const sendMessage = async (text: string) => {
