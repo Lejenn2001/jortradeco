@@ -357,10 +357,8 @@ export function useMarketData() {
       const weekday = get("weekday");
       const hour = parseInt(get("hour")) % 24;
       const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-      const isWeekday = weekdays.includes(weekday);
-      const isSundayEvening = weekday === "Sun" && hour >= 18;
-      // Poll during pre-market (4 AM) through after-hours (8 PM) on weekdays, or Sunday evening futures
-      return (isWeekday && hour >= 4 && hour < 20) || isSundayEvening;
+      // Only poll Monday–Friday, 4 AM – 8 PM ET
+      return weekdays.includes(weekday) && hour >= 4 && hour < 20;
     };
 
     const interval = setInterval(() => {
