@@ -13,8 +13,9 @@ const plans = [
   {
     id: "starter",
     name: "Starter Trader",
-    price: "$49",
-    period: "/mo",
+    monthlyPrice: "$49",
+    yearlyPrice: "$499",
+    yearlySavings: "Save ~$90",
     badge: null,
     desc: "Perfect for new traders ready to gain an edge with AI-powered market intelligence.",
     icon: Star,
@@ -31,8 +32,9 @@ const plans = [
   {
     id: "active",
     name: "Active Trader",
-    price: "$89",
-    period: "/mo",
+    monthlyPrice: "$89",
+    yearlyPrice: "$899",
+    yearlySavings: "Save ~$169",
     badge: "Most Popular",
     desc: "Built for serious traders who need deeper flow analysis and more daily insights.",
     icon: Zap,
@@ -50,8 +52,9 @@ const plans = [
   {
     id: "pro",
     name: "Pro Trader",
-    price: "$129",
-    period: "/mo",
+    monthlyPrice: "$129",
+    yearlyPrice: "$1,199",
+    yearlySavings: "Save ~$349",
     badge: "Power User",
     desc: "Maximum firepower for heavy flow traders and group leaders who demand the best.",
     icon: Crown,
@@ -68,8 +71,10 @@ const plans = [
     highlight: false,
   },
 ];
+
 const Signup = () => {
   const [selectedPlan, setSelectedPlan] = useState("active");
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
@@ -133,6 +138,22 @@ const Signup = () => {
           </p>
         </motion.div>
 
+        {/* Billing toggle */}
+        <div className="flex items-center justify-center gap-3 mb-10">
+          <button
+            onClick={() => setBillingCycle("monthly")}
+            className={`text-sm font-semibold px-4 py-2 rounded-full transition-all ${billingCycle === "monthly" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setBillingCycle("yearly")}
+            className={`text-sm font-semibold px-4 py-2 rounded-full transition-all ${billingCycle === "yearly" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            Yearly
+          </button>
+        </div>
+
         <div className="grid md:grid-cols-3 gap-6 mb-16">
           {plans.map((plan, i) => (
             <motion.div
@@ -156,11 +177,18 @@ const Signup = () => {
                 <plan.icon className="h-5 w-5 text-primary" />
               </div>
               <h3 className="text-foreground font-bold text-lg mb-1">{plan.name}</h3>
-              <div className="flex items-baseline gap-1 mb-2">
-                <span className="text-3xl font-extrabold text-foreground">{plan.price}</span>
-                <span className="text-sm text-muted-foreground">{plan.period}</span>
+              <div className="flex items-baseline gap-1 mb-1">
+                <span className="text-3xl font-extrabold text-foreground">
+                  {billingCycle === "monthly" ? plan.monthlyPrice : plan.yearlyPrice}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  {billingCycle === "monthly" ? "/mo" : "/yr"}
+                </span>
               </div>
-              <p className="text-muted-foreground text-xs mb-5">{plan.desc}</p>
+              {billingCycle === "yearly" && (
+                <span className="text-[10px] font-semibold text-primary">{plan.yearlySavings}</span>
+              )}
+              <p className="text-muted-foreground text-xs mb-5 mt-2">{plan.desc}</p>
               <ul className="space-y-2">
                 {plan.features.map((f) => (
                   <li key={f} className="flex items-center gap-2 text-xs text-muted-foreground">
