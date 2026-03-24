@@ -4,67 +4,72 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { Check, Zap, Crown, Star } from "lucide-react";
+import { Check, Zap, Crown, Star, Link2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 
 const plans = [
   {
-    id: "founding",
-    name: "Founding 50",
-    price: "$50",
+    id: "starter",
+    name: "Starter Trader",
+    price: "$49",
     period: "/mo",
-    badge: "Limited",
-    desc: "Lock in the lowest rate forever. Only 50 spots.",
+    badge: null,
+    desc: "Perfect for new traders ready to gain an edge with AI-powered market intelligence.",
     icon: Star,
     features: [
+      "30 AI searches per day",
       "Full AI dashboard access",
       "Real-time trade signals",
       "AI confidence scores",
+      "Community access",
+      "5-day free trial",
+    ],
+    highlight: false,
+  },
+  {
+    id: "active",
+    name: "Active Trader",
+    price: "$89",
+    period: "/mo",
+    badge: "Most Popular",
+    desc: "Built for serious traders who need deeper flow analysis and more daily insights.",
+    icon: Zap,
+    features: [
+      "60 AI searches per day",
+      "Full AI dashboard access",
+      "Real-time trade signals",
+      "AI confidence scores",
+      "Priority signal delivery",
       "Community access",
       "5-day free trial",
     ],
     highlight: true,
   },
   {
-    id: "monthly",
-    name: "Monthly",
-    price: "$99",
+    id: "pro",
+    name: "Pro Trader",
+    price: "$129",
     period: "/mo",
-    badge: null,
-    desc: "Full access with no commitment. Cancel anytime.",
-    icon: Zap,
+    badge: "Power User",
+    desc: "Maximum firepower for heavy flow traders and group leaders who demand the best.",
+    icon: Crown,
     features: [
+      "100 AI searches per day",
       "Full AI dashboard access",
       "Real-time trade signals",
       "AI confidence scores",
+      "Priority signal delivery",
+      "Advanced flow analytics",
       "Community access",
       "5-day free trial",
     ],
     highlight: false,
   },
-  {
-    id: "lifetime",
-    name: "Lifetime",
-    price: "$1,500",
-    period: "one-time",
-    badge: "Best Value",
-    desc: "Pay once, trade forever. Never worry about renewals.",
-    icon: Crown,
-    features: [
-      "Everything in Monthly",
-      "Priority support",
-      "1-on-1 onboarding call",
-      "Lifetime updates",
-      "Founding member status",
-    ],
-    highlight: false,
-  },
 ];
-
 const Signup = () => {
-  const [selectedPlan, setSelectedPlan] = useState("founding");
+  const [selectedPlan, setSelectedPlan] = useState("active");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
@@ -247,6 +252,24 @@ const Signup = () => {
               </p>
             </form>
           </div>
+        </motion.div>
+
+        {/* Affiliate Link Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+          className="text-center mt-10"
+        >
+          <Button
+            variant="outline"
+            className="rounded-full border-border/50 px-6 gap-2 text-sm text-muted-foreground hover:text-foreground"
+            onClick={() => toast.info("Affiliate program coming soon!")}
+          >
+            <Link2 className="h-4 w-4" />
+            Create Affiliate Link
+          </Button>
+          <p className="text-[10px] text-muted-foreground mt-2">Earn commissions by referring traders</p>
         </motion.div>
       </div>
       <div className="mt-8 w-full">
