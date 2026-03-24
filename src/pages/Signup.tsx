@@ -69,7 +69,7 @@ const plans = [
   },
 ];
 const Signup = () => {
-  const [selectedPlan, setSelectedPlan] = useState("founding");
+  const [selectedPlan, setSelectedPlan] = useState("active");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
