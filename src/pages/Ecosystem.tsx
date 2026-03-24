@@ -10,7 +10,7 @@ const products = [
     subtitle: "AI Trading Intelligence",
     description: "Institutional-grade AI assistant that scans 1,000+ setups daily, surfaces high-conviction flow, and translates complex market data into clear, actionable guidance.",
     link: "/biddieai",
-    cta: "Launch Biddie AI",
+    cta: "Get Started",
     accent: "from-[hsl(var(--glow-blue))] to-[hsl(var(--glow-purple))]",
     glowColor: "hsl(var(--glow-blue) / 0.15)",
   },
