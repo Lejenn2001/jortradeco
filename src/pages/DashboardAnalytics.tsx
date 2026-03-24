@@ -216,10 +216,17 @@ const DashboardAnalytics = () => {
       <div className="flex-1 flex flex-col min-w-0">
         <DashboardHeader />
         <main className="flex-1 overflow-y-auto p-4 lg:p-6 bg-mesh">
-          <div className="mb-6">
-            <h1 className="text-xl font-bold text-foreground">Analytics</h1>
-            <p className="text-sm text-muted-foreground">Member activity and platform overview</p>
-          </div>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-xl font-bold text-foreground">Analytics</h1>
+                <p className="text-sm text-muted-foreground">Member activity and platform overview</p>
+              </div>
+              <Link to="/ecosystem">
+                <Button size="sm" variant="outline" className="text-xs gap-2">
+                  <Globe className="h-3.5 w-3.5" /> Preview Ecosystem Page
+                </Button>
+              </Link>
+            </div>
 
           {loading ? (
             <div className="flex items-center justify-center h-40">
