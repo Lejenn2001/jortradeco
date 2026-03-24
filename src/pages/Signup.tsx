@@ -4,65 +4,70 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { Check, Zap, Crown, Star } from "lucide-react";
+import { Check, Zap, Crown, Star, Link2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 
 const plans = [
   {
-    id: "founding",
-    name: "Founding 50",
-    price: "$50",
+    id: "starter",
+    name: "Starter Trader",
+    price: "$49",
     period: "/mo",
-    badge: "Limited",
-    desc: "Lock in the lowest rate forever. Only 50 spots.",
+    badge: null,
+    desc: "Perfect for new traders ready to gain an edge with AI-powered market intelligence.",
     icon: Star,
     features: [
+      "30 AI searches per day",
       "Full AI dashboard access",
       "Real-time trade signals",
       "AI confidence scores",
+      "Community access",
+      "5-day free trial",
+    ],
+    highlight: false,
+  },
+  {
+    id: "active",
+    name: "Active Trader",
+    price: "$89",
+    period: "/mo",
+    badge: "Most Popular",
+    desc: "Built for serious traders who need deeper flow analysis and more daily insights.",
+    icon: Zap,
+    features: [
+      "60 AI searches per day",
+      "Full AI dashboard access",
+      "Real-time trade signals",
+      "AI confidence scores",
+      "Priority signal delivery",
       "Community access",
       "5-day free trial",
     ],
     highlight: true,
   },
   {
-    id: "monthly",
-    name: "Monthly",
-    price: "$99",
+    id: "pro",
+    name: "Pro Trader",
+    price: "$129",
     period: "/mo",
-    badge: null,
-    desc: "Full access with no commitment. Cancel anytime.",
-    icon: Zap,
+    badge: "Power User",
+    desc: "Maximum firepower for heavy flow traders and group leaders who demand the best.",
+    icon: Crown,
     features: [
+      "100 AI searches per day",
       "Full AI dashboard access",
       "Real-time trade signals",
       "AI confidence scores",
+      "Priority signal delivery",
+      "Advanced flow analytics",
       "Community access",
       "5-day free trial",
     ],
     highlight: false,
   },
-  {
-    id: "lifetime",
-    name: "Lifetime",
-    price: "$1,500",
-    period: "one-time",
-    badge: "Best Value",
-    desc: "Pay once, trade forever. Never worry about renewals.",
-    icon: Crown,
-    features: [
-      "Everything in Monthly",
-      "Priority support",
-      "1-on-1 onboarding call",
-      "Lifetime updates",
-      "Founding member status",
-    ],
-    highlight: false,
-  },
 ];
-
 const Signup = () => {
   const [selectedPlan, setSelectedPlan] = useState("founding");
   const [email, setEmail] = useState("");
