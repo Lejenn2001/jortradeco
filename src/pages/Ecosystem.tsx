@@ -141,9 +141,9 @@ const Ecosystem = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.55 }}
           >
-            <Link to="/biddieai">
+            <Link to="/signup">
               <Button className="rounded-full px-8 py-6 text-base font-semibold bg-foreground text-background hover:bg-foreground/90">
-                Explore Biddie AI
+                Get Started
                 <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             </Link>
