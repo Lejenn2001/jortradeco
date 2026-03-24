@@ -253,6 +253,24 @@ const Signup = () => {
             </form>
           </div>
         </motion.div>
+
+        {/* Affiliate Link Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+          className="text-center mt-10"
+        >
+          <Button
+            variant="outline"
+            className="rounded-full border-border/50 px-6 gap-2 text-sm text-muted-foreground hover:text-foreground"
+            onClick={() => toast.info("Affiliate program coming soon!")}
+          >
+            <Link2 className="h-4 w-4" />
+            Create Affiliate Link
+          </Button>
+          <p className="text-[10px] text-muted-foreground mt-2">Earn commissions by referring traders</p>
+        </motion.div>
       </div>
       <div className="mt-8 w-full">
         <Disclaimer />
