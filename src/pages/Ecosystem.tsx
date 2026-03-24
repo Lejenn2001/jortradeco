@@ -136,18 +136,6 @@ const Ecosystem = () => {
             ))}
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.55 }}
-          >
-            <Link to="/signup">
-              <Button className="rounded-full px-8 py-6 text-base font-semibold bg-foreground text-background hover:bg-foreground/90">
-                Get Started
-                <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
-            </Link>
-          </motion.div>
         </div>
       </section>
 
