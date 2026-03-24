@@ -73,7 +73,14 @@ const plans = [
 ];
 
 const Signup = () => {
+  const [selectedPlan, setSelectedPlan] = useState("active");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
