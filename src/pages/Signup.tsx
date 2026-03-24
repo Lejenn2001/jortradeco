@@ -13,8 +13,9 @@ const plans = [
   {
     id: "starter",
     name: "Starter Trader",
-    price: "$49",
-    period: "/mo",
+    monthlyPrice: "$49",
+    yearlyPrice: "$499",
+    yearlySavings: "Save ~$90",
     badge: null,
     desc: "Perfect for new traders ready to gain an edge with AI-powered market intelligence.",
     icon: Star,
@@ -31,8 +32,9 @@ const plans = [
   {
     id: "active",
     name: "Active Trader",
-    price: "$89",
-    period: "/mo",
+    monthlyPrice: "$89",
+    yearlyPrice: "$899",
+    yearlySavings: "Save ~$169",
     badge: "Most Popular",
     desc: "Built for serious traders who need deeper flow analysis and more daily insights.",
     icon: Zap,
@@ -50,8 +52,9 @@ const plans = [
   {
     id: "pro",
     name: "Pro Trader",
-    price: "$129",
-    period: "/mo",
+    monthlyPrice: "$129",
+    yearlyPrice: "$1,199",
+    yearlySavings: "Save ~$349",
     badge: "Power User",
     desc: "Maximum firepower for heavy flow traders and group leaders who demand the best.",
     icon: Crown,
@@ -68,14 +71,6 @@ const plans = [
     highlight: false,
   },
 ];
-const Signup = () => {
-  const [selectedPlan, setSelectedPlan] = useState("active");
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
