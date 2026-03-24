@@ -71,6 +71,9 @@ const plans = [
     highlight: false,
   },
 ];
+
+const Signup = () => {
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
