@@ -166,17 +166,17 @@ function SignalRow({ signal }: { signal: MarketSignal }) {
   const score = signal.convictionScore ?? Math.round(signal.confidence * 10);
 
   return (
-    <div className="px-5 py-4 hover:bg-muted/20 transition-colors">
-      {/* Top row */}
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-3">
+    <div className="px-3 sm:px-5 py-3 sm:py-4 hover:bg-muted/20 transition-colors">
+      {/* Top row — stacks on mobile */}
+      <div className="flex flex-wrap items-center gap-2 mb-2">
+        <div className="flex items-center gap-2 min-w-0">
           {isCall ? (
-            <TrendingUp className="h-4 w-4 text-primary" />
+            <TrendingUp className="h-4 w-4 shrink-0 text-primary" />
           ) : (
-            <TrendingDown className="h-4 w-4 text-destructive" />
+            <TrendingDown className="h-4 w-4 shrink-0 text-destructive" />
           )}
-          <span className="font-bold text-base text-foreground">{signal.ticker}</span>
-          <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+          <span className="font-bold text-sm sm:text-base text-foreground">{signal.ticker}</span>
+          <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full ${
             isCall ? "bg-primary/20 text-primary" : "bg-destructive/20 text-destructive"
           }`}>
             {signal.putCall === "call" ? "CALL" : "PUT"}
@@ -186,12 +186,11 @@ function SignalRow({ signal }: { signal: MarketSignal }) {
           ) : signal.source === "example" ? (
             <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-muted/40 text-muted-foreground uppercase tracking-wider">Example</span>
           ) : null}
-          {signal.premium && (
-            <span className="text-xs text-accent font-semibold">{signal.premium}</span>
-          )}
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] text-muted-foreground">{signal.timestamp}</span>
+        <div className="flex items-center gap-2 ml-auto">
+          {signal.premium && (
+            <span className="text-[11px] text-accent font-semibold">{signal.premium}</span>
+          )}
           <ConvictionScoreRing
             score={score}
             label={signal.convictionLabel ?? ""}
@@ -200,40 +199,35 @@ function SignalRow({ signal }: { signal: MarketSignal }) {
       </div>
 
       {/* Description */}
-      <p className="text-xs text-muted-foreground leading-relaxed mb-2">
+      <p className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed mb-2">
         {signal.suggestedTrade || signal.description}
       </p>
 
-      {/* Detail chips */}
-      <div className="flex flex-wrap gap-2 text-xs">
+      {/* Detail chips — wrap naturally */}
+      <div className="flex flex-wrap gap-1.5 text-[10px] sm:text-xs">
         {signal.strike && (
-          <span className="bg-muted/30 rounded-lg px-2.5 py-1">
+          <span className="bg-muted/30 rounded-lg px-2 py-0.5">
             Strike: <span className="font-semibold text-foreground">{signal.strike}</span>
           </span>
         )}
-        {signal.gammaLevelLabel && (
-          <span className="bg-accent/10 rounded-lg px-2.5 py-1">
-            📍 <span className="font-semibold text-accent">{signal.gammaLevelLabel}</span>
-          </span>
-        )}
-        {signal.keyLevel && (
-          <span className="bg-primary/10 rounded-lg px-2.5 py-1">
-            Key: <span className="font-semibold text-primary">{signal.keyLevel}</span>
-          </span>
-        )}
         {signal.targetZone && (
-          <span className="bg-primary/10 rounded-lg px-2.5 py-1">
+          <span className="bg-primary/10 rounded-lg px-2 py-0.5">
             Target: <span className="font-semibold text-primary">{signal.targetZone}</span>
           </span>
         )}
         {signal.invalidation && (
-          <span className="bg-destructive/10 rounded-lg px-2.5 py-1">
+          <span className="bg-destructive/10 rounded-lg px-2 py-0.5">
             Stop: <span className="font-semibold text-destructive">{signal.invalidation}</span>
           </span>
         )}
         {signal.expiry && (
-          <span className="bg-muted/30 rounded-lg px-2.5 py-1">
+          <span className="bg-muted/30 rounded-lg px-2 py-0.5">
             Exp: <span className="font-semibold text-foreground">{signal.expiry}</span>
+          </span>
+        )}
+        {signal.keyLevel && (
+          <span className="bg-primary/10 rounded-lg px-2 py-0.5">
+            Key: <span className="font-semibold text-primary">{signal.keyLevel}</span>
           </span>
         )}
       </div>
