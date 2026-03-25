@@ -92,22 +92,43 @@ const DashboardCommunity = () => {
     };
   }, [session?.user?.id, firstName]);
 
+  const triggerBiddie = async (userMessage: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-chat', {
+        body: { message: userMessage, postToChat: true },
+      });
+      if (error) {
+        console.error("Biddie edge function error:", error);
+      }
+    } catch (e) {
+      console.error("Biddie API error:", e);
+    }
+  };
+
   const sendMessage = async () => {
     if (!session?.user?.id) {
       toast({ title: "Please log in", description: "You need to be signed in to send messages.", variant: "destructive" });
       return;
     }
     if (!input.trim() || sending) return;
+    const messageText = input.trim();
     setSending(true);
     const { error } = await supabase.from("chat_messages").insert({
       user_id: session.user.id,
       user_name: profile?.full_name || "Trader",
-      content: input.trim(),
+      content: messageText,
     } as any);
     if (error) {
       toast({ title: "Error sending message", description: error.message, variant: "destructive" });
     } else {
       setInput("");
+      // Check if message mentions Biddie (case-insensitive)
+      const lower = messageText.toLowerCase();
+      if (lower.includes("biddie") || lower.includes("@biddie")) {
+        // Strip the @Biddie prefix and send the rest to the API
+        const cleanMsg = messageText.replace(/@?biddie[,:]?\s*/i, "").trim() || messageText;
+        triggerBiddie(cleanMsg);
+      }
     }
     setSending(false);
   };
