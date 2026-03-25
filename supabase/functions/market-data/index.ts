@@ -207,66 +207,9 @@ serve(async (req) => {
           .slice(0, 6)
           .map(({ _totalPremium, ...s }: any) => s);
 
-        if (dashboardSignals.length > 0) {
-          const tickers = [...new Set(dashboardSignals.map((s: any) => s.ticker))];
-          const buildSignalKey = (signal: any) => [
-            signal.ticker || 'N/A',
-            signal.signal_type || 'unknown',
-            signal.strike || '',
-            signal.expiry || '',
-            signal.signal_source || 'auto',
-          ].join('|');
-
-          const { data: existingPendingSignals, error: existingPendingSignalsError } = await supabaseAdmin
-            .from("signal_outcomes")
-            .select("ticker,signal_type,strike,expiry,signal_source")
-            .in("ticker", tickers)
-            .eq("signal_source", "auto")
-            .eq("outcome", "pending");
-
-          if (existingPendingSignalsError) throw existingPendingSignalsError;
-
-          const existingKeys = new Set((existingPendingSignals || []).map((signal: any) => buildSignalKey(signal)));
-          const freshSignals = dashboardSignals.filter((signal: any) => !existingKeys.has(buildSignalKey(signal)));
-
-          if (freshSignals.length > 0) {
-            const { data: insertedSignals, error: insertError } = await supabaseAdmin
-              .from("signal_outcomes")
-              .insert(freshSignals)
-              .select("*");
-
-            if (insertError) throw insertError;
-
-            const newPendingSignals = (insertedSignals || []).filter((signal: any) =>
-              signal.outcome === "pending" && !signal.alerted && signal.confidence >= 8.5
-            );
-
-            if (newPendingSignals.length > 0) {
-              const ids = newPendingSignals.map((signal: any) => signal.id);
-              await supabaseAdmin
-                .from("signal_outcomes")
-                .update({ alerted: true })
-                .in("id", ids);
-
-              try {
-                const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-                const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-                await fetch(`${supabaseUrl}/functions/v1/telegram-alert`, {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${supabaseAnonKey}`,
-                  },
-                  body: JSON.stringify({ signals: newPendingSignals }),
-                });
-              } catch (tgErr) {
-                console.warn("Failed to send Telegram alerts:", tgErr);
-              }
-            }
-          }
-        }
+        // Signal logging removed — only Replit signals are tracked for accuracy now
       } catch (logErr) {
-        console.warn("Failed to auto-log signals:", logErr);
+        console.warn("Failed to process signals:", logErr);
       }
 
     } else if (action === 'ticker' && ticker) {
