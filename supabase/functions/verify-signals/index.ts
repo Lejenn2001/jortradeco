@@ -72,7 +72,7 @@ serve(async (req) => {
       } catch (e) {
         console.warn(`Failed to get price for ${ticker}:`, e);
       }
-      await new Promise((r) => setTimeout(r, 200));
+      await new Promise((r) => setTimeout(r, 600));
     }
 
     let verified = 0, hits = 0, misses = 0, expired = 0;
