@@ -6,6 +6,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   profile: { full_name: string } | null;
+  isAdmin: boolean;
   loading: boolean;
   signOut: () => Promise<void>;
 }
