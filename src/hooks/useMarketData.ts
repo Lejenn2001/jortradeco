@@ -418,36 +418,71 @@ export function useMarketData() {
             const tags = [...(s.tags || [])];
             if (s.has_sweep && !tags.includes('Sweep')) tags.push('Sweep');
 
-            // Run through full whale conviction scoring model instead of simple confidence * 10
+            // Hybrid scoring: Replit signals already have Claude-analyzed confidence (0-10)
+            // Use confidence as primary baseline, boost with any whale data available
             const strikeNum = parseFloat(String(s.strike)) || 0;
             const premiumNum = typeof s.premium === 'number' ? s.premium : parseFloat(String(s.premium)) || 0;
-            const volumeNum = typeof s.volume === 'number' ? s.volume : 0;
-            const oiNum = typeof s.open_interest === 'number' ? s.open_interest : 0;
-            const tradeCountNum = typeof s.trade_count === 'number' ? s.trade_count : 1;
-            const stockPriceNum = typeof s.stock_price === 'number' ? s.stock_price : undefined;
-            const keyLevelsArr = Array.isArray(s.key_levels) ? s.key_levels.map(Number).filter((n: number) => !isNaN(n)) : undefined;
+            const hasWhaleData = s.volume > 0 || s.open_interest > 0;
 
-            const scoreResult = computeWhaleConviction({
-              premium: premiumNum,
-              alertRule: s.has_sweep ? 'sweep' : (s.alert_rule || 'flow'),
-              dte: computeDte(s.expiry),
-              moneynessPct: computeMoneyness(strikeNum, stockPriceNum ?? null),
-              volume: volumeNum,
-              openInterest: oiNum,
-              tradeCount: tradeCountNum,
-              ticker: s.ticker,
-              strike: strikeNum,
-              stockPrice: stockPriceNum,
-              keyLevels: keyLevelsArr,
-              isSpread: s.is_spread || false,
-              isDeepItm: s.is_deep_itm || false,
-            });
+            let hybridScore: number;
+            let hybridLabel: string;
+            let gammaLabel: string | undefined;
+
+            if (hasWhaleData) {
+              // Full scoring when whale data available
+              const scoreResult = computeWhaleConviction({
+                premium: premiumNum,
+                alertRule: s.has_sweep ? 'sweep' : (s.alert_rule || 'flow'),
+                dte: computeDte(s.expiry),
+                moneynessPct: computeMoneyness(strikeNum, s.stock_price ?? null),
+                volume: s.volume || 0,
+                openInterest: s.open_interest || 0,
+                tradeCount: s.trade_count || 1,
+                ticker: s.ticker,
+                strike: strikeNum,
+                stockPrice: s.stock_price,
+                keyLevels: Array.isArray(s.key_levels) ? s.key_levels.map(Number).filter((n: number) => !isNaN(n)) : undefined,
+                isSpread: s.is_spread || false,
+                isDeepItm: s.is_deep_itm || false,
+              });
+              hybridScore = scoreResult.score;
+              hybridLabel = scoreResult.label;
+              gammaLabel = scoreResult.gammaLevelLabel;
+            } else {
+              // Hybrid: map Replit confidence (0-10) to conviction score
+              // confidence 10 = 95, 9.5 = 90, 9 = 85, 8.5 = 78, 8 = 72, 7.5 = 65, 7 = 58
+              const baseScore = Math.round(s.confidence * 10);
+              
+              // Apply bonuses from available data
+              let bonus = 0;
+              if (s.has_sweep) bonus += 8;  // sweeps = aggressive
+              if (premiumNum >= 1_000_000) bonus += 5;
+              else if (premiumNum >= 500_000) bonus += 3;
+              if (s.trade_count && s.trade_count >= 3) bonus += 3;
+              
+              // DTE bonus for short-dated (urgency)
+              const dte = computeDte(s.expiry);
+              if (dte <= 2) bonus += 5;
+              else if (dte <= 7) bonus += 3;
+              
+              hybridScore = Math.min(100, Math.max(0, baseScore + bonus));
+              hybridLabel = hybridScore >= 90 ? "Extreme Conviction"
+                : hybridScore >= 75 ? "Very High Conviction"
+                : hybridScore >= 60 ? "High Conviction"
+                : hybridScore >= 40 ? "Moderate Conviction"
+                : "Low Conviction";
+              
+              // Check for key level alignment if key_levels provided
+              if (s.key_level) {
+                gammaLabel = `Near ${s.key_level} level`;
+              }
+            }
 
             // Use scored tags
-            if (scoreResult.score >= 85) tags.push('🔥 ACT NOW');
-            else if (scoreResult.score >= 70) tags.push('⚡ HIGH CONVICTION');
+            if (hybridScore >= 85) tags.push('🔥 ACT NOW');
+            else if (hybridScore >= 70) tags.push('⚡ HIGH CONVICTION');
 
-            const timeframe = classifyTimeframe({ convictionScore: scoreResult.score, confidence: s.confidence, expiry: s.expiry });
+            const timeframe = classifyTimeframe({ convictionScore: hybridScore, confidence: s.confidence, expiry: s.expiry });
 
             return {
               id: `replit-${s.ticker}-${i}`,
