@@ -5,6 +5,8 @@ import SignalFeedPanel from "@/components/dashboard/SignalFeedPanel";
 import AIChatPanel from "@/components/dashboard/AIChatPanel";
 import PortfolioPanel from "@/components/dashboard/PortfolioPanel";
 import MarketStatusSign from "@/components/dashboard/MarketStatusSign";
+import TickerTape from "@/components/dashboard/TickerTape";
+import PerformanceSnapshot from "@/components/dashboard/PerformanceSnapshot";
 import { useMarketData } from "@/hooks/useMarketData";
 
 const Dashboard = () => {
@@ -24,9 +26,11 @@ const Dashboard = () => {
 
       <div className="flex-1 flex flex-col min-w-0">
         <DashboardHeader />
+        <TickerTape />
 
         <main className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-4 lg:space-y-6">
           <MarketStatusSign />
+          <PerformanceSnapshot />
 
           <div className="grid lg:grid-cols-5 gap-4 lg:gap-6">
             <div className="lg:col-span-2 max-h-[600px]">
