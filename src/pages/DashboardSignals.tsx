@@ -4,6 +4,7 @@ import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { useMarketData, type MarketSignal, type SignalTimeframe } from "@/hooks/useMarketData";
 import { Search, Filter, TrendingUp, TrendingDown, Zap, ArrowUpDown, Clock, Flame, CalendarDays } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import SignalLegend from "@/components/dashboard/SignalLegend";
 
 type FilterType = "all" | "call" | "put";
 
@@ -115,6 +116,8 @@ const DashboardSignals = () => {
               ))}
             </div>
           </div>
+
+          <SignalLegend />
 
           {loading && signals.length === 0 && (
             <div className="p-8 text-center text-muted-foreground text-sm">Loading signals...</div>

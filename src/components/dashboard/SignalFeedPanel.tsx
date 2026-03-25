@@ -1,6 +1,7 @@
 import { Activity, TrendingUp, TrendingDown, Clock, AlertTriangle, Target, ShieldX, Zap, Crosshair, MapPin, Gauge } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { MarketSignal } from "@/hooks/useMarketData";
+import SignalLegend from "./SignalLegend";
 
 interface Props {
   signals: MarketSignal[];
@@ -22,6 +23,8 @@ const SignalFeedPanel = ({ signals, loading, limit }: Props) => {
           {displaySignals.length} Active
         </span>
       </div>
+
+      <SignalLegend />
 
       {loading && signals.length === 0 ? (
         <div className="space-y-3">
