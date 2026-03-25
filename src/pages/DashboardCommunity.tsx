@@ -209,7 +209,13 @@ const DashboardCommunity = () => {
                           {isBiddie ? "Biddie AI" : (msg.user_name || "Trader")}
                         </p>
                       )}
-                      <p className="text-xs text-foreground break-words leading-relaxed">{msg.content}</p>
+                      {isBiddie ? (
+                        <div className="prose prose-sm prose-invert max-w-none text-foreground [&_p]:text-xs [&_p]:leading-relaxed [&_p]:mb-1 [&_li]:text-xs [&_h1]:text-sm [&_h2]:text-xs [&_h3]:text-xs [&_strong]:text-primary [&_h1]:text-primary [&_h2]:text-primary [&_h1]:font-bold [&_h2]:font-semibold [&_h1]:mb-1 [&_h2]:mb-0.5 [&_ul]:pl-3 [&_ol]:pl-3 [&_li]:mb-0">
+                          <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-foreground break-words leading-relaxed">{msg.content}</p>
+                      )}
                       <p className="text-[9px] text-muted-foreground/60 mt-0.5">{formatTime(msg.created_at)}</p>
                     </div>
 
