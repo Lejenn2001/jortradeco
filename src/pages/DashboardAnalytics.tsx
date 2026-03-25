@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Users, UserPlus, MessageSquare, TrendingUp, ShieldAlert, Shield, ShieldCheck, ShieldX, Anchor, Gauge, Download, Globe } from "lucide-react";
+import { Users, UserPlus, MessageSquare, TrendingUp, ShieldAlert, Shield, ShieldCheck, ShieldX, Anchor, Gauge, Download, Globe, Trash2, Circle } from "lucide-react";
+import { usePresenceTracker } from "@/hooks/usePresence";
 import { Link } from "react-router-dom";
 import SignalAccuracyPanel from "@/components/dashboard/SignalAccuracyPanel";
 import SignalFeedPanel from "@/components/dashboard/SignalFeedPanel";
