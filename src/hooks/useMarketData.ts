@@ -135,34 +135,45 @@ export function computeWhaleConviction(input: WhaleScoreInput): WhaleScoreResult
 
   // 7) Level + Trend Alignment (0–15) — uses gamma S/R levels from options OI
   let levelAlignment = 2; // default: random location
+  let gammaLevelLabel: string | undefined;
+  
   if (keyLevels && keyLevels.length > 0 && strike > 0) {
-    // Check if strike is near any high-OI gamma level
-    const nearestDist = Math.min(...keyLevels.map(kl => Math.abs(strike - kl) / Math.max(strike, 1)));
-    
-    if (nearestDist <= 0.005) {
-      // Strike IS a high-OI level (within 0.5%) — likely breakout/breakdown level
-      levelAlignment = 9;
-    } else if (nearestDist <= 0.02) {
-      // Strike is near a high-OI level (within 2%) — near support/resistance
-      levelAlignment = 5;
-    } else if (nearestDist <= 0.05) {
-      // Strike is in the vicinity of a key level (within 5%)
-      levelAlignment = 3;
+    // Find nearest high-OI gamma level
+    let nearestLevel = keyLevels[0];
+    let nearestDist = Infinity;
+    for (const kl of keyLevels) {
+      const dist = Math.abs(strike - kl) / Math.max(strike, 1);
+      if (dist < nearestDist) {
+        nearestDist = dist;
+        nearestLevel = kl;
+      }
     }
     
-    // Bonus: if stock price is also near the strike AND near a key level, 
-    // it suggests active price action at this level = trend alignment
+    if (nearestDist <= 0.005) {
+      levelAlignment = 9;
+      gammaLevelLabel = `At $${nearestLevel} gamma level`;
+    } else if (nearestDist <= 0.02) {
+      levelAlignment = 5;
+      gammaLevelLabel = `Near $${nearestLevel} S/R level`;
+    } else if (nearestDist <= 0.05) {
+      levelAlignment = 3;
+      gammaLevelLabel = `Near $${nearestLevel} gamma zone`;
+    }
+    
+    // Bonus: stock price also near the strike at a key level = trend aligned
     if (stockPrice && stockPrice > 0 && levelAlignment >= 5) {
       const priceDist = Math.abs(stockPrice - strike) / stockPrice;
       if (priceDist <= 0.03) {
-        // Stock is within 3% of the strike which is at a key level = trend aligned
         levelAlignment = Math.min(15, levelAlignment + 3);
+        gammaLevelLabel = gammaLevelLabel ? `${gammaLevelLabel} — price converging` : `Price at $${nearestLevel} gamma level`;
       }
     }
   } else if (strike > 0) {
-    // No key levels data but check for round-number psychological S/R
     const isRoundNumber = strike % 10 === 0 || (strike >= 100 && strike % 25 === 0);
-    if (isRoundNumber) levelAlignment = 3;
+    if (isRoundNumber) {
+      levelAlignment = 3;
+      gammaLevelLabel = `$${strike} psychological level`;
+    }
   }
 
   // 8) Penalties (subtract 0–20)
@@ -185,6 +196,7 @@ export function computeWhaleConviction(input: WhaleScoreInput): WhaleScoreResult
   return {
     score,
     label,
+    gammaLevelLabel,
     breakdown: { size, aggression, urgency, strikeQuality, newPositioning, stacking, levelAlignment, penalties },
   };
 }
