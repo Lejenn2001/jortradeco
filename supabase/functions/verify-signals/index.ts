@@ -3,10 +3,11 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 const UW_BASE = "https://api.unusualwhales.com/api";
+const BATCH_SIZE = 20; // Process max 20 signals per invocation
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -20,94 +21,102 @@ serve(async (req) => {
   );
 
   try {
-    // Get all pending signals
+    // Get only recent pending signals (batch)
     const { data: pending, error: fetchErr } = await supabase
       .from("signal_outcomes")
       .select("*")
-      .eq("outcome", "pending");
+      .eq("outcome", "pending")
+      .order("created_at", { ascending: false })
+      .limit(BATCH_SIZE);
 
     if (fetchErr) throw fetchErr;
     if (!pending || pending.length === 0) {
-      return new Response(JSON.stringify({ message: "No pending signals to verify", verified: 0 }), {
+      return new Response(JSON.stringify({ message: "No pending signals to verify", verified: 0, hits: 0, misses: 0 }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Get unique tickers to look up
+    // Get unique tickers from this batch only
     const tickers = [...new Set(pending.map((s: any) => s.ticker))];
     const priceMap: Record<string, number> = {};
 
-    // Fetch current price for each ticker using options-volume (has underlying price)
     const uwHeaders = {
       Authorization: `Bearer ${apiKey}`,
       Accept: "application/json",
     };
 
     // Log API usage
-    const logRows = tickers.map((t) => ({ api_name: "unusual_whales", endpoint: `options-volume-verify-${t}` }));
+    const logRows = tickers.map((t) => ({ api_name: "unusual_whales", endpoint: `verify-${t}` }));
     await supabase.from("api_usage_log").insert(logRows);
 
-    for (const ticker of tickers) {
-      try {
-        const res = await fetch(`${UW_BASE}/stock/${ticker}/options-volume`, { headers: uwHeaders });
-        if (res.ok) {
-          const json = await res.json();
-          // The options-volume endpoint returns data with underlying price info
-          // Try to extract the latest price from the data
-          const records = json?.data || [];
-          if (records.length > 0) {
-            const latest = records[records.length - 1];
-            const price = parseFloat(latest.close || latest.price || latest.underlying_price || "0");
-            if (price > 0) priceMap[ticker] = price;
+    // Fetch prices in parallel (max 5 concurrent)
+    const chunks: string[][] = [];
+    for (let i = 0; i < tickers.length; i += 5) {
+      chunks.push(tickers.slice(i, i + 5));
+    }
+
+    for (const chunk of chunks) {
+      const results = await Promise.allSettled(
+        chunk.map(async (ticker) => {
+          try {
+            const res = await fetch(`${UW_BASE}/stock/${ticker}/options-volume`, { headers: uwHeaders });
+            if (res.ok) {
+              const json = await res.json();
+              const records = json?.data || [];
+              if (records.length > 0) {
+                const latest = records[records.length - 1];
+                const price = parseFloat(latest.close || latest.price || latest.underlying_price || "0");
+                if (price > 0) priceMap[ticker] = price;
+              }
+            }
+          } catch (e) {
+            console.warn(`Failed to get price for ${ticker}:`, e);
           }
-        }
-      } catch (e) {
-        console.warn(`Failed to get price for ${ticker}:`, e);
+        })
+      );
+      // Brief delay between chunks
+      if (chunks.indexOf(chunk) < chunks.length - 1) {
+        await new Promise((r) => setTimeout(r, 300));
       }
-      // Small delay to respect rate limits
-      await new Promise((r) => setTimeout(r, 600));
     }
 
     let verified = 0;
     let hits = 0;
     let misses = 0;
+    let expired = 0;
 
     for (const signal of pending as any[]) {
       const currentPrice = priceMap[signal.ticker];
       if (!currentPrice) continue;
 
       const strike = parseFloat((signal.strike || "").replace(/[$,]/g, ""));
-      if (!strike || isNaN(strike)) continue;
-
-      // Check if signal has expired (past expiry date)
       const now = new Date();
       const expiryDate = signal.expiry ? new Date(signal.expiry) : null;
       const isExpired = expiryDate && expiryDate < now;
 
-      // Determine if signal was correct:
-      // Bullish/Call: price went ABOVE strike = hit
-      // Bearish/Put: price went BELOW strike = hit
       let outcome: string | null = null;
 
       if (signal.signal_type === "bullish" || signal.put_call === "call") {
-        if (currentPrice > strike) {
+        if (currentPrice > strike && strike > 0) {
           outcome = "hit";
           hits++;
         } else if (isExpired) {
-          outcome = "missed";
-          misses++;
+          outcome = strike > 0 ? "missed" : "expired";
+          if (outcome === "missed") misses++;
+          else expired++;
         }
       } else if (signal.signal_type === "bearish" || signal.put_call === "put") {
-        if (currentPrice < strike) {
+        if (currentPrice < strike && strike > 0) {
           outcome = "hit";
           hits++;
         } else if (isExpired) {
-          outcome = "missed";
-          misses++;
+          outcome = strike > 0 ? "missed" : "expired";
+          if (outcome === "missed") misses++;
+          else expired++;
         }
       }
 
-      // Also check target zone if available
+      // Check target zone
       if (!outcome && signal.target_zone) {
         const targetMatch = signal.target_zone.match(/\$([\d.]+)/);
         if (targetMatch) {
@@ -119,6 +128,15 @@ serve(async (req) => {
             outcome = "hit";
             hits++;
           }
+        }
+      }
+
+      // Mark very old signals (>30 days) as expired
+      if (!outcome) {
+        const age = (now.getTime() - new Date(signal.created_at).getTime()) / (1000 * 60 * 60 * 24);
+        if (age > 30) {
+          outcome = "expired";
+          expired++;
         }
       }
 
@@ -135,14 +153,22 @@ serve(async (req) => {
       }
     }
 
+    // Count remaining pending
+    const { count: remainingCount } = await supabase
+      .from("signal_outcomes")
+      .select("id", { count: "exact", head: true })
+      .eq("outcome", "pending");
+
     return new Response(
       JSON.stringify({
         message: `Verified ${verified} signals`,
         verified,
         hits,
         misses,
+        expired,
         prices: priceMap,
-        pending_count: pending.length,
+        batch_size: pending.length,
+        remaining_pending: remainingCount || 0,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
