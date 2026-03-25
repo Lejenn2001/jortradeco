@@ -14,8 +14,14 @@ const Dashboard = () => {
 
   // Dashboard only shows the absolute best — top 2-3 highest conviction
   const topSignals = useMemo(() => {
-    return [...signals]
-      .sort((a, b) => (b.convictionScore ?? b.confidence * 10) - (a.convictionScore ?? a.confidence * 10))
+    // Prioritize live signals over examples
+    const live = signals.filter(s => s.source === 'live');
+    const examples = signals.filter(s => s.source !== 'live');
+    const sorted = [
+      ...live.sort((a, b) => (b.convictionScore ?? 0) - (a.convictionScore ?? 0)),
+      ...examples.sort((a, b) => (b.convictionScore ?? 0) - (a.convictionScore ?? 0)),
+    ];
+    return sorted
       .filter(s => (s.convictionScore ?? s.confidence * 10) >= 60)
       .slice(0, 3);
   }, [signals]);
