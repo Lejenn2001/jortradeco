@@ -167,7 +167,17 @@ function SignalRow({ signal }: { signal: MarketSignal }) {
     : score >= 75 ? "border-accent text-accent" 
     : score >= 60 ? "border-primary text-primary" 
     : "border-muted-foreground text-muted-foreground";
-  const scoreBadge = score >= 90 ? "🔥" : score >= 75 ? "⚡" : score >= 60 ? "📊" : null;
+  const scoreBg = score >= 90 ? "bg-destructive/10" 
+    : score >= 75 ? "bg-accent/10" 
+    : score >= 60 ? "bg-primary/10" 
+    : "bg-muted/20";
+  const convictionLabel = score >= 95 ? "Ultra Conviction"
+    : score >= 90 ? "Extreme Conviction"
+    : score >= 80 ? "Very High Conviction"
+    : score >= 70 ? "High Conviction"
+    : score >= 60 ? "Elevated Conviction"
+    : score >= 40 ? "Moderate Conviction"
+    : "Low Conviction";
 
   return (
     <div className="px-5 py-4 hover:bg-muted/20 transition-colors">
