@@ -9,6 +9,7 @@ const corsHeaders = {
 const BIDDIE_USER_ID = "00000000-0000-0000-0000-000000000000";
 const BIDDIE_NAME = "🤖 Biddie AI";
 const REPLIT_API = "https://dc9f5714-8a88-4d03-b91b-f82647f969bd-00-22sbppmc01524.riker.replit.dev/api/whale/chat";
+const CHAT_BREVITY = " IMPORTANT: Keep your response to 2-3 sentences max. Only mention the single best/highest conviction play. No lists of multiple contracts. Be concise like a quick chat message.";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -46,7 +47,7 @@ serve(async (req) => {
         const res = await fetch(REPLIT_API, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: "Good morning! Give me a quick market overview and any top setups for today." }),
+          body: JSON.stringify({ message: "Good morning! Give me a quick market overview and the single top setup for today." + CHAT_BREVITY }),
         });
         if (res.ok) {
           const data = await res.json();
@@ -95,7 +96,7 @@ serve(async (req) => {
 
       const alertData = body.alertData || {};
       const ticker = alertData.ticker || "Unknown";
-      const alertMsg = `What's the latest whale flow on ${ticker}? Give me a quick breakdown.`;
+      const alertMsg = `What's the latest whale flow on ${ticker}? Give me just the single highest conviction play.` + CHAT_BREVITY;
 
       try {
         const res = await fetch(REPLIT_API, {
@@ -150,7 +151,7 @@ serve(async (req) => {
       }
 
       // Strip the @biddie tag and send the rest to Replit API
-      const cleanMessage = messageContent.replace(/@?\s*biddie\s*/i, "").trim() || "What's the market looking like right now?";
+      const cleanMessage = (messageContent.replace(/@?\s*biddie\s*/i, "").trim() || "What's the market looking like right now?") + CHAT_BREVITY;
 
       try {
         const res = await fetch(REPLIT_API, {
