@@ -235,7 +235,7 @@ const DashboardCommunity = () => {
 
                     {/* Message Bubble */}
                     <div
-                      className={`max-w-[70%] rounded-2xl px-3 py-2 ${
+                      className={`max-w-[85%] sm:max-w-[70%] rounded-2xl px-2.5 sm:px-3 py-1.5 sm:py-2 ${
                         isBiddie
                           ? "bg-primary/10 border border-primary/25 rounded-bl-sm"
                           : isOwn
