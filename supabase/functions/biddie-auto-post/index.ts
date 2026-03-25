@@ -47,7 +47,7 @@ serve(async (req) => {
         const res = await fetch(REPLIT_API, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: "Good morning! Give me a quick market overview and any top setups for today." }),
+          body: JSON.stringify({ message: "Good morning! Give me a quick market overview and the single top setup for today." + CHAT_BREVITY }),
         });
         if (res.ok) {
           const data = await res.json();
