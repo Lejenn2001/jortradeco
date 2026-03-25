@@ -387,7 +387,11 @@ function saveCachedSignals(signals: MarketSignal[]) {
 }
 
 export function useMarketData() {
-  const [signals, setSignals] = useState<MarketSignal[]>(() => loadCachedSignals() || exampleSignals);
+  const [signals, setSignals] = useState<MarketSignal[]>(() => {
+    const cached = loadCachedSignals();
+    const source = cached || exampleSignals;
+    return source.filter(s => (s.convictionScore ?? s.confidence * 10) >= 80);
+  });
   const [whaleAlerts, setWhaleAlerts] = useState<FlowAlert[]>([]);
   const [marketOverview, setMarketOverview] = useState<any>(null);
   const [loading, setLoading] = useState(true);
