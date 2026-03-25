@@ -418,64 +418,47 @@ export function useMarketData() {
             const tags = [...(s.tags || [])];
             if (s.has_sweep && !tags.includes('Sweep')) tags.push('Sweep');
 
-            // Hybrid scoring: Replit signals already have Claude-analyzed confidence (0-10)
-            // Use confidence as primary baseline, boost with any whale data available
+            // Full whale scoring model using all available Replit API data
             const strikeNum = parseFloat(String(s.strike)) || 0;
             const premiumNum = typeof s.premium === 'number' ? s.premium : parseFloat(String(s.premium)) || 0;
-            const hasWhaleData = s.volume > 0 || s.open_interest > 0;
+            const volOiRatio = parseFloat(String(s.vol_oi_ratio)) || 0;
+            const currentPrice = parseFloat(String(s.current_price)) || 0;
 
-            let hybridScore: number;
-            let hybridLabel: string;
-            let gammaLabel: string | undefined;
+            // Derive volume/OI from vol_oi_ratio for scoring
+            // Use a synthetic OI of 100 so volume = ratio * 100 preserves the ratio
+            const syntheticOI = volOiRatio > 0 ? 100 : 0;
+            const syntheticVolume = Math.round(volOiRatio * 100);
 
-            if (hasWhaleData) {
-              // Full scoring when whale data available
-              const scoreResult = computeWhaleConviction({
-                premium: premiumNum,
-                alertRule: s.has_sweep ? 'sweep' : (s.alert_rule || 'flow'),
-                dte: computeDte(s.expiry),
-                moneynessPct: computeMoneyness(strikeNum, s.stock_price ?? null),
-                volume: s.volume || 0,
-                openInterest: s.open_interest || 0,
-                tradeCount: s.trade_count || 1,
-                ticker: s.ticker,
-                strike: strikeNum,
-                stockPrice: s.stock_price,
-                keyLevels: Array.isArray(s.key_levels) ? s.key_levels.map(Number).filter((n: number) => !isNaN(n)) : undefined,
-                isSpread: s.is_spread || false,
-                isDeepItm: s.is_deep_itm || false,
-              });
-              hybridScore = scoreResult.score;
-              hybridLabel = scoreResult.label;
-              gammaLabel = scoreResult.gammaLevelLabel;
-            } else {
-              // Hybrid: map Replit confidence (0-10) to conviction score
-              // confidence 10 = 95, 9.5 = 90, 9 = 85, 8.5 = 78, 8 = 72, 7.5 = 65, 7 = 58
-              const baseScore = Math.round(s.confidence * 10);
-              
-              // Apply bonuses from available data
-              let bonus = 0;
-              if (s.has_sweep) bonus += 8;  // sweeps = aggressive
-              if (premiumNum >= 1_000_000) bonus += 5;
-              else if (premiumNum >= 500_000) bonus += 3;
-              if (s.trade_count && s.trade_count >= 3) bonus += 3;
-              
-              // DTE bonus for short-dated (urgency)
-              const dte = computeDte(s.expiry);
-              if (dte <= 2) bonus += 5;
-              else if (dte <= 7) bonus += 3;
-              
-              hybridScore = Math.min(100, Math.max(0, baseScore + bonus));
-              hybridLabel = hybridScore >= 90 ? "Extreme Conviction"
-                : hybridScore >= 75 ? "Very High Conviction"
-                : hybridScore >= 60 ? "High Conviction"
-                : hybridScore >= 40 ? "Moderate Conviction"
-                : "Low Conviction";
-              
-              // Check for key level alignment if key_levels provided
-              if (s.key_level) {
-                gammaLabel = `Near ${s.key_level} level`;
-              }
+            // Map ask_aggression_pct to alert rule: 95%+ = sweep-level aggression
+            const askAgg = parseFloat(String(s.ask_aggression_pct)) || 0;
+            const inferredRule = s.has_sweep ? 'sweep' 
+              : askAgg >= 95 ? 'sweep'  // 95%+ ask aggression = sweep-equivalent
+              : askAgg >= 70 ? 'repeated'
+              : 'flow';
+
+            const scoreResult = computeWhaleConviction({
+              premium: premiumNum,
+              alertRule: inferredRule,
+              dte: computeDte(s.expiry),
+              moneynessPct: computeMoneyness(strikeNum, currentPrice || null),
+              volume: syntheticVolume,
+              openInterest: syntheticOI,
+              tradeCount: s.trade_count || 1,
+              ticker: s.ticker,
+              strike: strikeNum,
+              stockPrice: currentPrice || undefined,
+              keyLevels: undefined, // Replit doesn't provide gamma levels
+              isSpread: false,
+              isDeepItm: false,
+            });
+
+            let hybridScore = scoreResult.score;
+            let hybridLabel = scoreResult.label;
+            let gammaLabel = scoreResult.gammaLevelLabel;
+
+            // Key level from Claude analysis
+            if (s.key_level && !gammaLabel) {
+              gammaLabel = `Near ${s.key_level} level`;
             }
 
             // Use scored tags

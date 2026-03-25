@@ -46,7 +46,18 @@ const PerformanceSnapshot = () => {
     }
   };
 
-  useEffect(() => { fetchStats(); }, []);
+  // Auto-verify on mount, then refresh stats
+  useEffect(() => {
+    const autoVerify = async () => {
+      try {
+        await supabase.functions.invoke("verify-signals");
+      } catch (e) {
+        console.warn("Auto-verify failed:", e);
+      }
+      fetchStats();
+    };
+    autoVerify();
+  }, []);
 
   const handleVerify = async () => {
     setVerifying(true);
