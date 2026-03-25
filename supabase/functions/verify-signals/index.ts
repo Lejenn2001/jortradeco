@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 const UW_BASE = "https://api.unusualwhales.com/api";
-const BATCH_SIZE = 20; // Process max 20 signals per invocation
+const BATCH_SIZE = 20;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -21,7 +21,7 @@ serve(async (req) => {
   );
 
   try {
-    // Get only recent pending signals (batch)
+    // Get recent pending signals
     const { data: pending, error: fetchErr } = await supabase
       .from("signal_outcomes")
       .select("*")
@@ -36,7 +36,6 @@ serve(async (req) => {
       });
     }
 
-    // Get unique tickers from this batch only
     const tickers = [...new Set(pending.map((s: any) => s.ticker))];
     const priceMap: Record<string, number> = {};
 
@@ -46,44 +45,37 @@ serve(async (req) => {
     };
 
     // Log API usage
-    const logRows = tickers.map((t) => ({ api_name: "unusual_whales", endpoint: `verify-${t}` }));
-    await supabase.from("api_usage_log").insert(logRows);
+    await supabase.from("api_usage_log").insert(
+      tickers.map((t) => ({ api_name: "unusual_whales", endpoint: `verify-flow-${t}` }))
+    );
 
-    // Fetch prices in parallel (max 5 concurrent)
-    const chunks: string[][] = [];
-    for (let i = 0; i < tickers.length; i += 5) {
-      chunks.push(tickers.slice(i, i + 5));
-    }
-
-    for (const chunk of chunks) {
-      const results = await Promise.allSettled(
-        chunk.map(async (ticker) => {
-          try {
-            const res = await fetch(`${UW_BASE}/stock/${ticker}/options-volume`, { headers: uwHeaders });
-            if (res.ok) {
-              const json = await res.json();
-              const records = json?.data || [];
-              if (records.length > 0) {
-                const latest = records[records.length - 1];
-                const price = parseFloat(latest.close || latest.price || latest.underlying_price || "0");
-                if (price > 0) priceMap[ticker] = price;
-              }
+    // Fetch prices using flow-recent which has underlying_price
+    for (const ticker of tickers) {
+      try {
+        const res = await fetch(`${UW_BASE}/stock/${ticker}/flow-recent?limit=1`, { headers: uwHeaders });
+        if (res.ok) {
+          const json = await res.json();
+          const records = json?.data || [];
+          if (records.length > 0) {
+            const latest = records[0];
+            const price = parseFloat(
+              latest.stock_price || latest.underlying_price || latest.price || "0"
+            );
+            if (price > 0) {
+              priceMap[ticker] = price;
+              console.log(`Price for ${ticker}: $${price}`);
             }
-          } catch (e) {
-            console.warn(`Failed to get price for ${ticker}:`, e);
           }
-        })
-      );
-      // Brief delay between chunks
-      if (chunks.indexOf(chunk) < chunks.length - 1) {
-        await new Promise((r) => setTimeout(r, 300));
+        } else {
+          console.warn(`flow-recent ${ticker}: ${res.status}`);
+        }
+      } catch (e) {
+        console.warn(`Failed to get price for ${ticker}:`, e);
       }
+      await new Promise((r) => setTimeout(r, 200));
     }
 
-    let verified = 0;
-    let hits = 0;
-    let misses = 0;
-    let expired = 0;
+    let verified = 0, hits = 0, misses = 0, expired = 0;
 
     for (const signal of pending as any[]) {
       const currentPrice = priceMap[signal.ticker];
@@ -96,23 +88,13 @@ serve(async (req) => {
 
       let outcome: string | null = null;
 
-      if (signal.signal_type === "bullish" || signal.put_call === "call") {
-        if (currentPrice > strike && strike > 0) {
-          outcome = "hit";
-          hits++;
-        } else if (isExpired) {
-          outcome = strike > 0 ? "missed" : "expired";
-          if (outcome === "missed") misses++;
-          else expired++;
-        }
-      } else if (signal.signal_type === "bearish" || signal.put_call === "put") {
-        if (currentPrice < strike && strike > 0) {
-          outcome = "hit";
-          hits++;
-        } else if (isExpired) {
-          outcome = strike > 0 ? "missed" : "expired";
-          if (outcome === "missed") misses++;
-          else expired++;
+      if (strike > 0) {
+        if (signal.signal_type === "bullish" || signal.put_call === "call") {
+          if (currentPrice > strike) { outcome = "hit"; hits++; }
+          else if (isExpired) { outcome = "missed"; misses++; }
+        } else if (signal.signal_type === "bearish" || signal.put_call === "put") {
+          if (currentPrice < strike) { outcome = "hit"; hits++; }
+          else if (isExpired) { outcome = "missed"; misses++; }
         }
       }
 
@@ -121,39 +103,27 @@ serve(async (req) => {
         const targetMatch = signal.target_zone.match(/\$([\d.]+)/);
         if (targetMatch) {
           const target = parseFloat(targetMatch[1]);
-          if (signal.signal_type === "bullish" && currentPrice >= target) {
-            outcome = "hit";
-            hits++;
-          } else if (signal.signal_type === "bearish" && currentPrice <= target) {
-            outcome = "hit";
-            hits++;
-          }
+          if (signal.signal_type === "bullish" && currentPrice >= target) { outcome = "hit"; hits++; }
+          else if (signal.signal_type === "bearish" && currentPrice <= target) { outcome = "hit"; hits++; }
         }
       }
 
-      // Mark very old signals (>30 days) as expired
+      // Expire very old signals (>30 days)
       if (!outcome) {
-        const age = (now.getTime() - new Date(signal.created_at).getTime()) / (1000 * 60 * 60 * 24);
-        if (age > 30) {
-          outcome = "expired";
-          expired++;
-        }
+        const ageDays = (now.getTime() - new Date(signal.created_at).getTime()) / (1000 * 60 * 60 * 24);
+        if (ageDays > 30 || isExpired) { outcome = "expired"; expired++; }
       }
 
       if (outcome) {
-        await supabase
-          .from("signal_outcomes")
-          .update({
-            outcome,
-            outcome_price: currentPrice,
-            resolved_at: new Date().toISOString(),
-          })
-          .eq("id", signal.id);
+        await supabase.from("signal_outcomes").update({
+          outcome,
+          outcome_price: currentPrice,
+          resolved_at: new Date().toISOString(),
+        }).eq("id", signal.id);
         verified++;
       }
     }
 
-    // Count remaining pending
     const { count: remainingCount } = await supabase
       .from("signal_outcomes")
       .select("id", { count: "exact", head: true })
@@ -162,10 +132,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         message: `Verified ${verified} signals`,
-        verified,
-        hits,
-        misses,
-        expired,
+        verified, hits, misses, expired,
         prices: priceMap,
         batch_size: pending.length,
         remaining_pending: remainingCount || 0,
