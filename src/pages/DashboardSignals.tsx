@@ -77,17 +77,11 @@ const DashboardSignals = () => {
       <DashboardSidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <DashboardHeader />
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-5">
+        <main className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-4">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div>
-              <h1 className="text-2xl font-extrabold text-foreground">Live Signals</h1>
-              <p className="text-sm text-muted-foreground">Organized by trade timeframe — newest first</p>
-            </div>
-            <div className="flex items-center gap-2 text-xs">
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-muted-foreground">{totalCount} signals this week</span>
-            </div>
+          <div className="flex flex-col gap-1">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-foreground">Live Signals</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">Organized by trade timeframe — newest first</p>
           </div>
 
           {/* Filters */}
@@ -133,12 +127,10 @@ const DashboardSignals = () => {
             return (
               <div key={timeframe} className={`glass-panel rounded-xl border ${meta.accent} overflow-hidden`}>
                 {/* Section Header */}
-                <div className="px-5 py-3 border-b border-border/30 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {meta.icon}
-                    <span className="font-bold text-sm text-foreground">{meta.label}</span>
-                    <span className="text-xs text-muted-foreground">— {meta.description}</span>
-                  </div>
+                <div className="px-3 sm:px-5 py-2.5 border-b border-border/30 flex items-center gap-2 flex-wrap">
+                  {meta.icon}
+                  <span className="font-bold text-xs sm:text-sm text-foreground">{meta.label}</span>
+                  <span className="text-[10px] sm:text-xs text-muted-foreground hidden sm:inline">— {meta.description}</span>
                 </div>
 
                 {/* Signal cards */}
