@@ -122,10 +122,27 @@ const DashboardCommunity = () => {
       toast({ title: "Error sending message", description: error.message, variant: "destructive" });
     } else {
       setInput("");
-      // Check if message mentions Biddie (case-insensitive)
+      // Auto-detect trading questions OR explicit @Biddie mentions
       const lower = messageText.toLowerCase();
-      if (lower.includes("biddie") || lower.includes("@biddie")) {
-        // Strip the @Biddie prefix and send the rest to the API
+      const hasBiddieMention = lower.includes("biddie") || lower.includes("@biddie");
+      const tradingKeywords = [
+        "what's the play", "whats the play", "what is the play",
+        "best setup", "any plays", "what's pumping", "whats pumping",
+        "options flow", "unusual flow", "whale", "signal",
+        "calls or puts", "bull or bear", "bullish or bearish",
+        "spy", "qqq", "iwm", "nvda", "amd", "tsla", "aapl", "googl", "amzn", "meta",
+        "put spread", "call spread", "debit spread", "credit spread",
+        "what should i buy", "what should i trade", "any setups",
+        "is it bussin", "what's cooking", "whats cooking",
+        "momentum", "breakout", "breakdown", "entry", "strike",
+        "expir", "premium", "sweep", "gamma", "vwap",
+        "support", "resistance", "pivot", "target",
+        "what do you think about", "how's", "hows",
+        "should i", "would you", "is it time",
+      ];
+      const isTradingQuestion = tradingKeywords.some(kw => lower.includes(kw));
+      
+      if (hasBiddieMention || isTradingQuestion) {
         const cleanMsg = messageText.replace(/@?biddie[,:]?\s*/i, "").trim() || messageText;
         triggerBiddie(cleanMsg);
       }
@@ -261,7 +278,7 @@ const DashboardCommunity = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={`Message as ${firstName}... (type @Biddie to ask AI)`}
+              placeholder={`Message as ${firstName}... (Biddie auto-responds to trading questions)`}
               className="bg-muted/30 border-border/50 flex-1 focus:border-primary/50 transition-colors h-9 text-sm"
               maxLength={500}
             />
