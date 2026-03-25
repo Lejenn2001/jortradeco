@@ -10,6 +10,31 @@ const BIDDIE_USER_ID = "00000000-0000-0000-0000-000000000000";
 const BIDDIE_NAME = "🤖 Biddie AI";
 const REPLIT_API = "https://dc9f5714-8a88-4d03-b91b-f82647f969bd-00-22sbppmc01524.riker.replit.dev/api/whale/chat";
 const CHAT_BREVITY = " IMPORTANT: Keep response to 3 sentences max. Include ONE specific actionable contract recommendation with: ticker, call/put, strike price, expiration date, and your confidence level (low/medium/high/very high). Example format: 'Watching AAPL 200C 4/18 — high confidence, premium around $2.50, targeting the $205 zone.' Be concise like a quick trade alert.";
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 5000;
+
+async function fetchReplit(message: string): Promise<{ ok: boolean; analysis?: string }> {
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      const res = await fetch(REPLIT_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return { ok: true, analysis: data.analysis };
+      }
+      console.warn(`Replit attempt ${attempt + 1} failed: ${res.status}`);
+    } catch (e) {
+      console.warn(`Replit attempt ${attempt + 1} error:`, e);
+    }
+    if (attempt < MAX_RETRIES - 1) {
+      await new Promise(r => setTimeout(r, RETRY_DELAY_MS));
+    }
+  }
+  return { ok: false };
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -42,27 +67,18 @@ serve(async (req) => {
         });
       }
 
-      // Use Replit API for morning overview
-      try {
-        const res = await fetch(REPLIT_API, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: "Good morning! Give me a quick market overview and the single top setup for today." + CHAT_BREVITY }),
+      // Use Replit API for morning overview (with retry)
+      const result = await fetchReplit("Good morning! Give me a quick market overview and the single top setup for today." + CHAT_BREVITY);
+      if (result.ok && result.analysis) {
+        const content = `Good morning JORTRADE fam! 🌅\n\n${result.analysis}`;
+        await supabase.from("chat_messages").insert({
+          user_id: BIDDIE_USER_ID,
+          user_name: BIDDIE_NAME,
+          content,
         });
-        if (res.ok) {
-          const data = await res.json();
-          const content = `Good morning JORTRADE fam! 🌅\n\n${data.analysis || "Let's have a great trading day! Check the signals for early setups."}`;
-          await supabase.from("chat_messages").insert({
-            user_id: BIDDIE_USER_ID,
-            user_name: BIDDIE_NAME,
-            content,
-          });
-          return new Response(JSON.stringify({ status: "posted", action }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-      } catch (e) {
-        console.warn("Replit API failed for morning post:", e);
+        return new Response(JSON.stringify({ status: "posted", action }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
 
       // Fallback
@@ -98,26 +114,17 @@ serve(async (req) => {
       const ticker = alertData.ticker || "Unknown";
       const alertMsg = `What's the latest whale flow on ${ticker}? Give me just the single highest conviction play.` + CHAT_BREVITY;
 
-      try {
-        const res = await fetch(REPLIT_API, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: alertMsg }),
+      const result = await fetchReplit(alertMsg);
+      if (result.ok && result.analysis) {
+        const content = `🚨 **Whale Alert — ${ticker}**\n\n${result.analysis}`;
+        await supabase.from("chat_messages").insert({
+          user_id: BIDDIE_USER_ID,
+          user_name: BIDDIE_NAME,
+          content,
         });
-        if (res.ok) {
-          const data = await res.json();
-          const content = `🚨 **Whale Alert — ${ticker}**\n\n${data.analysis || "Big flow detected. Check the signals page for details!"}`;
-          await supabase.from("chat_messages").insert({
-            user_id: BIDDIE_USER_ID,
-            user_name: BIDDIE_NAME,
-            content,
-          });
-          return new Response(JSON.stringify({ status: "posted", action }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-      } catch (e) {
-        console.warn("Replit API failed for alert:", e);
+        return new Response(JSON.stringify({ status: "posted", action }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
 
       await supabase.from("chat_messages").insert({
@@ -153,27 +160,16 @@ serve(async (req) => {
       // Strip the @biddie tag and send the rest to Replit API
       const cleanMessage = (messageContent.replace(/@?\s*biddie\s*/i, "").trim() || "What's the market looking like right now?") + CHAT_BREVITY;
 
-      try {
-        const res = await fetch(REPLIT_API, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: cleanMessage }),
+      const result = await fetchReplit(cleanMessage);
+      if (result.ok && result.analysis) {
+        await supabase.from("chat_messages").insert({
+          user_id: BIDDIE_USER_ID,
+          user_name: BIDDIE_NAME,
+          content: result.analysis,
         });
-
-        if (res.ok) {
-          const data = await res.json();
-          const reply = data.analysis || "I'm having trouble getting data right now. Try again in a moment!";
-          await supabase.from("chat_messages").insert({
-            user_id: BIDDIE_USER_ID,
-            user_name: BIDDIE_NAME,
-            content: reply,
-          });
-          return new Response(JSON.stringify({ status: "replied" }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-      } catch (e) {
-        console.warn("Replit API failed for reply:", e);
+        return new Response(JSON.stringify({ status: "replied" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
 
       // Fallback using Lovable AI
