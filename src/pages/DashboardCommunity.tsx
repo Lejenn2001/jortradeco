@@ -149,8 +149,6 @@ const DashboardCommunity = () => {
       }
     }
     setSending(false);
-    }
-    setSending(false);
   };
 
   const deleteMessage = async (id: string) => {
