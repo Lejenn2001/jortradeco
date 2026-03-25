@@ -32,14 +32,12 @@ const LogoReveal: React.FC = () => {
         background: `radial-gradient(circle, rgba(60,130,255,${glowOpacity}) 0%, rgba(160,80,255,${glowOpacity * 0.5}) 40%, transparent 70%)`,
       }} />
 
-      {/* Logo text */}
-      <div style={{
+      {/* Logo */}
+      <Img src={staticFile("images/logo_jt.png")} style={{
         opacity, transform: `scale(${scale})`,
-        fontFamily: displayFont, fontSize: 120, fontWeight: 800,
-        color: "#fff", letterSpacing: "0.15em", textAlign: "center",
-      }}>
-        JORTRADE
-      </div>
+        width: 320, height: "auto",
+        filter: "drop-shadow(0 0 30px rgba(60,130,255,0.4))",
+      }} />
 
       {/* Accent line */}
       <div style={{
@@ -221,11 +219,10 @@ const ClosingCTA: React.FC = () => {
         background: `radial-gradient(circle, rgba(60,130,255,${glowPulse}) 0%, rgba(160,80,255,${glowPulse * 0.5}) 40%, transparent 65%)`,
       }} />
 
-      <div style={{ textAlign: "center", transform: `scale(${logoScale})` }}>
-        <div style={{ fontFamily: displayFont, fontSize: 100, fontWeight: 800, color: "#fff", letterSpacing: "0.12em" }}>
-          JORTRADE
-        </div>
-      </div>
+      <Img src={staticFile("images/logo_jt.png")} style={{
+        width: 280, height: "auto", transform: `scale(${logoScale})`,
+        filter: "drop-shadow(0 0 30px rgba(60,130,255,0.4))",
+      }} />
 
       <div style={{ width: lineWidth, height: 3, marginTop: 15, background: "linear-gradient(90deg, transparent, #3C82FF, #A050FF, transparent)" }} />
 
