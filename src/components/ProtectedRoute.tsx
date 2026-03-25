@@ -1,8 +1,10 @@
 import { useAuth } from "@/hooks/useAuth";
 import { Navigate } from "react-router-dom";
+import { usePresenceBroadcast } from "@/hooks/usePresence";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
+  usePresenceBroadcast();
 
   if (loading) {
     return (
