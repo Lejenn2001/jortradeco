@@ -10,6 +10,8 @@ export interface FlowAlert {
   sentiment: "bullish" | "bearish";
   time: string;
   explanation?: string;
+  convictionScore?: number;
+  convictionLabel?: string;
 }
 
 export type SignalTimeframe = "buy_now" | "short_term" | "swing";
@@ -19,6 +21,8 @@ export interface MarketSignal {
   ticker: string;
   type: "bullish" | "bearish" | "neutral";
   confidence: number;
+  convictionScore?: number;
+  convictionLabel?: string;
   description: string;
   timestamp: string;
   tags: string[];
@@ -40,6 +44,135 @@ export interface TickerData {
   volume: any;
 }
 
+// ─── JORTRADE Whale Conviction Scoring Model (0–100) ───
+
+const INDEX_HEAVY_TICKERS = new Set(['SPY', 'QQQ', 'TSLA', 'NVDA', 'SPX', 'NDX', 'AAPL', 'AMZN', 'META', 'MSFT', 'GOOGL']);
+
+interface WhaleScoreInput {
+  premium: number;           // total premium in dollars
+  alertRule: string;         // Sweep, Block, Repeated Hits, Flow
+  dte: number;               // days to expiry
+  moneynessPct: number;      // abs % OTM (0 = ATM, 0.05 = 5% OTM), -1 if unknown
+  volume: number;
+  openInterest: number;
+  tradeCount: number;        // proxy for stacking
+  ticker: string;
+  isSpread?: boolean;        // detected spread
+  isDeepItm?: boolean;       // deep ITM likely hedge
+}
+
+export interface WhaleScoreResult {
+  score: number;
+  label: string;
+  breakdown: {
+    size: number;
+    aggression: number;
+    urgency: number;
+    strikeQuality: number;
+    newPositioning: number;
+    stacking: number;
+    levelAlignment: number;
+    penalties: number;
+  };
+}
+
+export function computeWhaleConviction(input: WhaleScoreInput): WhaleScoreResult {
+  const { premium, alertRule, dte, moneynessPct, volume, openInterest, tradeCount, ticker, isSpread, isDeepItm } = input;
+
+  // 1) Size (0–20)
+  let size = 0;
+  if (premium >= 5_000_000) size = 20;
+  else if (premium >= 3_000_000) size = 16;
+  else if (premium >= 1_000_000) size = 12;
+  else if (premium >= 500_000) size = 8;
+  else if (premium >= 250_000) size = 4;
+
+  if (INDEX_HEAVY_TICKERS.has(ticker) && premium < 2_000_000) {
+    size = Math.round(size * 0.8);
+  }
+
+  // 2) Aggression (0–15)
+  const rule = (alertRule || '').toLowerCase();
+  let aggression = 2; // default mid
+  if (rule.includes('sweep')) aggression = 15;
+  else if (rule.includes('repeated')) aggression = 11;
+  else if (rule.includes('block')) aggression = 8;
+
+  // 3) Urgency / DTE (0–15)
+  let urgency = 2;
+  if (dte <= 2) urgency = 15;
+  else if (dte <= 7) urgency = 13;
+  else if (dte <= 14) urgency = 10;
+  else if (dte <= 30) urgency = 7;
+  else if (dte <= 60) urgency = 4;
+
+  // 4) Strike Quality (0–10)
+  let strikeQuality = 5; // default neutral when moneyness unknown
+  if (moneynessPct >= 0) {
+    if (moneynessPct <= 0.03) strikeQuality = 10;
+    else if (moneynessPct <= 0.07) strikeQuality = 7;
+    else if (moneynessPct <= 0.12) strikeQuality = 4;
+    else strikeQuality = 1;
+  }
+
+  // 5) New Positioning via vol/OI (0–15)
+  const oi = Math.max(openInterest, 1);
+  const ratio = volume / oi;
+  let newPositioning = 3;
+  if (ratio >= 5) newPositioning = 15;
+  else if (ratio >= 2) newPositioning = 11;
+  else if (ratio >= 1) newPositioning = 7;
+
+  // 6) Stacking (0–10) — using trade_count as proxy
+  let stacking = 2;
+  if (tradeCount >= 5) stacking = 10;
+  else if (tradeCount >= 3) stacking = 8;
+  else if (tradeCount >= 2) stacking = 5;
+
+  // 7) Level + Trend Alignment (0–15)
+  // We don't have chart data — default to "random" (2)
+  // Could be enhanced later with technical analysis integration
+  const levelAlignment = 2;
+
+  // 8) Penalties (subtract 0–20)
+  let penalties = 0;
+  if (isSpread) penalties += 10;
+  if (isDeepItm) penalties += 8;
+  if (moneynessPct > 0.12) penalties += 6; // far OTM lottery
+  if (dte > 60 && aggression <= 4) penalties += 4; // long-dated no urgency
+  if (tradeCount <= 1 && !rule.includes('sweep')) penalties += 5; // single block no follow-through
+
+  const raw = size + aggression + urgency + strikeQuality + newPositioning + stacking + levelAlignment - penalties;
+  const score = Math.max(0, Math.min(100, Math.round(raw)));
+
+  let label = "Low Conviction";
+  if (score >= 90) label = "Extreme Conviction";
+  else if (score >= 75) label = "Very High Conviction";
+  else if (score >= 60) label = "High Conviction";
+  else if (score >= 40) label = "Moderate Conviction";
+
+  return {
+    score,
+    label,
+    breakdown: { size, aggression, urgency, strikeQuality, newPositioning, stacking, levelAlignment, penalties },
+  };
+}
+
+function computeDte(expiryStr: string | null | undefined): number {
+  if (!expiryStr || expiryStr === 'N/A' || expiryStr === '—') return 30; // default moderate
+  const expDate = new Date(expiryStr);
+  if (isNaN(expDate.getTime())) return 30;
+  const now = new Date();
+  return Math.max(0, Math.ceil((expDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+}
+
+function computeMoneyness(strike: number, stockPrice: number | null | undefined): number {
+  if (!stockPrice || stockPrice <= 0 || strike <= 0) return -1; // unknown
+  return Math.abs(strike - stockPrice) / stockPrice;
+}
+
+// ─── End scoring model ───
+
 // High-conviction example signals based on recent whale activity
 const exampleSignals: MarketSignal[] = [
   {
@@ -47,6 +180,8 @@ const exampleSignals: MarketSignal[] = [
     ticker: "NVDA",
     type: "bullish",
     confidence: 9.4,
+    convictionScore: 92,
+    convictionLabel: "Extreme Conviction",
     description: "Massive call sweep activity detected on NVDA. Over $2.8M in premium on the $145 calls expiring March 27. Institutional flow is heavily skewed bullish with repeat sweeps at the ask. Volume-to-open-interest ratio is 4.2x — indicating new positioning, not hedging.",
     timestamp: "Fri 3:42 PM",
     tags: ["Call Flow", "Sweep", "🔥 ACT NOW"],
@@ -66,6 +201,8 @@ const exampleSignals: MarketSignal[] = [
     ticker: "TSLA",
     type: "bearish",
     confidence: 9.1,
+    convictionScore: 78,
+    convictionLabel: "Very High Conviction",
     description: "Aggressive put sweeps on TSLA totaling $1.9M in premium. The $250 puts expiring March 27 saw 6 consecutive sweeps at the ask within 12 minutes. Dark pool prints confirm institutional selling pressure near $260 resistance.",
     timestamp: "Fri 2:58 PM",
     tags: ["Put Flow", "Sweep", "🔥 ACT NOW"],
@@ -85,6 +222,8 @@ const exampleSignals: MarketSignal[] = [
     ticker: "AAPL",
     type: "bullish",
     confidence: 9.6,
+    convictionScore: 85,
+    convictionLabel: "Very High Conviction",
     description: "Whale alert: single-block $3.1M call order on AAPL $215 strike. Unusual volume spike with 5.8x average call volume. Options market makers are actively hedging long delta — a strong signal of directional conviction from smart money.",
     timestamp: "Fri 1:15 PM",
     tags: ["Call Flow", "Block", "🔥 ACT NOW"],
@@ -104,6 +243,8 @@ const exampleSignals: MarketSignal[] = [
     ticker: "SPY",
     type: "bearish",
     confidence: 9.8,
+    convictionScore: 88,
+    convictionLabel: "Very High Conviction",
     description: "Extreme put sweep cluster on SPY — $4.5M in $570 puts expiring March 27. 9 sweeps in under 20 minutes, all filled at the ask. Put/call ratio spiked to 2.1x. This is the highest conviction bearish flow seen this week across all indices.",
     timestamp: "Fri 12:30 PM",
     tags: ["Put Flow", "Sweep", "🔥 ACT NOW"],
@@ -123,6 +264,8 @@ const exampleSignals: MarketSignal[] = [
     ticker: "PLTR",
     type: "bullish",
     confidence: 9.2,
+    convictionScore: 72,
+    convictionLabel: "High Conviction",
     description: "Repeat call sweeps on PLTR at the $120 strike — $1.4M total premium across 4 sweeps. Unusual whales flagged this as top-tier flow. Open interest is building rapidly and the stock is consolidating near a breakout level.",
     timestamp: "Fri 11:45 AM",
     tags: ["Call Flow", "Sweep", "🔥 ACT NOW"],
@@ -142,6 +285,8 @@ const exampleSignals: MarketSignal[] = [
     ticker: "AMD",
     type: "bearish",
     confidence: 10.0,
+    convictionScore: 95,
+    convictionLabel: "Extreme Conviction",
     description: "Highest-conviction signal of the week: $5.2M in AMD $110 put sweeps. 12 consecutive sweeps at the ask, all within a 15-minute window. Dark pool short volume hit 62% — the highest level in 30 days. Smart money is positioning aggressively bearish.",
     timestamp: "Fri 10:22 AM",
     tags: ["Put Flow", "Sweep", "🔥 ACT NOW"],
@@ -158,21 +303,19 @@ const exampleSignals: MarketSignal[] = [
   },
 ];
 
-function classifyTimeframe(signal: { confidence: number; expiry?: string; createdAt?: string }): SignalTimeframe {
-  // Highest conviction or same-day expiry = BUY NOW
-  if (signal.confidence >= 9.5) return "buy_now";
+function classifyTimeframe(signal: { convictionScore?: number; confidence: number; expiry?: string }): SignalTimeframe {
+  const score = signal.convictionScore ?? 0;
+  
+  if (score >= 75) return "buy_now";
   
   if (signal.expiry) {
-    const expiryDate = new Date(signal.expiry);
-    const now = new Date();
-    const daysOut = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    if (daysOut <= 1) return "buy_now";
-    if (daysOut <= 3) return "short_term";
+    const dte = computeDte(signal.expiry);
+    if (dte <= 1) return "buy_now";
+    if (dte <= 7) return "short_term";
     return "swing";
   }
   
-  // Default: use confidence as tiebreaker
-  if (signal.confidence >= 9.0) return "short_term";
+  if (score >= 60) return "short_term";
   return "swing";
 }
 
@@ -214,64 +357,51 @@ export function useMarketData() {
 
       const alerts = data?.data || [];
       
-      if (alerts.length === 0) {
-        // Keep example signals as fallback
-        return;
-      }
+      if (alerts.length === 0) return;
 
-      // Transform flow alerts into signals with HIGH-CONVICTION filtering
-      // Based on Unusual Whales methodology:
-      // - Vol/OI >= 5x (new positions, not just existing trading)
-      // - Premium >= $25K (filters out retail noise)
-      // - Trade count >= 5 (repeated conviction)
-      type SignalWithPremium = MarketSignal & { _totalPremium: number };
-      const allSignals: SignalWithPremium[] = alerts
+      type SignalWithMeta = MarketSignal & { _totalPremium: number };
+      const allSignals: SignalWithMeta[] = alerts
         .filter((alert: any) => {
           const volOi = alert.volume_oi_ratio ? parseFloat(alert.volume_oi_ratio) : 0;
           const totalPremium = parseFloat(alert.total_premium || alert.premium || '0');
           const tradeCount = alert.trade_count || 0;
           const strike = alert.strike ? parseFloat(String(alert.strike).replace(/[^0-9.]/g, '')) : NaN;
-          // Must meet ALL minimum criteria — including a valid strike
           return volOi >= 5 && totalPremium >= 25000 && tradeCount >= 5 && !isNaN(strike) && strike > 0;
         })
         .map((alert: any, i: number) => {
           const putCall = alert.type === 'call' ? 'call' : 'put';
           const isBullish = putCall === 'call';
           const ticker = alert.ticker || alert.underlying_symbol || 'N/A';
-          const rawStrike = alert.strike ? parseFloat(String(alert.strike).replace(/[^0-9.]/g, '')) : NaN;
-          const hasValidStrike = !isNaN(rawStrike) && rawStrike > 0;
-          const strikeLabel = hasValidStrike ? String(rawStrike) : null;
+          const rawStrike = parseFloat(String(alert.strike).replace(/[^0-9.]/g, ''));
+          const strikeLabel = String(rawStrike);
           const totalPremium = parseFloat(alert.total_premium || alert.premium || '0');
           const premium = formatPremium(totalPremium);
           const expiry = alert.expiry || alert.expires || 'N/A';
           const flowType = alert.alert_rule?.includes('Sweep') ? 'Sweep' : 
                            alert.alert_rule?.includes('Block') ? 'Block' : 
                            alert.alert_rule?.includes('Repeated') ? 'Repeated Hits' : 'Flow';
-          const volOiRatio = alert.volume_oi_ratio ? parseFloat(alert.volume_oi_ratio) : null;
+          const volOiRatio = alert.volume_oi_ratio ? parseFloat(alert.volume_oi_ratio) : 0;
           const tradeCount = alert.trade_count || 0;
+          const stockPrice = parseFloat(alert.stock_price || alert.underlying_price || '0') || null;
 
-          // Approximate average daily option premium by ticker class
-          const MEGA_CAP = ['SPY', 'QQQ', 'NVDA', 'AAPL', 'TSLA', 'AMZN', 'META', 'MSFT', 'GOOGL', 'GOOG', 'SPX', 'NDX'];
-          const LARGE_CAP = ['AMD', 'NFLX', 'BA', 'JPM', 'GS', 'DIS', 'V', 'MA', 'UNH', 'XOM', 'HD', 'CRM', 'INTC', 'COST', 'WMT'];
-          const avgDailyPremium = MEGA_CAP.includes(ticker) ? 5_000_000
-            : LARGE_CAP.includes(ticker) ? 2_000_000
-            : 500_000;
+          // Compute whale conviction score
+          const dte = computeDte(expiry !== 'N/A' ? expiry : null);
+          const moneynessPct = computeMoneyness(rawStrike, stockPrice);
+          const scoreResult = computeWhaleConviction({
+            premium: totalPremium,
+            alertRule: alert.alert_rule || flowType,
+            dte,
+            moneynessPct,
+            volume: alert.volume || 0,
+            openInterest: alert.open_interest || 0,
+            tradeCount,
+            ticker,
+          });
 
-          const premiumRatio = totalPremium / avgDailyPremium;
+          // Convert 0-100 to 0-10 for backward compat display
+          const confidence = Math.min(10, parseFloat((scoreResult.score / 10).toFixed(1)));
 
-          let confidence = 8.5;
-          if (volOiRatio && volOiRatio >= 8) confidence += 0.4;
-          if (volOiRatio && volOiRatio >= 12) confidence += 0.3;
-          if (premiumRatio >= 0.05) confidence += 0.2;
-          if (premiumRatio >= 0.15) confidence += 0.3;
-          if (premiumRatio >= 0.40) confidence += 0.3;
-          if (tradeCount >= 8) confidence += 0.2;
-          if (tradeCount >= 12) confidence += 0.2;
-          // Penalize missing strike — less actionable without it
-          if (!hasValidStrike) confidence = Math.min(confidence, 8.8);
-          confidence = Math.min(10, parseFloat(confidence.toFixed(1)));
-
-          const urgencyTag = confidence >= 9.5 ? '🔥 ACT NOW' : confidence >= 9.0 ? '⚡ HIGH CONVICTION' : null;
+          const urgencyTag = scoreResult.score >= 75 ? '🔥 ACT NOW' : scoreResult.score >= 60 ? '⚡ HIGH CONVICTION' : null;
           const tags = [
             putCall === 'call' ? 'Call Flow' : 'Put Flow',
             flowType,
@@ -283,33 +413,25 @@ export function useMarketData() {
             ticker,
             type: isBullish ? 'bullish' as const : 'bearish' as const,
             confidence,
+            convictionScore: scoreResult.score,
+            convictionLabel: scoreResult.label,
             _totalPremium: totalPremium,
-            description: `${tradeCount} ${putCall} trades detected on ${ticker}${hasValidStrike ? ` at $${strikeLabel} strike` : ''}. Total premium: $${premium}. Volume/OI ratio: ${volOiRatio ? volOiRatio.toFixed(1) + 'x' : 'N/A'} — ${volOiRatio && volOiRatio >= 8 ? 'major new positioning' : 'significant new positioning'}.`,
+            description: `${tradeCount} ${putCall} trades detected on ${ticker} at $${strikeLabel} strike. Total premium: $${premium}. Volume/OI ratio: ${volOiRatio ? volOiRatio.toFixed(1) + 'x' : 'N/A'} — ${volOiRatio >= 8 ? 'major new positioning' : 'significant new positioning'}. Conviction: ${scoreResult.score}/100 (${scoreResult.label}).`,
             timestamp: alert.created_at ? timeAgo(alert.created_at) : 'just now',
             createdAt: alert.created_at || '',
             tags,
-            strike: hasValidStrike ? `$${strikeLabel}` : undefined,
+            strike: `$${strikeLabel}`,
             expiry: expiry && expiry !== 'N/A' ? expiry : undefined,
             premium: `$${premium}`,
             putCall: putCall as 'call' | 'put',
-            suggestedTrade: hasValidStrike
-              ? `Buy ${ticker} $${strikeLabel} ${putCall === 'call' ? 'Calls' : 'Puts'}${expiry && expiry !== 'N/A' ? ` expiring ${expiry}` : ''}`
-              : `${isBullish ? 'Bullish' : 'Bearish'} flow on ${ticker} — $${premium} in ${putCall} premium`,
-            entryTrigger: hasValidStrike
-              ? (isBullish ? `Break above $${strikeLabel} with volume` : `Break below $${strikeLabel} with volume`)
-              : undefined,
-            invalidation: hasValidStrike
-              ? `$${(rawStrike * (isBullish ? 0.97 : 1.03)).toFixed(2)}`
-              : undefined,
-            keyLevel: hasValidStrike
-              ? `$${(rawStrike * (isBullish ? 0.99 : 1.01)).toFixed(2)}`
-              : undefined,
-            targetZone: hasValidStrike
-              ? (isBullish 
-                ? `$${(rawStrike * 1.02).toFixed(2)} – $${(rawStrike * 1.05).toFixed(2)}`
-                : `$${(rawStrike * 0.95).toFixed(2)} – $${(rawStrike * 0.98).toFixed(2)}`)
-              : undefined,
-          } as MarketSignal & { _totalPremium: number };
+            suggestedTrade: `Buy ${ticker} $${strikeLabel} ${putCall === 'call' ? 'Calls' : 'Puts'}${expiry && expiry !== 'N/A' ? ` expiring ${expiry}` : ''}`,
+            entryTrigger: isBullish ? `Break above $${strikeLabel} with volume` : `Break below $${strikeLabel} with volume`,
+            invalidation: `$${(rawStrike * (isBullish ? 0.97 : 1.03)).toFixed(2)}`,
+            keyLevel: `$${(rawStrike * (isBullish ? 0.99 : 1.01)).toFixed(2)}`,
+            targetZone: isBullish 
+              ? `$${(rawStrike * 1.02).toFixed(2)} – $${(rawStrike * 1.05).toFixed(2)}`
+              : `$${(rawStrike * 0.95).toFixed(2)} – $${(rawStrike * 0.98).toFixed(2)}`,
+          } as SignalWithMeta;
         });
 
       // Deduplicate: per ticker, keep only the dominant side (highest total premium)
@@ -321,7 +443,6 @@ export function useMarketData() {
         }
       }
 
-      // Sort newest first, no hard limit — let the pages decide what to show
       const liveDeduped: MarketSignal[] = Array.from(tickerMap.values())
         .sort((a, b) => {
           const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
@@ -333,7 +454,6 @@ export function useMarketData() {
           timeframe: classifyTimeframe(signal),
         }));
 
-      // Merge: live data takes priority, fill remaining with examples
       const liveTickers = new Set(liveDeduped.map(s => s.ticker));
       const fillerSignals = exampleSignals.filter(s => !liveTickers.has(s.ticker));
       const merged = [...liveDeduped, ...fillerSignals];
@@ -342,8 +462,6 @@ export function useMarketData() {
         setSignals(merged);
         saveCachedSignals(merged);
       }
-
-      // Whale alerts now fetched separately via fetchWhaleAlerts
     } catch (e) {
       console.error('Failed to fetch flow alerts:', e);
     }
@@ -357,41 +475,66 @@ export function useMarketData() {
       if (error) throw error;
 
       const alerts = data?.data || [];
-      if (alerts.length === 0) return; // keep example fallbacks
+      if (alerts.length === 0) return;
 
-      const newWhaleAlerts: FlowAlert[] = alerts.map((alert: any) => {
-        const putCall = alert.type === 'call' ? 'Call' : 'Put';
-        const flowPattern = alert.alert_rule?.includes('Sweep') ? 'Sweep'
-          : alert.alert_rule?.includes('Block') ? 'Block'
-          : alert.alert_rule?.includes('Repeated') ? 'Repeated Hits' : 'Flow';
-        const ticker = alert.ticker || alert.underlying_symbol || 'N/A';
-        const strike = alert.strike || '—';
-        const premium = formatPremium(alert.total_premium || alert.premium);
-        const isBullish = alert.type === 'call';
+      const newWhaleAlerts: FlowAlert[] = alerts
+        .filter((alert: any) => {
+          // Filter out whale alerts without valid strike
+          const strike = alert.strike ? parseFloat(String(alert.strike).replace(/[^0-9.]/g, '')) : NaN;
+          return !isNaN(strike) && strike > 0;
+        })
+        .map((alert: any) => {
+          const putCall = alert.type === 'call' ? 'Call' : 'Put';
+          const flowPattern = alert.alert_rule?.includes('Sweep') ? 'Sweep'
+            : alert.alert_rule?.includes('Block') ? 'Block'
+            : alert.alert_rule?.includes('Repeated') ? 'Repeated Hits' : 'Flow';
+          const ticker = alert.ticker || alert.underlying_symbol || 'N/A';
+          const rawStrike = parseFloat(String(alert.strike).replace(/[^0-9.]/g, ''));
+          const totalPremium = parseFloat(alert.total_premium || alert.premium || '0');
+          const premium = formatPremium(totalPremium);
+          const isBullish = alert.type === 'call';
+          const expiry = alert.expiry || alert.expires || '—';
+          const stockPrice = parseFloat(alert.stock_price || alert.underlying_price || '0') || null;
 
-        return {
-          ticker,
-          type: `${putCall} ${flowPattern}`,
-          premium: `$${premium}`,
-          strike: `$${strike}`,
-          expiry: alert.expiry || alert.expires || '—',
-          sentiment: isBullish ? 'bullish' as const : 'bearish' as const,
-          time: alert.created_at ? timeAgo(alert.created_at) : 'just now',
-          explanation: `${alert.trade_count || 'Multiple'} ${putCall.toLowerCase()} ${flowPattern.toLowerCase()}${alert.trade_count > 1 ? 's' : ''} detected on ${ticker} at $${strike} strike with $${premium} total premium. ${alert.volume_oi_ratio ? `Volume/OI ratio is ${parseFloat(alert.volume_oi_ratio).toFixed(1)}x — ` : ''}${isBullish ? 'Bullish' : 'Bearish'} institutional positioning with significant capital commitment.`,
-        };
-      });
+          // Compute whale conviction score
+          const dte = computeDte(expiry !== '—' ? expiry : null);
+          const moneynessPct = computeMoneyness(rawStrike, stockPrice);
+          const scoreResult = computeWhaleConviction({
+            premium: totalPremium,
+            alertRule: alert.alert_rule || flowPattern,
+            dte,
+            moneynessPct,
+            volume: alert.volume || 0,
+            openInterest: alert.open_interest || 0,
+            tradeCount: alert.trade_count || 1,
+            ticker,
+          });
 
-      // Deduplicate: keep highest premium per ticker
+          return {
+            ticker,
+            type: `${putCall} ${flowPattern}`,
+            premium: `$${premium}`,
+            strike: `$${rawStrike}`,
+            expiry,
+            sentiment: isBullish ? 'bullish' as const : 'bearish' as const,
+            time: alert.created_at ? timeAgo(alert.created_at) : 'just now',
+            convictionScore: scoreResult.score,
+            convictionLabel: scoreResult.label,
+            explanation: `${alert.trade_count || 'Multiple'} ${putCall.toLowerCase()} ${flowPattern.toLowerCase()}${alert.trade_count > 1 ? 's' : ''} detected on ${ticker} at $${rawStrike} strike with $${premium} total premium. ${alert.volume_oi_ratio ? `Volume/OI ratio is ${parseFloat(alert.volume_oi_ratio).toFixed(1)}x — ` : ''}${isBullish ? 'Bullish' : 'Bearish'} institutional positioning. Conviction: ${scoreResult.score}/100 (${scoreResult.label}).`,
+          };
+        });
+
+      // Deduplicate: keep highest conviction per ticker
       const tickerMap = new Map<string, FlowAlert>();
       for (const alert of newWhaleAlerts) {
         const existing = tickerMap.get(alert.ticker);
-        if (!existing || parsePremium(alert.premium) > parsePremium(existing.premium)) {
+        if (!existing || (alert.convictionScore || 0) > (existing.convictionScore || 0)) {
           tickerMap.set(alert.ticker, alert);
         }
       }
 
       const deduped = Array.from(tickerMap.values())
-        .sort((a, b) => parsePremium(b.premium) - parsePremium(a.premium))
+        .sort((a, b) => (b.convictionScore || 0) - (a.convictionScore || 0))
         .slice(0, 8);
 
       if (deduped.length > 0) setWhaleAlerts(deduped);
@@ -399,8 +542,6 @@ export function useMarketData() {
       console.error('Failed to fetch whale alerts:', e);
     }
   }, []);
-
-
 
   const fetchMarketOverview = useCallback(async () => {
     try {
@@ -440,10 +581,8 @@ export function useMarketData() {
       }
     };
 
-    // Always fetch once on mount so dashboard isn't empty
     load();
 
-    // Only poll when market-adjacent sessions are active (4 AM – 8 PM ET, weekdays + Sunday 6 PM+)
     const shouldPoll = (): boolean => {
       const now = new Date();
       const fmt = new Intl.DateTimeFormat("en-US", {
@@ -455,7 +594,6 @@ export function useMarketData() {
       const weekday = get("weekday");
       const hour = parseInt(get("hour")) % 24;
       const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-      // Only poll Monday–Friday, 4 AM – 8 PM ET
       return weekdays.includes(weekday) && hour >= 4 && hour < 20;
     };
 
@@ -495,7 +633,6 @@ function timeAgo(dateStr: string): string {
   const diffMs = now.getTime() - then.getTime();
   const mins = Math.floor(diffMs / 60000);
 
-  // If data is from today, show relative time
   if (isToday(dateStr)) {
     if (mins < 1) return 'just now';
     if (mins < 60) return `${mins} min ago`;
@@ -503,7 +640,6 @@ function timeAgo(dateStr: string): string {
     return `${hrs}h ago`;
   }
 
-  // If data is older than today, show actual day/time so users know it's not fresh
   const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const day = days[then.getDay()];
   const h = then.getHours();
