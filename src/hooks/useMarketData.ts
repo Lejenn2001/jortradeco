@@ -24,6 +24,7 @@ export interface MarketSignal {
   confidence: number;
   convictionScore?: number;
   convictionLabel?: string;
+  gammaLevelLabel?: string;
   description: string;
   timestamp: string;
   tags: string[];
