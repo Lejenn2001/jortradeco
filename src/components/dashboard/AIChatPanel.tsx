@@ -104,11 +104,17 @@ const AIChatPanel = () => {
           <Bot className="h-4 w-4 text-primary" />
           <span className="font-semibold text-sm text-foreground">Biddie AI</span>
         </div>
-        <span className="text-xs bg-primary/20 text-primary px-2.5 py-0.5 rounded-full flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-          Online
-        </span>
-      </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs bg-primary/20 text-primary px-2.5 py-0.5 rounded-full flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            Online
+          </span>
+          {messages.length > 0 && (
+            <button onClick={clearChat} className="p-1 rounded hover:bg-destructive/20 transition-colors" title="Clear chat">
+              <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+            </button>
+          )}
+        </div>
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
