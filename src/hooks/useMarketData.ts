@@ -286,7 +286,7 @@ export function useMarketData() {
             confidence,
             _totalPremium: totalPremium,
             description: `${tradeCount} ${putCall} trades detected on ${ticker} at $${strike} strike. Total premium: $${premium}. Volume/OI ratio: ${volOiRatio ? volOiRatio.toFixed(1) + 'x' : 'N/A'} — ${volOiRatio && volOiRatio >= 8 ? 'major new positioning' : 'significant new positioning'}.`,
-            timestamp: alert.created_at ? timeAgo(alert.created_at) : 'Time unavailable',
+            timestamp: alert.created_at ? timeAgo(alert.created_at) : 'just now',
             createdAt: alert.created_at || '',
             tags,
             strike: `$${strike}`,
