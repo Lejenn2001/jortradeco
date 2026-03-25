@@ -162,44 +162,6 @@ const SignalAccuracyPanel = ({ isAdmin, liveSignals = [] }: Props) => {
         )}
       </div>
 
-      {/* Description */}
-      <div className="px-5 py-3 border-b border-border/20 text-xs text-muted-foreground leading-relaxed">
-        <span className="text-primary font-semibold">Day Trade</span> signals are detected from live options flow — what's moving right now. 
-        <span className="text-amber-400 font-semibold ml-1">Swing</span> signals are based on whale activity and prior market analysis — watching if big money bets play out over time.
-      </div>
-
-      {/* Legend */}
-      <div className="px-4 pt-4 pb-2 flex flex-wrap gap-x-5 gap-y-2 border-b border-border/20">
-        <div className="flex items-center gap-2">
-          <Zap className="h-3 w-3 text-primary" />
-          <div>
-            <span className="text-[10px] font-bold text-primary uppercase">Day Trade</span>
-            <p className="text-[10px] text-muted-foreground">What's happening now — act on it today</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Clock className="h-3 w-3 text-amber-400" />
-          <div>
-            <span className="text-[10px] font-bold text-amber-400 uppercase">Swing</span>
-            <p className="text-[10px] text-muted-foreground">Called earlier — did it play out?</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <CheckCircle className="h-3 w-3 text-emerald-400" />
-          <div>
-            <span className="text-[10px] font-bold text-emerald-400 uppercase">Hit</span>
-            <p className="text-[10px] text-muted-foreground">Signal played out as expected</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <XCircle className="h-3 w-3 text-destructive" />
-          <div>
-            <span className="text-[10px] font-bold text-destructive uppercase">Missed</span>
-            <p className="text-[10px] text-muted-foreground">Signal didn't hit target</p>
-          </div>
-        </div>
-      </div>
-
       {/* Summary Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 p-4">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-muted/20 rounded-lg p-3 text-center">
