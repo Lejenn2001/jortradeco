@@ -9,7 +9,7 @@ const corsHeaders = {
 const BIDDIE_USER_ID = "00000000-0000-0000-0000-000000000000";
 const BIDDIE_NAME = "🤖 Biddie AI";
 const REPLIT_API = "https://python-script-lejenn2001.replit.app/api/whale/chat";
-const CHAT_BREVITY = " IMPORTANT: Keep response to 3 sentences max. Include ONE specific actionable contract recommendation with: ticker, call/put, strike price, expiration date, and your confidence level (low/medium/high/very high). Example format: 'Watching AAPL 200C 4/18 — high confidence, premium around $2.50, targeting the $205 zone.' Be concise like a quick trade alert.";
+const CHAT_BREVITY = " IMPORTANT: Keep response to 3 sentences max. Include ONE specific actionable contract recommendation with: ticker, call/put, strike price, expiration date, and your confidence level (low/medium/high/very high). Example format: 'Watching AAPL 200C 4/18 — high confidence, premium around $2.50, targeting the $205 zone.' Be concise like a quick trade alert. CRITICAL: Do NOT state exact current prices as fact — prices may be from previous close or delayed. Say 'last seen near $X' or 'closed around $X' instead of 'price is at $X' or 'pinned at $X'. Focus on the contract setup, strike, and levels — not quoting a live price.";
 const MAX_RETRIES = 2;
 const RETRY_DELAY_MS = 5000;
 
