@@ -770,7 +770,10 @@ export function useMarketData() {
       setLoading(true);
       setError(null);
       try {
-        await Promise.all([fetchFlowAlerts(), fetchWhaleAlerts(), fetchMarketOverview()]);
+        // Sequential to avoid exceeding UW API concurrency limit (max 3)
+        await fetchFlowAlerts();
+        await fetchWhaleAlerts();
+        await fetchMarketOverview();
       } catch (e) {
         setError('Failed to load market data');
       } finally {
@@ -794,11 +797,12 @@ export function useMarketData() {
       return weekdays.includes(weekday) && hour >= 4 && hour < 20;
     };
 
-    const interval = setInterval(() => {
+    // Sequential polling to respect concurrency limits
+    const interval = setInterval(async () => {
       if (shouldPoll()) {
-        fetchFlowAlerts();
-        fetchWhaleAlerts();
-        fetchMarketOverview();
+        await fetchFlowAlerts();
+        await fetchWhaleAlerts();
+        await fetchMarketOverview();
       }
     }, 60000);
 
