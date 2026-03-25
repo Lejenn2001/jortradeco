@@ -121,6 +121,29 @@ serve(async (req) => {
       });
     }
 
+    if (action === "delete") {
+      if (!user_id) {
+        return new Response(JSON.stringify({ error: "user_id required" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (user_id === user.id) {
+        return new Response(JSON.stringify({ error: "Cannot delete yourself" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // Delete profile, roles, and auth user
+      await adminClient.from("user_roles").delete().eq("user_id", user_id);
+      await adminClient.from("trades").delete().eq("user_id", user_id);
+      await adminClient.from("user_alert_preferences").delete().eq("user_id", user_id);
+      await adminClient.from("profiles").delete().eq("id", user_id);
+      const { error } = await adminClient.auth.admin.deleteUser(user_id);
+      if (error) throw error;
+      return new Response(JSON.stringify({ status: "deleted" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(JSON.stringify({ error: "Invalid action" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

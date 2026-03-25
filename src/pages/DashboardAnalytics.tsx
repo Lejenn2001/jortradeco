@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Users, UserPlus, MessageSquare, TrendingUp, ShieldAlert, Shield, ShieldCheck, ShieldX, Anchor, Gauge, Download, Globe } from "lucide-react";
+import { Users, UserPlus, MessageSquare, TrendingUp, ShieldAlert, Shield, ShieldCheck, ShieldX, Anchor, Gauge, Download, Globe, Trash2, Circle } from "lucide-react";
+import { usePresenceTracker } from "@/hooks/usePresence";
 import { Link } from "react-router-dom";
 import SignalAccuracyPanel from "@/components/dashboard/SignalAccuracyPanel";
 import SignalFeedPanel from "@/components/dashboard/SignalFeedPanel";
@@ -80,11 +81,13 @@ const exportToCSV = (members: MemberWithRoles[]) => {
 const DashboardAnalytics = () => {
   const { session } = useAuth();
   const { signals, loading: signalsLoading } = useMarketData();
+  const onlineUsers = usePresenceTracker();
   const [members, setMembers] = useState<MemberWithRoles[]>([]);
   const [chatCount, setChatCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [apiUsageToday, setApiUsageToday] = useState(0);
   const [apiUsageMinute, setApiUsageMinute] = useState(0);
 
@@ -171,8 +174,28 @@ const DashboardAnalytics = () => {
     setTogglingId(null);
   };
 
+  const deleteMember = async (userId: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete ${name || "this member"}? This cannot be undone.`)) return;
+    setDeletingId(userId);
+    const { data, error } = await supabase.functions.invoke("manage-roles", {
+      body: { action: "delete", user_id: userId },
+    });
+    if (error || data?.error) {
+      toast({
+        title: "Error",
+        description: data?.error || error?.message || "Failed to delete member",
+        variant: "destructive",
+      });
+    } else {
+      toast({ title: "Member deleted", description: `${name || "User"} has been removed.` });
+      await loadMembers();
+    }
+    setDeletingId(null);
+  };
+
   const today = new Date().toISOString().split("T")[0];
   const newToday = members.filter((m) => m.created_at.startsWith(today)).length;
+  const onlineCount = members.filter((m) => onlineUsers.has(m.id)).length;
 
   const thisWeekStart = new Date();
   thisWeekStart.setDate(thisWeekStart.getDate() - 7);
@@ -234,9 +257,10 @@ const DashboardAnalytics = () => {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+               <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
                 <StatCard icon={Users} label="Total Members" value={members.length} color="bg-primary" />
-                <StatCard icon={UserPlus} label="New Today" value={newToday} color="bg-emerald-500" />
+                <StatCard icon={Circle} label="Online Now" value={onlineCount} color="bg-emerald-500" />
+                <StatCard icon={UserPlus} label="New Today" value={newToday} color="bg-primary" />
                 <StatCard icon={TrendingUp} label="This Week" value={newThisWeek} subtitle="New signups" color="bg-purple-500" />
                 <StatCard icon={MessageSquare} label="Chat Messages" value={chatCount} color="bg-amber-500" />
               </div>
@@ -307,6 +331,7 @@ const DashboardAnalytics = () => {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border/30">
+                        <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground">Status</th>
                         <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground">Name</th>
                         <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground">Email</th>
                         <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground">Plan</th>
@@ -319,8 +344,12 @@ const DashboardAnalytics = () => {
                       {members.map((m) => {
                         const memberIsAdmin = m.roles.includes("admin");
                         const isSelf = m.id === session?.user?.id;
+                        const isOnline = onlineUsers.has(m.id);
                         return (
                           <tr key={m.id} className="border-b border-border/20 hover:bg-muted/20 transition-colors">
+                            <td className="px-5 py-3">
+                              <span className={`w-2 h-2 rounded-full inline-block ${isOnline ? "bg-emerald-400" : "bg-muted-foreground/30"}`} title={isOnline ? "Online" : "Offline"} />
+                            </td>
                             <td className="px-5 py-3 text-foreground">
                               {m.full_name || "Unknown"}
                               {isSelf && <span className="text-xs text-muted-foreground ml-2">(you)</span>}
@@ -353,21 +382,36 @@ const DashboardAnalytics = () => {
                             </td>
                             <td className="px-5 py-3 text-right">
                               {!isSelf && (
-                                <Button
-                                  size="sm"
-                                  variant={memberIsAdmin ? "destructive" : "outline"}
-                                  className="text-xs h-7 px-3"
-                                  disabled={togglingId === m.id}
-                                  onClick={() => toggleAdmin(m.id, memberIsAdmin)}
-                                >
-                                  {togglingId === m.id ? (
-                                    <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
-                                  ) : memberIsAdmin ? (
-                                    <><ShieldX className="h-3 w-3 mr-1" /> Remove Admin</>
-                                  ) : (
-                                    <><ShieldCheck className="h-3 w-3 mr-1" /> Make Admin</>
-                                  )}
-                                </Button>
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <Button
+                                    size="sm"
+                                    variant={memberIsAdmin ? "destructive" : "outline"}
+                                    className="text-xs h-7 px-3"
+                                    disabled={togglingId === m.id}
+                                    onClick={() => toggleAdmin(m.id, memberIsAdmin)}
+                                  >
+                                    {togglingId === m.id ? (
+                                      <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+                                    ) : memberIsAdmin ? (
+                                      <><ShieldX className="h-3 w-3 mr-1" /> Remove Admin</>
+                                    ) : (
+                                      <><ShieldCheck className="h-3 w-3 mr-1" /> Make Admin</>
+                                    )}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="text-xs h-7 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    disabled={deletingId === m.id}
+                                    onClick={() => deleteMember(m.id, m.full_name)}
+                                  >
+                                    {deletingId === m.id ? (
+                                      <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+                                    ) : (
+                                      <Trash2 className="h-3 w-3" />
+                                    )}
+                                  </Button>
+                                </div>
                               )}
                             </td>
                           </tr>
@@ -375,7 +419,7 @@ const DashboardAnalytics = () => {
                       })}
                       {members.length === 0 && (
                         <tr>
-                          <td colSpan={6} className="px-5 py-8 text-center text-muted-foreground">No members yet</td>
+                          <td colSpan={7} className="px-5 py-8 text-center text-muted-foreground">No members yet</td>
                         </tr>
                       )}
                     </tbody>
