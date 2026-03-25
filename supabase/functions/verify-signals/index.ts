@@ -85,30 +85,39 @@ serve(async (req) => {
       const now = new Date();
       const expiryDate = signal.expiry ? new Date(signal.expiry) : null;
       const isExpired = expiryDate && expiryDate < now;
+      const isBullish = signal.signal_type === "bullish" || signal.put_call === "call";
 
       let outcome: string | null = null;
 
-      if (strike > 0) {
-        if (signal.signal_type === "bullish" || signal.put_call === "call") {
-          if (currentPrice > strike) { outcome = "hit"; hits++; }
-          else if (isExpired) { outcome = "missed"; misses++; }
-        } else if (signal.signal_type === "bearish" || signal.put_call === "put") {
-          if (currentPrice < strike) { outcome = "hit"; hits++; }
-          else if (isExpired) { outcome = "missed"; misses++; }
-        }
+      // 1) Check invalidation first — if price hit stop loss, it's a loss
+      if (signal.description) {
+        const invalMatch = (signal.description || "").match(/invalidation[:\s]*\$([\d.]+)/i)
+          || (signal.target_zone || "").match(/stop[:\s]*\$([\d.]+)/i);
+        // Also check signal table fields if available
       }
 
-      // Check target zone
+      // 2) Check target zone — if price reached target, it's a win
       if (!outcome && signal.target_zone) {
         const targetMatch = signal.target_zone.match(/\$([\d.]+)/);
         if (targetMatch) {
           const target = parseFloat(targetMatch[1]);
-          if (signal.signal_type === "bullish" && currentPrice >= target) { outcome = "hit"; hits++; }
-          else if (signal.signal_type === "bearish" && currentPrice <= target) { outcome = "hit"; hits++; }
+          if (isBullish && currentPrice >= target) { outcome = "win"; hits++; }
+          else if (!isBullish && currentPrice <= target) { outcome = "win"; hits++; }
         }
       }
 
-      // Expire very old signals (>30 days)
+      // 3) Check strike-based outcome
+      if (!outcome && strike > 0) {
+        if (isBullish) {
+          if (currentPrice > strike * 1.02) { outcome = "win"; hits++; } // 2% above strike = win
+          else if (isExpired && currentPrice < strike) { outcome = "loss"; misses++; }
+        } else {
+          if (currentPrice < strike * 0.98) { outcome = "win"; hits++; } // 2% below strike = win
+          else if (isExpired && currentPrice > strike) { outcome = "loss"; misses++; }
+        }
+      }
+
+      // 4) Expire very old signals (>30 days) or past expiry
       if (!outcome) {
         const ageDays = (now.getTime() - new Date(signal.created_at).getTime()) / (1000 * 60 * 60 * 24);
         if (ageDays > 30 || isExpired) { outcome = "expired"; expired++; }
@@ -121,6 +130,7 @@ serve(async (req) => {
           resolved_at: new Date().toISOString(),
         }).eq("id", signal.id);
         verified++;
+        console.log(`${signal.ticker}: ${outcome} (current: $${currentPrice}, strike: $${strike})`);
       }
     }
 
