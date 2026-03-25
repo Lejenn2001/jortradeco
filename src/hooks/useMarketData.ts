@@ -387,7 +387,11 @@ function saveCachedSignals(signals: MarketSignal[]) {
 }
 
 export function useMarketData() {
-  const [signals, setSignals] = useState<MarketSignal[]>(() => loadCachedSignals() || exampleSignals);
+  const [signals, setSignals] = useState<MarketSignal[]>(() => {
+    const cached = loadCachedSignals();
+    const source = cached || exampleSignals;
+    return source.filter(s => (s.convictionScore ?? s.confidence * 10) >= 80);
+  });
   const [whaleAlerts, setWhaleAlerts] = useState<FlowAlert[]>([]);
   const [marketOverview, setMarketOverview] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -494,6 +498,7 @@ export function useMarketData() {
       }
 
       const liveDeduped: MarketSignal[] = Array.from(tickerMap.values())
+        .filter(s => s.convictionScore !== undefined ? s.convictionScore >= 80 : s.confidence >= 8)
         .sort((a, b) => {
           const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
           const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
@@ -505,7 +510,7 @@ export function useMarketData() {
         }));
 
       const liveTickers = new Set(liveDeduped.map(s => s.ticker));
-      const fillerSignals = exampleSignals.filter(s => !liveTickers.has(s.ticker));
+      const fillerSignals = exampleSignals.filter(s => !liveTickers.has(s.ticker) && (s.convictionScore !== undefined ? s.convictionScore >= 80 : s.confidence >= 8));
       const merged = [...liveDeduped, ...fillerSignals];
 
       if (merged.length > 0) {
