@@ -14,7 +14,7 @@ interface Message {
 }
 
 const quickPrompts = [
-  "What's the best setup for Monday?",
+  "What's the best setup for today?",
   "Any unusual options flow today?",
   "Show me high-confidence plays",
 ];
