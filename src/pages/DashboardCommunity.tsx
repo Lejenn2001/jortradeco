@@ -274,12 +274,12 @@ const DashboardCommunity = () => {
           </div>
 
           {/* Input */}
-          <div className="glass-panel rounded-xl p-2.5 flex gap-2 border-glow-blue shrink-0">
+          <div className="glass-panel rounded-xl p-1.5 sm:p-2.5 flex gap-1.5 sm:gap-2 border-glow-blue shrink-0">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={`Message as ${firstName}... (Biddie auto-responds to trading questions)`}
+              placeholder={`Message as ${firstName}...`}
               className="bg-muted/30 border-border/50 flex-1 focus:border-primary/50 transition-colors h-9 text-sm"
               maxLength={500}
             />
