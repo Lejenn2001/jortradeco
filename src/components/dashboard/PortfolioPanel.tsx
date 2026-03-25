@@ -10,49 +10,6 @@ interface Props {
   limit?: number;
 }
 
-const exampleWhaleAlerts: FlowAlert[] = [
-  {
-    ticker: "NVDA", type: "Call Sweep", premium: "$2.8M", strike: "$145", expiry: "Mar 27",
-    sentiment: "bullish", time: "Fri 3:42 PM", convictionScore: 92, convictionLabel: "Extreme Conviction",
-    explanation: "Institutions are aggressively buying $145 calls with $2.8M in premium. The sweep pattern signals urgency — they want in fast before the price moves. Volume is 4.2x the open interest, meaning this is new money entering. Conviction: 92/100.",
-  },
-  {
-    ticker: "TSLA", type: "Put Sweep", premium: "$1.9M", strike: "$250", expiry: "Mar 27",
-    sentiment: "bearish", time: "Fri 2:58 PM", convictionScore: 78, convictionLabel: "Very High Conviction",
-    explanation: "6 consecutive put sweeps at the ask within 12 minutes — institutional urgency. $1.9M in premium on the $250 puts. Dark pool data confirms large sell blocks near $260 resistance. Conviction: 78/100.",
-  },
-  {
-    ticker: "META", type: "Call Block", premium: "$3.6M", strike: "$620", expiry: "Mar 27",
-    sentiment: "bullish", time: "Fri 2:15 PM", convictionScore: 65, convictionLabel: "High Conviction",
-    explanation: "A single $3.6M block order on META $620 calls. Block orders bypass the open market — a fund wanted to build a position without moving the price. Conviction: 65/100.",
-  },
-  {
-    ticker: "AMD", type: "Put Sweep", premium: "$5.2M", strike: "$110", expiry: "Mar 27",
-    sentiment: "bearish", time: "Fri 1:30 PM", convictionScore: 95, convictionLabel: "Extreme Conviction",
-    explanation: "The largest bearish flow of the week: $5.2M across 12 consecutive put sweeps in 15 minutes. Dark pool short volume hit 62%. Conviction: 95/100.",
-  },
-  {
-    ticker: "AAPL", type: "Call Sweep", premium: "$3.1M", strike: "$215", expiry: "Mar 27",
-    sentiment: "bullish", time: "Fri 1:15 PM", convictionScore: 85, convictionLabel: "Very High Conviction",
-    explanation: "A whale dropped $3.1M on AAPL $215 calls. Call volume is 5.8x the daily average — that kind of spike almost always precedes a move. Conviction: 85/100.",
-  },
-  {
-    ticker: "COIN", type: "Call Block", premium: "$1.7M", strike: "$280", expiry: "Mar 27",
-    sentiment: "bullish", time: "Fri 12:45 PM", convictionScore: 62, convictionLabel: "High Conviction",
-    explanation: "$1.7M in COIN $280 calls via block trade. Crypto-related names tend to see whale activity before major BTC moves. Conviction: 62/100.",
-  },
-  {
-    ticker: "PLTR", type: "Call Sweep", premium: "$1.4M", strike: "$120", expiry: "Mar 27",
-    sentiment: "bullish", time: "Fri 11:45 AM", convictionScore: 72, convictionLabel: "High Conviction",
-    explanation: "4 rapid call sweeps at the ask totaling $1.4M. PLTR is consolidating near a breakout level and open interest is building fast. Conviction: 72/100.",
-  },
-  {
-    ticker: "SPY", type: "Put Sweep", premium: "$4.5M", strike: "$570", expiry: "Mar 27",
-    sentiment: "bearish", time: "Fri 11:00 AM", convictionScore: 88, convictionLabel: "Very High Conviction",
-    explanation: "$4.5M in SPY $570 puts across 9 sweeps in under 20 minutes. When whales bet against the entire market, they're seeing macro risk. Conviction: 88/100.",
-  },
-];
-
 function getActionLabel(alert: FlowAlert): string {
   return alert.sentiment === "bullish"
     ? `Buy ${alert.strike} Calls`
