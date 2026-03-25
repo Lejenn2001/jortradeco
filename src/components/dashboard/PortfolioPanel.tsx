@@ -42,9 +42,7 @@ function getScoreBadge(score: number): string {
 const PortfolioPanel = ({ whaleAlerts, loading, limit }: Props) => {
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
-  const liveTickers = new Set(whaleAlerts.map(a => a.ticker));
-  const fillers = exampleWhaleAlerts.filter(a => !liveTickers.has(a.ticker));
-  const allAlerts = [...whaleAlerts, ...fillers].slice(0, 8);
+  const allAlerts = whaleAlerts.slice(0, 8);
   const displayAlerts = limit ? allAlerts.slice(0, limit) : allAlerts;
 
   const bullishPremium = allAlerts
