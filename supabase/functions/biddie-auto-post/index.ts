@@ -96,7 +96,7 @@ serve(async (req) => {
 
       const alertData = body.alertData || {};
       const ticker = alertData.ticker || "Unknown";
-      const alertMsg = `What's the latest whale flow on ${ticker}? Give me a quick breakdown.`;
+      const alertMsg = `What's the latest whale flow on ${ticker}? Give me just the single highest conviction play.` + CHAT_BREVITY;
 
       try {
         const res = await fetch(REPLIT_API, {
