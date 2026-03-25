@@ -57,6 +57,9 @@ interface WhaleScoreInput {
   openInterest: number;
   tradeCount: number;        // proxy for stacking
   ticker: string;
+  strike: number;            // actual strike price
+  stockPrice?: number;       // current stock price
+  keyLevels?: number[];      // high-OI gamma S/R levels for this ticker
   isSpread?: boolean;        // detected spread
   isDeepItm?: boolean;       // deep ITM likely hedge
 }
@@ -77,7 +80,7 @@ export interface WhaleScoreResult {
 }
 
 export function computeWhaleConviction(input: WhaleScoreInput): WhaleScoreResult {
-  const { premium, alertRule, dte, moneynessPct, volume, openInterest, tradeCount, ticker, isSpread, isDeepItm } = input;
+  const { premium, alertRule, dte, moneynessPct, volume, openInterest, tradeCount, ticker, strike, stockPrice, keyLevels, isSpread, isDeepItm } = input;
 
   // 1) Size (0–20)
   let size = 0;
@@ -129,10 +132,37 @@ export function computeWhaleConviction(input: WhaleScoreInput): WhaleScoreResult
   else if (tradeCount >= 3) stacking = 8;
   else if (tradeCount >= 2) stacking = 5;
 
-  // 7) Level + Trend Alignment (0–15)
-  // We don't have chart data — default to "random" (2)
-  // Could be enhanced later with technical analysis integration
-  const levelAlignment = 2;
+  // 7) Level + Trend Alignment (0–15) — uses gamma S/R levels from options OI
+  let levelAlignment = 2; // default: random location
+  if (keyLevels && keyLevels.length > 0 && strike > 0) {
+    // Check if strike is near any high-OI gamma level
+    const nearestDist = Math.min(...keyLevels.map(kl => Math.abs(strike - kl) / Math.max(strike, 1)));
+    
+    if (nearestDist <= 0.005) {
+      // Strike IS a high-OI level (within 0.5%) — likely breakout/breakdown level
+      levelAlignment = 9;
+    } else if (nearestDist <= 0.02) {
+      // Strike is near a high-OI level (within 2%) — near support/resistance
+      levelAlignment = 5;
+    } else if (nearestDist <= 0.05) {
+      // Strike is in the vicinity of a key level (within 5%)
+      levelAlignment = 3;
+    }
+    
+    // Bonus: if stock price is also near the strike AND near a key level, 
+    // it suggests active price action at this level = trend alignment
+    if (stockPrice && stockPrice > 0 && levelAlignment >= 5) {
+      const priceDist = Math.abs(stockPrice - strike) / stockPrice;
+      if (priceDist <= 0.03) {
+        // Stock is within 3% of the strike which is at a key level = trend aligned
+        levelAlignment = Math.min(15, levelAlignment + 3);
+      }
+    }
+  } else if (strike > 0) {
+    // No key levels data but check for round-number psychological S/R
+    const isRoundNumber = strike % 10 === 0 || (strike >= 100 && strike % 25 === 0);
+    if (isRoundNumber) levelAlignment = 3;
+  }
 
   // 8) Penalties (subtract 0–20)
   let penalties = 0;
@@ -356,6 +386,7 @@ export function useMarketData() {
       if (error) throw error;
 
       const alerts = data?.data || [];
+      const keyLevelsMap: Record<string, number[]> = data?.key_levels || {};
       
       if (alerts.length === 0) return;
 
@@ -396,6 +427,9 @@ export function useMarketData() {
             openInterest: alert.open_interest || 0,
             tradeCount,
             ticker,
+            strike: rawStrike,
+            stockPrice: stockPrice || undefined,
+            keyLevels: keyLevelsMap[ticker],
           });
 
           // Convert 0-100 to 0-10 for backward compat display
@@ -475,11 +509,11 @@ export function useMarketData() {
       if (error) throw error;
 
       const alerts = data?.data || [];
+      const keyLevelsMap: Record<string, number[]> = data?.key_levels || {};
       if (alerts.length === 0) return;
 
       const newWhaleAlerts: FlowAlert[] = alerts
         .filter((alert: any) => {
-          // Filter out whale alerts without valid strike
           const strike = alert.strike ? parseFloat(String(alert.strike).replace(/[^0-9.]/g, '')) : NaN;
           return !isNaN(strike) && strike > 0;
         })
@@ -496,7 +530,6 @@ export function useMarketData() {
           const expiry = alert.expiry || alert.expires || '—';
           const stockPrice = parseFloat(alert.stock_price || alert.underlying_price || '0') || null;
 
-          // Compute whale conviction score
           const dte = computeDte(expiry !== '—' ? expiry : null);
           const moneynessPct = computeMoneyness(rawStrike, stockPrice);
           const scoreResult = computeWhaleConviction({
@@ -508,6 +541,9 @@ export function useMarketData() {
             openInterest: alert.open_interest || 0,
             tradeCount: alert.trade_count || 1,
             ticker,
+            strike: rawStrike,
+            stockPrice: stockPrice || undefined,
+            keyLevels: keyLevelsMap[ticker],
           });
 
           return {

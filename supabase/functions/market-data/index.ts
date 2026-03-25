@@ -19,6 +19,44 @@ const corsHeaders = {
 
 const UW_BASE = 'https://api.unusualwhales.com/api';
 
+// Extract top N high-OI strikes from option-contracts data as gamma S/R levels
+function extractKeyLevels(contracts: any[], topN = 5): number[] {
+  if (!contracts || contracts.length === 0) return [];
+
+  // Parse strike from option_symbol (e.g. "NVDA260327C00145000" → 145)
+  const withStrikes = contracts
+    .map((c: any) => {
+      let strike = 0;
+      if (c.option_symbol) {
+        // Standard OCC format: last 8 digits = price * 1000
+        const match = c.option_symbol.match(/(\d{8})$/);
+        if (match) strike = parseInt(match[1]) / 1000;
+      }
+      return {
+        strike,
+        oi: c.open_interest || 0,
+        volume: c.volume || 0,
+        gamma: Math.abs(parseFloat(c.gamma || '0')),
+      };
+    })
+    .filter((c: any) => c.strike > 0 && c.oi > 0);
+
+  // Group by strike, sum OI across calls/puts at same strike
+  const strikeMap = new Map<number, { oi: number; gamma: number }>();
+  for (const c of withStrikes) {
+    const existing = strikeMap.get(c.strike) || { oi: 0, gamma: 0 };
+    existing.oi += c.oi;
+    existing.gamma = Math.max(existing.gamma, c.gamma);
+    strikeMap.set(c.strike, existing);
+  }
+
+  // Sort by OI descending, take top N
+  return Array.from(strikeMap.entries())
+    .sort((a, b) => b[1].oi - a[1].oi)
+    .slice(0, topN)
+    .map(([strike]) => strike);
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -72,7 +110,46 @@ serve(async (req) => {
         data.data = [...(data.data || []), ...newAlerts];
       }
 
-      await logApiUsage(["flow-alerts", "screener"]);
+      // --- Fetch key S/R levels for top tickers via option-contracts ---
+      // Find top 3 tickers by premium from the flow data
+      const alerts = data?.data || [];
+      const tickerPremiums = new Map<string, number>();
+      for (const a of alerts) {
+        const t = a.ticker || a.underlying_symbol || '';
+        const p = parseFloat(a.total_premium || a.premium || '0');
+        tickerPremiums.set(t, (tickerPremiums.get(t) || 0) + p);
+      }
+      const topTickers = Array.from(tickerPremiums.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([t]) => t)
+        .filter(t => t && t !== 'N/A');
+
+      const keyLevelsMap: Record<string, number[]> = {};
+      if (topTickers.length > 0) {
+        const contractPromises = topTickers.map(t =>
+          fetch(`${UW_BASE}/stock/${t}/option-contracts`, { headers: uwHeaders })
+            .then(async res => {
+              if (!res.ok) return { ticker: t, contracts: [] };
+              const json = await res.json();
+              return { ticker: t, contracts: json?.data || [] };
+            })
+            .catch(() => ({ ticker: t, contracts: [] }))
+        );
+
+        const results = await Promise.all(contractPromises);
+        for (const { ticker: t, contracts } of results) {
+          const levels = extractKeyLevels(contracts, 5);
+          if (levels.length > 0) keyLevelsMap[t] = levels;
+        }
+
+        await logApiUsage(["flow-alerts", "screener", ...topTickers.map(t => `option-contracts:${t}`)]);
+      } else {
+        await logApiUsage(["flow-alerts", "screener"]);
+      }
+
+      // Attach key_levels to the response
+      data.key_levels = keyLevelsMap;
 
       // Auto-log high-conviction signals for accuracy tracking
       try {
@@ -80,19 +157,12 @@ serve(async (req) => {
           Deno.env.get("SUPABASE_URL")!,
           Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
         );
-        const alerts = data?.data || [];
         
-        // HIGH-CONVICTION CRITERIA (based on Unusual Whales methodology):
-        // - Vol/OI >= 5x (new positions being opened, not just trading existing)
-        // - Premium >= $25K (filters out retail noise)
-        // - Trade count >= 5 (repeated conviction, not a one-off)
-        // Dashboard tier: Vol/OI >= 8x AND Premium >= $100K (only the absolute best)
         const signalsWithMeta = alerts
           .filter((a: any) => {
             const volOi = a.volume_oi_ratio ? parseFloat(a.volume_oi_ratio) : 0;
             const totalPremium = parseFloat(a.total_premium || a.premium || '0');
             const tradeCount = a.trade_count || 0;
-            // Must meet ALL: Vol/OI >= 5x AND premium >= $25K AND tradeCount >= 5
             return volOi >= 5 && totalPremium >= 25000 && tradeCount >= 5;
           })
           .map((a: any) => {
@@ -100,15 +170,13 @@ serve(async (req) => {
             const tradeCount = a.trade_count || 0;
             const totalPremium = parseFloat(a.total_premium || a.premium || '0');
             
-            // Confidence scoring based on how many high-conviction criteria are met
-            let confidence = 8.5; // baseline (passed all minimum filters)
-            if (volOi >= 8) confidence += 0.5;    // strong new positioning
-            if (volOi >= 12) confidence += 0.3;   // extreme new positioning
-            if (totalPremium >= 100000) confidence += 0.3; // serious capital
-            if (totalPremium >= 500000) confidence += 0.2; // whale-level capital
-            if (tradeCount >= 8) confidence += 0.2; // repeated conviction
-            if (tradeCount >= 12) confidence += 0.2; // extreme clustering
-            // Cap at 10
+            let confidence = 8.5;
+            if (volOi >= 8) confidence += 0.5;
+            if (volOi >= 12) confidence += 0.3;
+            if (totalPremium >= 100000) confidence += 0.3;
+            if (totalPremium >= 500000) confidence += 0.2;
+            if (tradeCount >= 8) confidence += 0.2;
+            if (tradeCount >= 12) confidence += 0.2;
             confidence = Math.min(10, parseFloat(confidence.toFixed(1)));
 
             return {
@@ -126,7 +194,6 @@ serve(async (req) => {
             };
           });
 
-        // Dedup: per ticker keep highest premium side (matches dashboard logic)
         const tickerMap = new Map<string, any>();
         for (const s of signalsWithMeta) {
           const existing = tickerMap.get(s.ticker);
@@ -135,7 +202,6 @@ serve(async (req) => {
           }
         }
 
-        // Top 6 by confidence
         const dashboardSignals = Array.from(tickerMap.values())
           .sort((a: any, b: any) => b.confidence - a.confidence)
           .slice(0, 6)
@@ -220,10 +286,37 @@ serve(async (req) => {
       await logApiUsage(["market-tide"]);
 
     } else if (action === 'whale-alerts') {
+      // Fetch whale alerts AND key levels for their tickers
       const res = await fetch(`${UW_BASE}/option-trades/flow-alerts?min_premium=500000&limit=10`, { headers: uwHeaders });
       if (!res.ok) throw new Error(`UW whale-alerts failed [${res.status}]: ${await res.text()}`);
       data = await res.json();
-      await logApiUsage(["whale-alerts"]);
+
+      // Get top 3 tickers from whale alerts for S/R levels
+      const whaleAlerts = data?.data || [];
+      const whaleTickers = [...new Set(whaleAlerts.map((a: any) => a.ticker || a.underlying_symbol).filter(Boolean))].slice(0, 3);
+
+      const keyLevelsMap: Record<string, number[]> = {};
+      if (whaleTickers.length > 0) {
+        const contractPromises = whaleTickers.map((t: string) =>
+          fetch(`${UW_BASE}/stock/${t}/option-contracts`, { headers: uwHeaders })
+            .then(async res => {
+              if (!res.ok) return { ticker: t, contracts: [] };
+              const json = await res.json();
+              return { ticker: t, contracts: json?.data || [] };
+            })
+            .catch(() => ({ ticker: t, contracts: [] }))
+        );
+        const results = await Promise.all(contractPromises);
+        for (const { ticker: t, contracts } of results) {
+          const levels = extractKeyLevels(contracts, 5);
+          if (levels.length > 0) keyLevelsMap[t] = levels;
+        }
+        await logApiUsage(["whale-alerts", ...whaleTickers.map((t: string) => `option-contracts:${t}`)]);
+      } else {
+        await logApiUsage(["whale-alerts"]);
+      }
+
+      data.key_levels = keyLevelsMap;
 
     } else if (action === 'darkpool' && ticker) {
       const res = await fetch(`${UW_BASE}/darkpool/${ticker}`, { headers: uwHeaders });
