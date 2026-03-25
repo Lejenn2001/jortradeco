@@ -114,26 +114,17 @@ serve(async (req) => {
       const ticker = alertData.ticker || "Unknown";
       const alertMsg = `What's the latest whale flow on ${ticker}? Give me just the single highest conviction play.` + CHAT_BREVITY;
 
-      try {
-        const res = await fetch(REPLIT_API, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: alertMsg }),
+      const result = await fetchReplit(alertMsg);
+      if (result.ok && result.analysis) {
+        const content = `🚨 **Whale Alert — ${ticker}**\n\n${result.analysis}`;
+        await supabase.from("chat_messages").insert({
+          user_id: BIDDIE_USER_ID,
+          user_name: BIDDIE_NAME,
+          content,
         });
-        if (res.ok) {
-          const data = await res.json();
-          const content = `🚨 **Whale Alert — ${ticker}**\n\n${data.analysis || "Big flow detected. Check the signals page for details!"}`;
-          await supabase.from("chat_messages").insert({
-            user_id: BIDDIE_USER_ID,
-            user_name: BIDDIE_NAME,
-            content,
-          });
-          return new Response(JSON.stringify({ status: "posted", action }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-      } catch (e) {
-        console.warn("Replit API failed for alert:", e);
+        return new Response(JSON.stringify({ status: "posted", action }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
 
       await supabase.from("chat_messages").insert({
