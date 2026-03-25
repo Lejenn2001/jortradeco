@@ -212,6 +212,11 @@ function SignalRow({ signal }: { signal: MarketSignal }) {
             Strike: <span className="font-semibold text-foreground">{signal.strike}</span>
           </span>
         )}
+        {signal.gammaLevelLabel && (
+          <span className="bg-accent/10 rounded-lg px-2.5 py-1">
+            📍 <span className="font-semibold text-accent">{signal.gammaLevelLabel}</span>
+          </span>
+        )}
         {signal.keyLevel && (
           <span className="bg-primary/10 rounded-lg px-2.5 py-1">
             Key: <span className="font-semibold text-primary">{signal.keyLevel}</span>
