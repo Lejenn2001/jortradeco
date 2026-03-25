@@ -419,7 +419,7 @@ const DashboardAnalytics = () => {
                       })}
                       {members.length === 0 && (
                         <tr>
-                          <td colSpan={6} className="px-5 py-8 text-center text-muted-foreground">No members yet</td>
+                          <td colSpan={7} className="px-5 py-8 text-center text-muted-foreground">No members yet</td>
                         </tr>
                       )}
                     </tbody>
