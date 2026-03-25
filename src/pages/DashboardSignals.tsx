@@ -198,14 +198,12 @@ function SignalRow({ signal }: { signal: MarketSignal }) {
           {signal.premium && (
             <span className="text-xs text-accent font-semibold">{signal.premium}</span>
           )}
-          {scoreBadge && (
-            <span className="text-[9px] font-bold">{scoreBadge} {signal.convictionLabel || ''}</span>
-          )}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <span className="text-[10px] text-muted-foreground">{signal.timestamp}</span>
-          <div className={`w-9 h-9 rounded-full border-2 flex items-center justify-center text-xs font-bold ${scoreColor}`}>
-            {score}
+          <div className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 ${scoreColor} ${scoreBg}`}>
+            <span className="text-xs font-bold">{score}</span>
+            <span className="text-[9px] font-medium hidden sm:inline">{convictionLabel}</span>
           </div>
         </div>
       </div>
