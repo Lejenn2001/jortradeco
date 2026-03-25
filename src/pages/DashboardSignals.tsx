@@ -117,6 +117,8 @@ const DashboardSignals = () => {
             </div>
           </div>
 
+          <SignalLegend />
+
           {loading && signals.length === 0 && (
             <div className="p-8 text-center text-muted-foreground text-sm">Loading signals...</div>
           )}
