@@ -84,14 +84,14 @@ const SignalFeedPanel = ({ signals, loading, limit }: Props) => {
                   </div>
                   <div
                     className={`w-10 h-10 rounded-full border-2 flex items-center justify-center text-[10px] font-bold ${
-                      (signal.convictionScore ?? signal.confidence * 10) >= 90
+                      signal.confidence >= 9
                         ? "border-primary text-primary"
-                        : (signal.convictionScore ?? signal.confidence * 10) >= 80
+                        : signal.confidence >= 8
                         ? "border-accent text-accent"
                         : "border-muted-foreground text-muted-foreground"
                     }`}
                   >
-                    {signal.convictionScore ?? Math.round(signal.confidence * 10)}
+                    {signal.confidence}/10
                   </div>
                 </div>
 
