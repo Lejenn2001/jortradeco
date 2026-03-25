@@ -22,7 +22,7 @@ const Dashboard = () => {
       ...examples.sort((a, b) => (b.convictionScore ?? 0) - (a.convictionScore ?? 0)),
     ];
     return sorted
-      .filter(s => (s.convictionScore ?? s.confidence * 10) >= 60)
+      .filter(s => (s.convictionScore ?? s.confidence * 10) >= 90)
       .slice(0, 3);
   }, [signals]);
 
