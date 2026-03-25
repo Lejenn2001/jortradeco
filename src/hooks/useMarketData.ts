@@ -237,7 +237,9 @@ export function useMarketData() {
           const putCall = alert.type === 'call' ? 'call' : 'put';
           const isBullish = putCall === 'call';
           const ticker = alert.ticker || alert.underlying_symbol || 'N/A';
-          const strike = alert.strike || '—';
+          const rawStrike = alert.strike ? parseFloat(String(alert.strike).replace(/[^0-9.]/g, '')) : NaN;
+          const hasValidStrike = !isNaN(rawStrike) && rawStrike > 0;
+          const strikeLabel = hasValidStrike ? String(rawStrike) : null;
           const totalPremium = parseFloat(alert.total_premium || alert.premium || '0');
           const premium = formatPremium(totalPremium);
           const expiry = alert.expiry || alert.expires || 'N/A';
@@ -248,28 +250,24 @@ export function useMarketData() {
           const tradeCount = alert.trade_count || 0;
 
           // Approximate average daily option premium by ticker class
-          // Mega-cap (SPY/QQQ/NVDA/AAPL/TSLA/AMZN/META/MSFT/GOOGL): ~$5M+ daily
-          // Large-cap (AMD/NFLX/BA/JPM/GS etc): ~$1-3M daily
-          // Mid-cap (PLTR/COIN/SNAP/SOFI etc): ~$200K-800K daily
           const MEGA_CAP = ['SPY', 'QQQ', 'NVDA', 'AAPL', 'TSLA', 'AMZN', 'META', 'MSFT', 'GOOGL', 'GOOG', 'SPX', 'NDX'];
           const LARGE_CAP = ['AMD', 'NFLX', 'BA', 'JPM', 'GS', 'DIS', 'V', 'MA', 'UNH', 'XOM', 'HD', 'CRM', 'INTC', 'COST', 'WMT'];
           const avgDailyPremium = MEGA_CAP.includes(ticker) ? 5_000_000
             : LARGE_CAP.includes(ticker) ? 2_000_000
-            : 500_000; // mid/small-cap default
+            : 500_000;
 
-          // Premium relative to ticker's avg daily premium (how unusual is this flow?)
           const premiumRatio = totalPremium / avgDailyPremium;
 
-          // Confidence scoring — relative to what's normal for this ticker
-          let confidence = 8.5; // baseline (passed all minimum filters)
-          if (volOiRatio && volOiRatio >= 8) confidence += 0.4;    // strong new positioning
-          if (volOiRatio && volOiRatio >= 12) confidence += 0.3;   // extreme new positioning
-          // Premium scoring relative to ticker size
-          if (premiumRatio >= 0.05) confidence += 0.2;  // notable (5%+ of daily avg)
-          if (premiumRatio >= 0.15) confidence += 0.3;  // significant (15%+ of daily avg)
-          if (premiumRatio >= 0.40) confidence += 0.3;  // massive (40%+ of daily avg)
-          if (tradeCount >= 8) confidence += 0.2; // repeated conviction
-          if (tradeCount >= 12) confidence += 0.2; // extreme clustering
+          let confidence = 8.5;
+          if (volOiRatio && volOiRatio >= 8) confidence += 0.4;
+          if (volOiRatio && volOiRatio >= 12) confidence += 0.3;
+          if (premiumRatio >= 0.05) confidence += 0.2;
+          if (premiumRatio >= 0.15) confidence += 0.3;
+          if (premiumRatio >= 0.40) confidence += 0.3;
+          if (tradeCount >= 8) confidence += 0.2;
+          if (tradeCount >= 12) confidence += 0.2;
+          // Penalize missing strike — less actionable without it
+          if (!hasValidStrike) confidence = Math.min(confidence, 8.8);
           confidence = Math.min(10, parseFloat(confidence.toFixed(1)));
 
           const urgencyTag = confidence >= 9.5 ? '🔥 ACT NOW' : confidence >= 9.0 ? '⚡ HIGH CONVICTION' : null;
@@ -285,21 +283,31 @@ export function useMarketData() {
             type: isBullish ? 'bullish' as const : 'bearish' as const,
             confidence,
             _totalPremium: totalPremium,
-            description: `${tradeCount} ${putCall} trades detected on ${ticker} at $${strike} strike. Total premium: $${premium}. Volume/OI ratio: ${volOiRatio ? volOiRatio.toFixed(1) + 'x' : 'N/A'} — ${volOiRatio && volOiRatio >= 8 ? 'major new positioning' : 'significant new positioning'}.`,
+            description: `${tradeCount} ${putCall} trades detected on ${ticker}${hasValidStrike ? ` at $${strikeLabel} strike` : ''}. Total premium: $${premium}. Volume/OI ratio: ${volOiRatio ? volOiRatio.toFixed(1) + 'x' : 'N/A'} — ${volOiRatio && volOiRatio >= 8 ? 'major new positioning' : 'significant new positioning'}.`,
             timestamp: alert.created_at ? timeAgo(alert.created_at) : 'just now',
             createdAt: alert.created_at || '',
             tags,
-            strike: `$${strike}`,
+            strike: hasValidStrike ? `$${strikeLabel}` : undefined,
             expiry: expiry && expiry !== 'N/A' ? expiry : undefined,
             premium: `$${premium}`,
             putCall: putCall as 'call' | 'put',
-            suggestedTrade: `Buy ${ticker} $${strike} ${putCall === 'call' ? 'Calls' : 'Puts'}${expiry && expiry !== 'N/A' ? ` expiring ${expiry}` : ''}`,
-            entryTrigger: isBullish ? `Break above $${strike} with volume` : `Break below $${strike} with volume`,
-            invalidation: isBullish ? `$${(parseFloat(strike) * 0.97).toFixed(2)}` : `$${(parseFloat(strike) * 1.03).toFixed(2)}`,
-            keyLevel: `$${(parseFloat(strike) * (isBullish ? 0.99 : 1.01)).toFixed(2)}`,
-            targetZone: isBullish 
-              ? `$${(parseFloat(strike) * 1.02).toFixed(2)} – $${(parseFloat(strike) * 1.05).toFixed(2)}`
-              : `$${(parseFloat(strike) * 0.95).toFixed(2)} – $${(parseFloat(strike) * 0.98).toFixed(2)}`,
+            suggestedTrade: hasValidStrike
+              ? `Buy ${ticker} $${strikeLabel} ${putCall === 'call' ? 'Calls' : 'Puts'}${expiry && expiry !== 'N/A' ? ` expiring ${expiry}` : ''}`
+              : `${isBullish ? 'Bullish' : 'Bearish'} flow on ${ticker} — $${premium} in ${putCall} premium`,
+            entryTrigger: hasValidStrike
+              ? (isBullish ? `Break above $${strikeLabel} with volume` : `Break below $${strikeLabel} with volume`)
+              : undefined,
+            invalidation: hasValidStrike
+              ? `$${(rawStrike * (isBullish ? 0.97 : 1.03)).toFixed(2)}`
+              : undefined,
+            keyLevel: hasValidStrike
+              ? `$${(rawStrike * (isBullish ? 0.99 : 1.01)).toFixed(2)}`
+              : undefined,
+            targetZone: hasValidStrike
+              ? (isBullish 
+                ? `$${(rawStrike * 1.02).toFixed(2)} – $${(rawStrike * 1.05).toFixed(2)}`
+                : `$${(rawStrike * 0.95).toFixed(2)} – $${(rawStrike * 0.98).toFixed(2)}`)
+              : undefined,
           } as MarketSignal & { _totalPremium: number };
         });
 
