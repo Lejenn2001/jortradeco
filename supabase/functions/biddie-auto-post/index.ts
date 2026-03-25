@@ -151,7 +151,7 @@ serve(async (req) => {
       }
 
       // Strip the @biddie tag and send the rest to Replit API
-      const cleanMessage = messageContent.replace(/@?\s*biddie\s*/i, "").trim() || "What's the market looking like right now?";
+      const cleanMessage = (messageContent.replace(/@?\s*biddie\s*/i, "").trim() || "What's the market looking like right now?") + CHAT_BREVITY;
 
       try {
         const res = await fetch(REPLIT_API, {
