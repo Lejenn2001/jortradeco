@@ -83,6 +83,50 @@ export type Database = {
         }
         Relationships: []
       }
+      signal_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string
+          current_price: number | null
+          id: string
+          message: string
+          read: boolean
+          signal_id: string
+          ticker: string
+          trigger_price: number | null
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          current_price?: number | null
+          id?: string
+          message: string
+          read?: boolean
+          signal_id: string
+          ticker: string
+          trigger_price?: number | null
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          current_price?: number | null
+          id?: string
+          message?: string
+          read?: boolean
+          signal_id?: string
+          ticker?: string
+          trigger_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signal_alerts_signal_id_fkey"
+            columns: ["signal_id"]
+            isOneToOne: false
+            referencedRelation: "signal_outcomes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       signal_outcomes: {
         Row: {
           alerted: boolean
