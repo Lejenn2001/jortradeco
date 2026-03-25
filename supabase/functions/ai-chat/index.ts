@@ -15,7 +15,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, postToChat } = await req.json();
+    const { message, postToChat, history } = await req.json();
 
     if (!message?.trim()) {
       return new Response(JSON.stringify({ reply: "Send me a message and I'll check the flow!" }), {
@@ -25,10 +25,15 @@ serve(async (req) => {
 
     console.log('Forwarding to Replit API:', message.substring(0, 80));
 
+    const body: Record<string, unknown> = { message: message.trim() };
+    if (history && Array.isArray(history) && history.length > 0) {
+      body.history = history;
+    }
+
     const res = await fetch(REPLIT_API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: message.trim() }),
+      body: JSON.stringify(body),
     });
 
     if (!res.ok) {
