@@ -453,8 +453,32 @@ export function useMarketData() {
             });
 
             let hybridScore = scoreResult.score;
-            let hybridLabel = scoreResult.label;
             let gammaLabel = scoreResult.gammaLevelLabel;
+
+            // Boost score using Replit's Claude confidence (1-10 scale)
+            // If Replit confidence is high (8+) but whale model scored low due to
+            // per-contract premium format, blend them to avoid underscoring
+            const replitConfidence = parseFloat(String(s.confidence)) || 5;
+            if (replitConfidence >= 8) {
+              // Map confidence 8-10 → target floor 70-90
+              const confidenceFloor = Math.round((replitConfidence - 8) * 10 + 70);
+              if (hybridScore < confidenceFloor) {
+                // Blend: weighted average favoring higher score
+                hybridScore = Math.round(hybridScore * 0.3 + confidenceFloor * 0.7);
+              }
+            } else if (replitConfidence >= 7) {
+              const confidenceFloor = 60;
+              if (hybridScore < confidenceFloor) {
+                hybridScore = Math.round(hybridScore * 0.4 + confidenceFloor * 0.6);
+              }
+            }
+
+            // Re-derive label after boost
+            let hybridLabel = "Low Conviction";
+            if (hybridScore >= 90) hybridLabel = "Extreme Conviction";
+            else if (hybridScore >= 75) hybridLabel = "Very High Conviction";
+            else if (hybridScore >= 60) hybridLabel = "High Conviction";
+            else if (hybridScore >= 40) hybridLabel = "Moderate Conviction";
 
             // Key level from Claude analysis
             if (s.key_level && !gammaLabel) {
