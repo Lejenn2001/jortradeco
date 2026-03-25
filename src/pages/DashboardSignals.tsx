@@ -162,7 +162,12 @@ const DashboardSignals = () => {
 
 function SignalRow({ signal }: { signal: MarketSignal }) {
   const isCall = signal.putCall === "call" || signal.type === "bullish";
-  const score = signal.confidence;
+  const score = signal.convictionScore ?? Math.round(signal.confidence * 10);
+  const scoreColor = score >= 90 ? "border-destructive text-destructive" 
+    : score >= 75 ? "border-accent text-accent" 
+    : score >= 60 ? "border-primary text-primary" 
+    : "border-muted-foreground text-muted-foreground";
+  const scoreBadge = score >= 90 ? "🔥" : score >= 75 ? "⚡" : score >= 60 ? "📊" : null;
 
   return (
     <div className="px-5 py-4 hover:bg-muted/20 transition-colors">
@@ -183,12 +188,13 @@ function SignalRow({ signal }: { signal: MarketSignal }) {
           {signal.premium && (
             <span className="text-xs text-accent font-semibold">{signal.premium}</span>
           )}
+          {scoreBadge && (
+            <span className="text-[9px] font-bold">{scoreBadge} {signal.convictionLabel || ''}</span>
+          )}
         </div>
         <div className="flex items-center gap-3">
           <span className="text-[10px] text-muted-foreground">{signal.timestamp}</span>
-          <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold ${
-            score >= 9.5 ? "border-destructive text-destructive" : score >= 9 ? "border-accent text-accent" : "border-primary text-primary"
-          }`}>
+          <div className={`w-9 h-9 rounded-full border-2 flex items-center justify-center text-xs font-bold ${scoreColor}`}>
             {score}
           </div>
         </div>
