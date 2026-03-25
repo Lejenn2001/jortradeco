@@ -39,11 +39,9 @@ const AIChatPanel = () => {
     setMessages([]);
     localStorage.removeItem('biddie-chat-messages');
   };
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-  }, [messages]);
 
   useEffect(() => {
-    try { localStorage.setItem('biddie-chat-messages', JSON.stringify({ messages, timestamp: Date.now() })); } catch {}
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
 
   const sendMessage = async (text: string) => {
