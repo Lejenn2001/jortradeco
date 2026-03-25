@@ -67,27 +67,18 @@ serve(async (req) => {
         });
       }
 
-      // Use Replit API for morning overview
-      try {
-        const res = await fetch(REPLIT_API, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: "Good morning! Give me a quick market overview and the single top setup for today." + CHAT_BREVITY }),
+      // Use Replit API for morning overview (with retry)
+      const result = await fetchReplit("Good morning! Give me a quick market overview and the single top setup for today." + CHAT_BREVITY);
+      if (result.ok && result.analysis) {
+        const content = `Good morning JORTRADE fam! 🌅\n\n${result.analysis}`;
+        await supabase.from("chat_messages").insert({
+          user_id: BIDDIE_USER_ID,
+          user_name: BIDDIE_NAME,
+          content,
         });
-        if (res.ok) {
-          const data = await res.json();
-          const content = `Good morning JORTRADE fam! 🌅\n\n${data.analysis || "Let's have a great trading day! Check the signals for early setups."}`;
-          await supabase.from("chat_messages").insert({
-            user_id: BIDDIE_USER_ID,
-            user_name: BIDDIE_NAME,
-            content,
-          });
-          return new Response(JSON.stringify({ status: "posted", action }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-      } catch (e) {
-        console.warn("Replit API failed for morning post:", e);
+        return new Response(JSON.stringify({ status: "posted", action }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
 
       // Fallback
