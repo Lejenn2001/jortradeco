@@ -278,7 +278,7 @@ const DashboardCommunity = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={`Message as ${firstName}... (type @Biddie to ask AI)`}
+              placeholder={`Message as ${firstName}... (Biddie auto-responds to trading questions)`}
               className="bg-muted/30 border-border/50 flex-1 focus:border-primary/50 transition-colors h-9 text-sm"
               maxLength={500}
             />
