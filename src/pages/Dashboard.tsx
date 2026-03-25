@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import SignalFeedPanel from "@/components/dashboard/SignalFeedPanel";
@@ -110,6 +110,39 @@ const Dashboard = () => {
     };
 
     loadTodaysLiveSignals();
+  }, []);
+
+  // Realtime: new inserts into signal_outcomes appear instantly
+  useEffect(() => {
+    const channel = supabase
+      .channel("dashboard-signals-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "signal_outcomes",
+          filter: "signal_source=eq.replit",
+        },
+        (payload) => {
+          const row = payload.new as SignalOutcomeRow;
+          const mapped = recordToDashboardSignal(row);
+          setPersistedSignals((prev) => {
+            // Deduplicate by ticker|strike|expiry
+            const key = `${mapped.ticker}|${mapped.strike}|${mapped.expiry}`;
+            const exists = prev.some(
+              (s) => `${s.ticker}|${s.strike}|${s.expiry}` === key
+            );
+            if (exists) return prev;
+            return [mapped, ...prev];
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   // Dashboard only shows the latest extreme live signals from today.
