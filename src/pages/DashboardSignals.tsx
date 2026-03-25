@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import { useMarketData, type MarketSignal, type SignalTimeframe } from "@/hooks/useMarketData";
+import { useMarketData, type MarketSignal, type SignalTimeframe, computeWhaleConviction } from "@/hooks/useMarketData";
+import { supabase } from "@/integrations/supabase/client";
 import { Search, Filter, TrendingUp, TrendingDown, Zap, Clock, CalendarDays, Target, ShieldX, Crosshair, MapPin, Gauge } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import SignalLegend from "@/components/dashboard/SignalLegend";
@@ -38,10 +39,148 @@ const cardVariants = {
   }),
 };
 
+function classifyTimeframeFromRecord(record: any): SignalTimeframe {
+  const confidence = parseFloat(record.confidence) || 5;
+  const score = confidence >= 8.5 ? 85 : confidence >= 7.5 ? 75 : confidence >= 6 ? 60 : 40;
+  
+  if (score >= 75) return "buy_now";
+  
+  if (record.expiry) {
+    const expDate = new Date(record.expiry);
+    if (!isNaN(expDate.getTime())) {
+      const now = new Date();
+      const dte = Math.max(0, Math.ceil((expDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+      if (dte <= 1) return "buy_now";
+      if (dte <= 7) return "short_term";
+      return "swing";
+    }
+  }
+  
+  if (score >= 60) return "short_term";
+  return "swing";
+}
+
+function dbRecordToSignal(record: any): MarketSignal {
+  const isBullish = record.signal_type === 'bullish';
+  const confidence = parseFloat(record.confidence) || 5;
+  
+  // Derive conviction score from confidence (1-10 scale → approximate 0-100)
+  let convictionScore = Math.round(confidence * 10);
+  if (confidence >= 9) convictionScore = Math.max(convictionScore, 85);
+  else if (confidence >= 8) convictionScore = Math.max(convictionScore, 75);
+  else if (confidence >= 7) convictionScore = Math.max(convictionScore, 65);
+
+  let convictionLabel = "Low Conviction";
+  if (convictionScore >= 90) convictionLabel = "Extreme Conviction";
+  else if (convictionScore >= 75) convictionLabel = "Very High Conviction";
+  else if (convictionScore >= 60) convictionLabel = "High Conviction";
+  else if (convictionScore >= 40) convictionLabel = "Moderate Conviction";
+
+  const tags: string[] = [];
+  if (record.put_call) tags.push(record.put_call === 'call' ? 'Call Flow' : 'Put Flow');
+  if (convictionScore >= 85) tags.push('🔥 ACT NOW');
+  else if (convictionScore >= 70) tags.push('⚡ HIGH CONVICTION');
+
+  const createdAt = record.created_at || '';
+  const timestamp = createdAt ? formatTimestamp(createdAt) : 'Today';
+
+  return {
+    id: record.id,
+    ticker: record.ticker,
+    type: isBullish ? 'bullish' : 'bearish',
+    confidence,
+    convictionScore,
+    convictionLabel,
+    description: record.description || `${record.put_call || ''} flow on ${record.ticker} at ${record.strike || 'N/A'} strike.`,
+    timestamp,
+    tags,
+    strike: record.strike || undefined,
+    expiry: record.expiry || undefined,
+    premium: record.premium || undefined,
+    putCall: record.put_call as 'call' | 'put' | undefined,
+    suggestedTrade: `Buy ${record.ticker} ${record.strike || ''} ${record.put_call === 'call' ? 'Calls' : 'Puts'}${record.expiry ? ` exp ${record.expiry}` : ''}`,
+    targetZone: record.target_zone || undefined,
+    createdAt,
+    source: 'live',
+    timeframe: classifyTimeframeFromRecord(record),
+  };
+}
+
+function formatTimestamp(isoStr: string): string {
+  const date = new Date(isoStr);
+  if (isNaN(date.getTime())) return 'Today';
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 1) return 'just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  const diffHrs = Math.floor(diffMins / 60);
+  if (diffHrs < 12) return `${diffHrs}h ago`;
+  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+}
+
 const DashboardSignals = () => {
-  const { signals, loading } = useMarketData();
+  const { signals: liveSignals, loading: liveLoading } = useMarketData();
+  const [dbSignals, setDbSignals] = useState<MarketSignal[]>([]);
+  const [dbLoading, setDbLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<FilterType>("all");
+
+  // Load today's signals from signal_outcomes table
+  useEffect(() => {
+    const loadTodaySignals = async () => {
+      setDbLoading(true);
+      try {
+        // Get start of today in UTC
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        todayStart.setHours(todayStart.getHours() - 4); // EST offset — capture full trading day
+
+        const { data, error } = await supabase
+          .from("signal_outcomes")
+          .select("*")
+          .eq("signal_source", "replit")
+          .gte("created_at", todayStart.toISOString())
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          const mapped = data.map(dbRecordToSignal);
+          setDbSignals(mapped);
+        }
+      } catch (e) {
+        console.warn('Failed to load today signals from DB:', e);
+      } finally {
+        setDbLoading(false);
+      }
+    };
+
+    loadTodaySignals();
+  }, []);
+
+  // Merge: live signals take priority (fresher data), then fill in from DB records
+  const allSignals = useMemo(() => {
+    const signalMap = new Map<string, MarketSignal>();
+
+    // DB signals first (background)
+    for (const s of dbSignals) {
+      const key = `${s.ticker}|${s.strike}|${s.expiry}`;
+      signalMap.set(key, s);
+    }
+
+    // Live signals override DB (they have richer data like entry triggers, key levels)
+    for (const s of liveSignals) {
+      if (s.source === 'example') continue; // skip Friday examples
+      const key = `${s.ticker}|${s.strike}|${s.expiry}`;
+      signalMap.set(key, s);
+    }
+
+    return Array.from(signalMap.values());
+  }, [liveSignals, dbSignals]);
+
+  const loading = liveLoading && dbLoading;
+  const signals = allSignals;
 
   const grouped = useMemo(() => {
     let list = [...signals];
@@ -74,6 +213,8 @@ const DashboardSignals = () => {
     return groups;
   }, [signals, search, filterType]);
 
+  const totalCount = signals.filter(s => s.source !== 'example').length;
+
   return (
     <div className="h-screen flex bg-background overflow-hidden">
       <DashboardSidebar />
@@ -83,7 +224,9 @@ const DashboardSignals = () => {
           {/* Header */}
           <div className="flex flex-col gap-1">
             <h1 className="text-xl sm:text-2xl font-extrabold text-foreground">Live Signals</h1>
-            <p className="text-xs text-muted-foreground">Full signal details — organized by timeframe</p>
+            <p className="text-xs text-muted-foreground">
+              Today's signal log — {totalCount} signals recorded
+            </p>
           </div>
 
           {/* Filters */}
@@ -125,6 +268,12 @@ const DashboardSignals = () => {
             </div>
           )}
 
+          {!loading && signals.length === 0 && (
+            <div className="glass-panel rounded-xl p-8 text-center">
+              <p className="text-muted-foreground text-sm">No signals recorded yet today. Signals will appear here as they come in during market hours.</p>
+            </div>
+          )}
+
           {/* Sections */}
           {SECTION_ORDER.map((timeframe) => {
             const meta = SECTION_META[timeframe];
@@ -138,9 +287,12 @@ const DashboardSignals = () => {
                   {meta.icon}
                   <span className="font-bold text-xs sm:text-sm text-foreground">{meta.label}</span>
                   <span className="text-[10px] text-muted-foreground hidden sm:inline">— {meta.description}</span>
+                  <span className="text-[10px] bg-muted/50 text-muted-foreground px-1.5 py-0.5 rounded-full ml-auto">
+                    {sectionSignals.length}
+                  </span>
                 </div>
 
-                {/* Signal cards — same style as dashboard */}
+                {/* Signal cards */}
                 <div className="space-y-3">
                   {sectionSignals.map((signal, i) => (
                     <motion.div
@@ -167,7 +319,6 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
   const isCall = signal.putCall === "call" || signal.type === "bullish";
   const score = signal.convictionScore ?? Math.round(signal.confidence * 10);
 
-  // Glow class based on conviction
   const glowClass = score >= 85
     ? "shadow-[0_0_15px_-3px_hsl(var(--primary)/0.4)] border-primary/40"
     : score >= 70
@@ -180,7 +331,6 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
     <div className={`rounded-xl border overflow-hidden transition-shadow ${glowClass} ${
       isCall ? "bg-primary/5" : "bg-destructive/5"
     }`}>
-      {/* Alert Header Bar */}
       <div className={`px-3 sm:px-4 py-2 flex items-center justify-between ${
         isCall ? "bg-primary/15" : "bg-destructive/15"
       }`}>
@@ -189,11 +339,7 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
           <span className="text-[9px] sm:text-[10px] font-bold tracking-widest text-accent uppercase">
             JORTRADE Alert
           </span>
-          {signal.source === "live" ? (
-            <span className="text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 uppercase tracking-wider">Live</span>
-          ) : signal.source === "example" ? (
-            <span className="text-[8px] sm:text-[9px] font-medium px-1.5 py-0.5 rounded bg-muted/40 text-muted-foreground uppercase tracking-wider">Example</span>
-          ) : null}
+          <span className="text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 uppercase tracking-wider">Live</span>
         </div>
         <span className="text-[9px] sm:text-[10px] text-muted-foreground flex items-center gap-1">
           <Clock className="h-2.5 w-2.5" />
@@ -202,7 +348,6 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
       </div>
 
       <div className="px-3 sm:px-4 py-3 space-y-2.5">
-        {/* Ticker + Direction + Score Ring */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {isCall ? (
@@ -223,12 +368,10 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
           <ConvictionScoreRing score={score} label={signal.convictionLabel ?? ""} />
         </div>
 
-        {/* Description */}
         <p className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">
           {signal.description}
         </p>
 
-        {/* Trade Details */}
         <div className="grid grid-cols-1 gap-1.5 text-[11px] sm:text-xs">
           {signal.suggestedTrade && (
             <div className="flex items-start gap-2 bg-muted/30 rounded-lg px-2.5 py-1.5">
@@ -286,7 +429,6 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
           )}
         </div>
 
-        {/* Tags + Expiry */}
         <div className="flex flex-wrap gap-1.5">
           {signal.tags.map((tag) => {
             const isUrgent = tag.includes('ACT NOW') || tag.includes('HIGH CONVICTION');
