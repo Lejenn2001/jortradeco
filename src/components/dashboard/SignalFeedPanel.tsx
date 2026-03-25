@@ -122,6 +122,16 @@ const SignalFeedPanel = ({ signals, loading, limit }: Props) => {
                     </div>
                   )}
 
+                  {signal.gammaLevelLabel && (
+                    <div className="flex items-start gap-2 bg-accent/10 rounded-lg px-3 py-2">
+                      <Gauge className="h-3.5 w-3.5 text-accent mt-0.5 shrink-0" />
+                      <div>
+                        <span className="text-muted-foreground">S/R alignment: </span>
+                        <span className="text-accent font-semibold">{signal.gammaLevelLabel}</span>
+                      </div>
+                    </div>
+                  )}
+
                   {signal.keyLevel && (
                     <div className="flex items-start gap-2 bg-primary/10 rounded-lg px-3 py-2">
                       <Crosshair className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
