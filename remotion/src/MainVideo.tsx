@@ -32,12 +32,14 @@ const LogoReveal: React.FC = () => {
         background: `radial-gradient(circle, rgba(60,130,255,${glowOpacity}) 0%, rgba(160,80,255,${glowOpacity * 0.5}) 40%, transparent 70%)`,
       }} />
 
-      {/* Logo */}
-      <Img src={staticFile("images/logo_jt.png")} style={{
+      {/* Logo text */}
+      <div style={{
         opacity, transform: `scale(${scale})`,
-        width: 320, height: "auto",
-        filter: "drop-shadow(0 0 30px rgba(60,130,255,0.4))",
-      }} />
+        fontFamily: displayFont, fontSize: 120, fontWeight: 800,
+        color: "#fff", letterSpacing: "0.15em", textAlign: "center",
+      }}>
+        JORTRADE
+      </div>
 
       {/* Accent line */}
       <div style={{
@@ -99,8 +101,8 @@ const FourPillars: React.FC = () => {
             }}>
               <div style={{ fontSize: 36 }}>{p.icon}</div>
               <div>
-                <div style={{ fontFamily: displayFont, fontSize: 38, fontWeight: 700, color: p.color, letterSpacing: "0.1em" }}>{p.name}</div>
-                <div style={{ fontFamily: bodyFont, fontSize: 26, color: "#C8CDD7", marginTop: 4 }}>{p.desc}</div>
+                <div style={{ fontFamily: displayFont, fontSize: 28, fontWeight: 700, color: p.color, letterSpacing: "0.1em" }}>{p.name}</div>
+                <div style={{ fontFamily: bodyFont, fontSize: 20, color: "#C8CDD7", marginTop: 4 }}>{p.desc}</div>
               </div>
             </div>
           );
@@ -219,10 +221,11 @@ const ClosingCTA: React.FC = () => {
         background: `radial-gradient(circle, rgba(60,130,255,${glowPulse}) 0%, rgba(160,80,255,${glowPulse * 0.5}) 40%, transparent 65%)`,
       }} />
 
-      <Img src={staticFile("images/logo_jt.png")} style={{
-        width: 280, height: "auto", transform: `scale(${logoScale})`,
-        filter: "drop-shadow(0 0 30px rgba(60,130,255,0.4))",
-      }} />
+      <div style={{ textAlign: "center", transform: `scale(${logoScale})` }}>
+        <div style={{ fontFamily: displayFont, fontSize: 100, fontWeight: 800, color: "#fff", letterSpacing: "0.12em" }}>
+          JORTRADE
+        </div>
+      </div>
 
       <div style={{ width: lineWidth, height: 3, marginTop: 15, background: "linear-gradient(90deg, transparent, #3C82FF, #A050FF, transparent)" }} />
 
