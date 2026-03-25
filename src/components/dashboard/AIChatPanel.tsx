@@ -35,7 +35,10 @@ const AIChatPanel = () => {
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  const clearChat = () => {
+    setMessages([]);
+    localStorage.removeItem('biddie-chat-messages');
+  };
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
 
