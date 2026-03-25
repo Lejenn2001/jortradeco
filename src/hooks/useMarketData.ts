@@ -427,6 +427,9 @@ export function useMarketData() {
             openInterest: alert.open_interest || 0,
             tradeCount,
             ticker,
+            strike: rawStrike,
+            stockPrice: stockPrice || undefined,
+            keyLevels: keyLevelsMap[ticker],
           });
 
           // Convert 0-100 to 0-10 for backward compat display
