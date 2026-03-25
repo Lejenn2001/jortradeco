@@ -174,6 +174,25 @@ const DashboardAnalytics = () => {
     setTogglingId(null);
   };
 
+  const deleteMember = async (userId: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete ${name || "this member"}? This cannot be undone.`)) return;
+    setDeletingId(userId);
+    const { data, error } = await supabase.functions.invoke("manage-roles", {
+      body: { action: "delete", user_id: userId },
+    });
+    if (error || data?.error) {
+      toast({
+        title: "Error",
+        description: data?.error || error?.message || "Failed to delete member",
+        variant: "destructive",
+      });
+    } else {
+      toast({ title: "Member deleted", description: `${name || "User"} has been removed.` });
+      await loadMembers();
+    }
+    setDeletingId(null);
+  };
+
   const today = new Date().toISOString().split("T")[0];
   const newToday = members.filter((m) => m.created_at.startsWith(today)).length;
   const onlineCount = members.filter((m) => onlineUsers.has(m.id)).length;
