@@ -35,7 +35,7 @@ const LogoReveal: React.FC = () => {
       {/* Logo text */}
       <div style={{
         opacity, transform: `scale(${scale})`,
-        fontFamily: displayFont, fontSize: 120, fontWeight: 800,
+        fontFamily: displayFont, fontSize: 150, fontWeight: 800,
         color: "#fff", letterSpacing: "0.15em", textAlign: "center",
       }}>
         JORTRADE
@@ -50,7 +50,7 @@ const LogoReveal: React.FC = () => {
       {/* Tagline */}
       <div style={{
         opacity: taglineOpacity, transform: `translateY(${taglineY}px)`,
-        fontFamily: bodyFont, fontSize: 28, color: "#C8CDD7",
+        fontFamily: bodyFont, fontSize: 36, color: "#C8CDD7",
         marginTop: 25, letterSpacing: "0.3em", fontWeight: 400,
       }}>
         TRADE WITH INTELLIGENCE
@@ -81,8 +81,8 @@ const FourPillars: React.FC = () => {
       }} />
 
       <div style={{ opacity: titleOpacity, transform: `translateY(${titleY}px)`, textAlign: "center", marginBottom: 50 }}>
-        <div style={{ fontFamily: displayFont, fontSize: 72, fontWeight: 800, color: "#fff" }}>THE ECOSYSTEM</div>
-        <div style={{ fontFamily: bodyFont, fontSize: 24, color: "#8C91A0", marginTop: 10, letterSpacing: "0.2em" }}>FOUR PILLARS OF EDGE</div>
+        <div style={{ fontFamily: displayFont, fontSize: 90, fontWeight: 800, color: "#fff" }}>THE ECOSYSTEM</div>
+        <div style={{ fontFamily: bodyFont, fontSize: 30, color: "#8C91A0", marginTop: 10, letterSpacing: "0.2em" }}>FOUR PILLARS OF EDGE</div>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 18, width: "100%" }}>
@@ -101,8 +101,8 @@ const FourPillars: React.FC = () => {
             }}>
               <div style={{ fontSize: 36 }}>{p.icon}</div>
               <div>
-                <div style={{ fontFamily: displayFont, fontSize: 28, fontWeight: 700, color: p.color, letterSpacing: "0.1em" }}>{p.name}</div>
-                <div style={{ fontFamily: bodyFont, fontSize: 20, color: "#C8CDD7", marginTop: 4 }}>{p.desc}</div>
+                <div style={{ fontFamily: displayFont, fontSize: 36, fontWeight: 700, color: p.color, letterSpacing: "0.1em" }}>{p.name}</div>
+                <div style={{ fontFamily: bodyFont, fontSize: 26, color: "#C8CDD7", marginTop: 4 }}>{p.desc}</div>
               </div>
             </div>
           );
@@ -147,9 +147,9 @@ const BiddieReveal: React.FC = () => {
 
       {/* Text below */}
       <div style={{ opacity: textOpacity, transform: `translateY(${textY}px)`, textAlign: "center", marginTop: 30 }}>
-        <div style={{ fontFamily: displayFont, fontSize: 64, fontWeight: 800, color: "#fff" }}>MEET BIDDIE</div>
-        <div style={{ fontFamily: bodyFont, fontSize: 26, color: "#A050FF", marginTop: 8 }}>Your AI Trading Assistant</div>
-        <div style={{ fontFamily: bodyFont, fontSize: 20, color: "#8C91A0", marginTop: 12 }}>Scans 1,000+ setups daily</div>
+        <div style={{ fontFamily: displayFont, fontSize: 80, fontWeight: 800, color: "#fff" }}>MEET BIDDIE</div>
+        <div style={{ fontFamily: bodyFont, fontSize: 34, color: "#A050FF", marginTop: 8 }}>Your AI Trading Assistant</div>
+        <div style={{ fontFamily: bodyFont, fontSize: 26, color: "#8C91A0", marginTop: 12 }}>Scans 1,000+ setups daily</div>
       </div>
     </AbsoluteFill>
   );
@@ -187,8 +187,8 @@ const StatsScene: React.FC = () => {
               padding: "35px 30px", textAlign: "center",
               border: `1px solid ${s.color}33`,
             }}>
-              <div style={{ fontFamily: displayFont, fontSize: 56, fontWeight: 800, color: s.color }}>{s.value}</div>
-              <div style={{ fontFamily: bodyFont, fontSize: 20, color: "#C8CDD7", marginTop: 10 }}>{s.label}</div>
+              <div style={{ fontFamily: displayFont, fontSize: 72, fontWeight: 800, color: s.color }}>{s.value}</div>
+              <div style={{ fontFamily: bodyFont, fontSize: 26, color: "#C8CDD7", marginTop: 10 }}>{s.label}</div>
             </div>
           );
         })}
@@ -222,7 +222,7 @@ const ClosingCTA: React.FC = () => {
       }} />
 
       <div style={{ textAlign: "center", transform: `scale(${logoScale})` }}>
-        <div style={{ fontFamily: displayFont, fontSize: 100, fontWeight: 800, color: "#fff", letterSpacing: "0.12em" }}>
+        <div style={{ fontFamily: displayFont, fontSize: 130, fontWeight: 800, color: "#fff", letterSpacing: "0.12em" }}>
           JORTRADE
         </div>
       </div>
@@ -230,7 +230,7 @@ const ClosingCTA: React.FC = () => {
       <div style={{ width: lineWidth, height: 3, marginTop: 15, background: "linear-gradient(90deg, transparent, #3C82FF, #A050FF, transparent)" }} />
 
       <div style={{ opacity: tagOpacity, transform: `translateY(${tagY}px)`, textAlign: "center", marginTop: 25 }}>
-        <div style={{ fontFamily: bodyFont, fontSize: 28, color: "#C8CDD7", letterSpacing: "0.15em" }}>
+        <div style={{ fontFamily: bodyFont, fontSize: 36, color: "#C8CDD7", letterSpacing: "0.15em" }}>
           YOUR EDGE STARTS HERE
         </div>
       </div>
@@ -240,13 +240,13 @@ const ClosingCTA: React.FC = () => {
         background: "linear-gradient(135deg, #3C82FF, #A050FF)", borderRadius: 30,
         padding: "14px 40px",
       }}>
-        <div style={{ fontFamily: displayFont, fontSize: 26, fontWeight: 700, color: "#fff", letterSpacing: "0.1em" }}>
+        <div style={{ fontFamily: displayFont, fontSize: 34, fontWeight: 700, color: "#fff", letterSpacing: "0.1em" }}>
           WWW.JORTRADE.COM
         </div>
       </div>
 
       <div style={{ opacity: urlOpacity, marginTop: 20 }}>
-        <div style={{ fontFamily: bodyFont, fontSize: 22, color: "#8C91A0" }}>@jortrade</div>
+        <div style={{ fontFamily: bodyFont, fontSize: 28, color: "#8C91A0" }}>@jortrade</div>
       </div>
     </AbsoluteFill>
   );
