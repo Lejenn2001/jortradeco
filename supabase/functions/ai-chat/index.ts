@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -6,6 +7,7 @@ const corsHeaders = {
 };
 
 const REPLIT_API = 'https://dc9f5714-8a88-4d03-b91b-f82647f969bd-00-22sbppmc01524.riker.replit.dev/api/whale/chat';
+const BIDDIE_USER_ID = "00000000-0000-0000-0000-000000000000";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -13,7 +15,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message } = await req.json();
+    const { message, postToChat } = await req.json();
 
     if (!message?.trim()) {
       return new Response(JSON.stringify({ reply: "Send me a message and I'll check the flow!" }), {
@@ -37,6 +39,23 @@ serve(async (req) => {
 
     const data = await res.json();
     const reply = data.analysis || data.reply || "I couldn't get a response right now. Try again in a moment.";
+
+    // If postToChat is true, insert Biddie's reply into chat_messages using service role
+    if (postToChat) {
+      try {
+        const supabase = createClient(
+          Deno.env.get('SUPABASE_URL')!,
+          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+        );
+        await supabase.from('chat_messages').insert({
+          user_id: BIDDIE_USER_ID,
+          user_name: 'Biddie AI',
+          content: reply,
+        });
+      } catch (dbErr) {
+        console.error('Failed to post Biddie reply to chat:', dbErr);
+      }
+    }
 
     return new Response(JSON.stringify({ reply, isAlert: data.isAlert || false }), {
       status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
