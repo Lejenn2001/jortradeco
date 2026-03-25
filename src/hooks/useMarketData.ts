@@ -444,8 +444,10 @@ export function useMarketData() {
             } as MarketSignal;
           });
 
-          // Merge live signals (first) with examples (after)
-          setSignals([...mapped, ...exampleSignals]);
+          // Merge live signals (first) with examples (after), deduplicating by ticker
+          const liveTickers = new Set(mapped.map(s => s.ticker));
+          const filteredExamples = exampleSignals.filter(s => !liveTickers.has(s.ticker));
+          setSignals([...mapped, ...filteredExamples]);
           saveCachedSignals(mapped);
 
           // Log Replit signals to signal_outcomes for accuracy tracking
