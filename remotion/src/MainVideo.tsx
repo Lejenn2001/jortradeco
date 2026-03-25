@@ -32,14 +32,12 @@ const LogoReveal: React.FC = () => {
         background: `radial-gradient(circle, rgba(60,130,255,${glowOpacity}) 0%, rgba(160,80,255,${glowOpacity * 0.5}) 40%, transparent 70%)`,
       }} />
 
-      {/* Logo text */}
-      <div style={{
+      {/* Logo */}
+      <Img src={staticFile("images/logo_jt.png")} style={{
         opacity, transform: `scale(${scale})`,
-        fontFamily: displayFont, fontSize: 120, fontWeight: 800,
-        color: "#fff", letterSpacing: "0.15em", textAlign: "center",
-      }}>
-        JORTRADE
-      </div>
+        width: 320, height: "auto",
+        filter: "drop-shadow(0 0 30px rgba(60,130,255,0.4))",
+      }} />
 
       {/* Accent line */}
       <div style={{
