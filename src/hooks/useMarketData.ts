@@ -12,6 +12,7 @@ export interface FlowAlert {
   explanation?: string;
   convictionScore?: number;
   convictionLabel?: string;
+  gammaLevelLabel?: string;
 }
 
 export type SignalTimeframe = "buy_now" | "short_term" | "swing";
