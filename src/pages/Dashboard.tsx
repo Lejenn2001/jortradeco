@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import SignalFeedPanel from "@/components/dashboard/SignalFeedPanel";
@@ -8,6 +9,14 @@ import { useMarketData } from "@/hooks/useMarketData";
 
 const Dashboard = () => {
   const { signals, whaleAlerts, loading } = useMarketData();
+
+  // Dashboard only shows the absolute best — top 2-3 highest conviction
+  const topSignals = useMemo(() => {
+    return [...signals]
+      .sort((a, b) => (b.convictionScore ?? b.confidence * 10) - (a.convictionScore ?? a.confidence * 10))
+      .filter(s => (s.convictionScore ?? s.confidence * 10) >= 85)
+      .slice(0, 3);
+  }, [signals]);
 
   return (
     <div className="h-screen flex bg-background overflow-hidden">
@@ -24,7 +33,7 @@ const Dashboard = () => {
               <AIChatPanel />
             </div>
             <div className="lg:col-span-3 grid grid-cols-1 gap-4 lg:gap-6">
-              <SignalFeedPanel signals={signals} loading={loading} limit={4} />
+              <SignalFeedPanel signals={topSignals} loading={loading} />
               <PortfolioPanel whaleAlerts={whaleAlerts} loading={loading} limit={6} />
             </div>
           </div>
