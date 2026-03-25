@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 const UW_BASE = "https://api.unusualwhales.com/api";
-const BATCH_SIZE = 20;
+const BATCH_SIZE = 10;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
