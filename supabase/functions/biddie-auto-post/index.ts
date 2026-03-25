@@ -9,6 +9,7 @@ const corsHeaders = {
 const BIDDIE_USER_ID = "00000000-0000-0000-0000-000000000000";
 const BIDDIE_NAME = "🤖 Biddie AI";
 const REPLIT_API = "https://dc9f5714-8a88-4d03-b91b-f82647f969bd-00-22sbppmc01524.riker.replit.dev/api/whale/chat";
+const CHAT_BREVITY = " IMPORTANT: Keep your response to 2-3 sentences max. Only mention the single best/highest conviction play. No lists of multiple contracts. Be concise like a quick chat message.";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
