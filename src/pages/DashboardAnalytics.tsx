@@ -257,9 +257,10 @@ const DashboardAnalytics = () => {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+               <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
                 <StatCard icon={Users} label="Total Members" value={members.length} color="bg-primary" />
-                <StatCard icon={UserPlus} label="New Today" value={newToday} color="bg-emerald-500" />
+                <StatCard icon={Circle} label="Online Now" value={onlineCount} color="bg-emerald-500" />
+                <StatCard icon={UserPlus} label="New Today" value={newToday} color="bg-primary" />
                 <StatCard icon={TrendingUp} label="This Week" value={newThisWeek} subtitle="New signups" color="bg-purple-500" />
                 <StatCard icon={MessageSquare} label="Chat Messages" value={chatCount} color="bg-amber-500" />
               </div>
