@@ -176,6 +176,7 @@ const DashboardAnalytics = () => {
 
   const today = new Date().toISOString().split("T")[0];
   const newToday = members.filter((m) => m.created_at.startsWith(today)).length;
+  const onlineCount = members.filter((m) => onlineUsers.has(m.id)).length;
 
   const thisWeekStart = new Date();
   thisWeekStart.setDate(thisWeekStart.getDate() - 7);
