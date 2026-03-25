@@ -63,7 +63,7 @@ const SignalFeedPanel = ({ signals, loading, limit }: Props) => {
               </div>
 
               <div className="px-4 py-3 space-y-3">
-                {/* Ticker + Direction */}
+                {/* Ticker + Direction + Conviction */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     {signal.type === "bullish" ? (
@@ -79,20 +79,28 @@ const SignalFeedPanel = ({ signals, loading, limit }: Props) => {
                           : "bg-destructive/20 text-destructive"
                       }`}
                     >
-                      {signal.type} Entry Signal
+                      {signal.putCall === "call" ? "CALL" : signal.putCall === "put" ? "PUT" : signal.type}
                     </span>
                   </div>
-                  <div
-                    className={`w-10 h-10 rounded-full border-2 flex items-center justify-center text-[10px] font-bold ${
-                      signal.confidence >= 9
-                        ? "border-primary text-primary"
-                        : signal.confidence >= 8
-                        ? "border-accent text-accent"
-                        : "border-muted-foreground text-muted-foreground"
-                    }`}
-                  >
-                    {signal.confidence}/10
-                  </div>
+                  {(() => {
+                    const score = signal.convictionScore ?? Math.round(signal.confidence * 10);
+                    const scoreColor = score >= 90 ? "border-destructive text-destructive bg-destructive/10"
+                      : score >= 75 ? "border-accent text-accent bg-accent/10"
+                      : score >= 60 ? "border-primary text-primary bg-primary/10"
+                      : "border-muted-foreground text-muted-foreground bg-muted/20";
+                    const label = score >= 95 ? "Ultra"
+                      : score >= 90 ? "Extreme"
+                      : score >= 80 ? "Very High"
+                      : score >= 70 ? "High"
+                      : score >= 60 ? "Elevated"
+                      : "Moderate";
+                    return (
+                      <div className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 ${scoreColor}`}>
+                        <span className="text-xs font-bold">{score}</span>
+                        <span className="text-[9px] font-medium">{label}</span>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Description */}
