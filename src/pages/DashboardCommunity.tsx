@@ -94,29 +94,14 @@ const DashboardCommunity = () => {
 
   const triggerBiddie = async (userMessage: string) => {
     try {
-      const res = await fetch(
-        "https://dc9f5714-8a88-4d03-b91b-f82647f969bd-00-22sbppmc01524.riker.replit.dev/api/whale/chat",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: userMessage }),
-        }
-      );
-      const data = await res.json();
-      const reply = data.analysis || "Biddie couldn't read the tape right now.";
-      // Post Biddie's response as a chat message
-      await supabase.from("chat_messages").insert({
-        user_id: BIDDIE_USER_ID,
-        user_name: "Biddie AI",
-        content: reply,
-      } as any);
+      const { data, error } = await supabase.functions.invoke('ai-chat', {
+        body: { message: userMessage, postToChat: true },
+      });
+      if (error) {
+        console.error("Biddie edge function error:", error);
+      }
     } catch (e) {
       console.error("Biddie API error:", e);
-      await supabase.from("chat_messages").insert({
-        user_id: BIDDIE_USER_ID,
-        user_name: "Biddie AI",
-        content: "⚠️ Biddie couldn't connect to the flow right now. Try again.",
-      } as any);
     }
   };
 
