@@ -94,8 +94,10 @@ const DashboardCommunity = () => {
 
   const triggerBiddie = async (userMessage: string) => {
     try {
+      // Prepend instruction for concise community chat responses
+      const chatInstruction = `[COMMUNITY CHAT MODE] Keep your response SHORT — 2-3 sentences max. Only give a full detailed breakdown if you see a high-confidence alert (8+/10). For casual greetings, just be friendly and brief. For trading questions, give the #1 best play only with ticker, direction, and confidence. No long lists.\n\nUser says: ${userMessage}`;
       const { data, error } = await supabase.functions.invoke('ai-chat', {
-        body: { message: userMessage, postToChat: true },
+        body: { message: chatInstruction, postToChat: true },
       });
       if (error) {
         console.error("Biddie edge function error:", error);
@@ -122,7 +124,6 @@ const DashboardCommunity = () => {
       toast({ title: "Error sending message", description: error.message, variant: "destructive" });
     } else {
       setInput("");
-      // Auto-detect trading questions OR explicit @Biddie mentions
       const lower = messageText.toLowerCase();
       const hasBiddieMention = lower.includes("biddie") || lower.includes("@biddie");
       const tradingKeywords = [
@@ -137,11 +138,11 @@ const DashboardCommunity = () => {
         "momentum", "breakout", "breakdown", "entry", "strike",
         "expir", "premium", "sweep", "gamma", "vwap",
         "support", "resistance", "pivot", "target",
-        "what do you think about", "how's", "hows",
-        "should i", "would you", "is it time",
+        "what do you think about", "should i", "would you", "is it time",
       ];
       const isTradingQuestion = tradingKeywords.some(kw => lower.includes(kw));
       
+      // Only trigger once — Biddie mention OR trading question, not both
       if (hasBiddieMention || isTradingQuestion) {
         const cleanMsg = messageText.replace(/@?biddie[,:]?\s*/i, "").trim() || messageText;
         triggerBiddie(cleanMsg);
