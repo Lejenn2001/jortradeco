@@ -68,9 +68,10 @@ serve(async (req) => {
       }
 
       // Use Replit API for morning overview (with retry)
-      const result = await fetchReplit("Good morning! Give me a quick market overview and the single top setup for today." + CHAT_BREVITY);
+      const result = await fetchReplit("Give me a pre-market overview and the single top setup for today based on yesterday's flow. Remember prices are from previous close, not live." + CHAT_BREVITY);
+      const timeStr = new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit", hour12: true });
       if (result.ok && result.analysis) {
-        const content = `Good morning JORTRADE fam! 🌅\n\n${result.analysis}`;
+        const content = `Good morning JORTRADE fam! 🌅\n\n${result.analysis}\n\n_Data as of ${timeStr} ET — prices may reflect previous close_`;
         await supabase.from("chat_messages").insert({
           user_id: BIDDIE_USER_ID,
           user_name: BIDDIE_NAME,
