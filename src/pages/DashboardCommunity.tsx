@@ -183,16 +183,16 @@ const DashboardCommunity = () => {
       <DashboardSidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <DashboardHeader />
-        <main className="flex-1 flex flex-col overflow-hidden p-2 lg:p-3 bg-mesh">
-          {/* Compact Header */}
-          <div className="mb-2 shrink-0">
+        <main className="flex-1 flex flex-col overflow-hidden p-1.5 sm:p-2 lg:p-3 bg-mesh">
+          {/* Compact Header — hidden on very small screens */}
+          <div className="mb-1.5 sm:mb-2 shrink-0 hidden sm:block">
             <ChatRoomHeader onlineCount={onlineCount} firstName={firstName} />
           </div>
 
           {/* Messages — full height like Teams/Zoom */}
           <div
             ref={scrollRef}
-            className="flex-1 glass-panel rounded-xl border-glow-purple px-4 py-3 overflow-y-auto space-y-2 mb-2 min-h-0"
+            className="flex-1 glass-panel rounded-xl border-glow-purple px-2.5 sm:px-4 py-2 sm:py-3 overflow-y-auto space-y-2 mb-1.5 sm:mb-2 min-h-0"
           >
             {messages.length === 0 && (
               <div className="flex-1 flex items-center justify-center h-full">
