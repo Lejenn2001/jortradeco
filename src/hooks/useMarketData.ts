@@ -241,6 +241,7 @@ const exampleSignals: MarketSignal[] = [
     keyLevel: "$141.50",
     targetZone: "$148.00 – $152.00",
     timeframe: "buy_now",
+    source: "example",
   },
   {
     id: "ex-2",
@@ -262,6 +263,7 @@ const exampleSignals: MarketSignal[] = [
     keyLevel: "$255.00",
     targetZone: "$242.00 – $245.00",
     timeframe: "short_term",
+    source: "example",
   },
   {
     id: "ex-3",
@@ -283,6 +285,7 @@ const exampleSignals: MarketSignal[] = [
     keyLevel: "$213.00",
     targetZone: "$218.00 – $222.00",
     timeframe: "buy_now",
+    source: "example",
   },
   {
     id: "ex-4",
@@ -304,6 +307,7 @@ const exampleSignals: MarketSignal[] = [
     keyLevel: "$573.50",
     targetZone: "$564.00 – $567.00",
     timeframe: "buy_now",
+    source: "example",
   },
   {
     id: "ex-5",
@@ -325,6 +329,7 @@ const exampleSignals: MarketSignal[] = [
     keyLevel: "$117.50",
     targetZone: "$123.00 – $126.00",
     timeframe: "swing",
+    source: "example",
   },
   {
     id: "ex-6",
@@ -346,6 +351,7 @@ const exampleSignals: MarketSignal[] = [
     keyLevel: "$112.00",
     targetZone: "$105.00 – $107.00",
     timeframe: "buy_now",
+    source: "example",
   },
 ];
 
