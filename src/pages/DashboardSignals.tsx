@@ -134,9 +134,6 @@ const DashboardSignals = () => {
                     <span className="font-bold text-sm text-foreground">{meta.label}</span>
                     <span className="text-xs text-muted-foreground">— {meta.description}</span>
                   </div>
-                  <span className="text-xs bg-muted/50 text-muted-foreground px-2.5 py-0.5 rounded-full">
-                    {sectionSignals.length} signal{sectionSignals.length !== 1 ? "s" : ""}
-                  </span>
                 </div>
 
                 {/* Signal cards */}
