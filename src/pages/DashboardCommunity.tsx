@@ -143,16 +143,16 @@ const DashboardCommunity = () => {
       <DashboardSidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <DashboardHeader />
-        <main className="flex-1 flex flex-col overflow-hidden p-4 lg:p-6 bg-mesh">
-          {/* Enhanced Header */}
-          <div className="mb-3">
+        <main className="flex-1 flex flex-col overflow-hidden p-2 lg:p-3 bg-mesh">
+          {/* Compact Header */}
+          <div className="mb-2 shrink-0">
             <ChatRoomHeader onlineCount={onlineCount} firstName={firstName} />
           </div>
 
-          {/* Messages */}
+          {/* Messages — full height like Teams/Zoom */}
           <div
             ref={scrollRef}
-            className="flex-1 glass-panel rounded-xl border-glow-purple p-4 overflow-y-auto space-y-2 mb-3"
+            className="flex-1 glass-panel rounded-xl border-glow-purple px-4 py-3 overflow-y-auto space-y-2 mb-2 min-h-0"
           >
             {messages.length === 0 && (
               <div className="flex-1 flex items-center justify-center h-full">
@@ -228,13 +228,13 @@ const DashboardCommunity = () => {
           </div>
 
           {/* Input */}
-          <div className="glass-panel rounded-xl p-3 flex gap-3 border-glow-blue">
+          <div className="glass-panel rounded-xl p-2.5 flex gap-2 border-glow-blue shrink-0">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={`Message as ${firstName}...`}
-              className="bg-muted/30 border-border/50 flex-1 focus:border-primary/50 transition-colors"
+              className="bg-muted/30 border-border/50 flex-1 focus:border-primary/50 transition-colors h-9 text-sm"
               maxLength={500}
             />
             <Button
@@ -242,7 +242,7 @@ const DashboardCommunity = () => {
               disabled={!input.trim() || sending}
               variant="hero"
               size="icon"
-              className="rounded-xl"
+              className="rounded-xl h-9 w-9"
             >
               <Send className="h-4 w-4" />
             </Button>
