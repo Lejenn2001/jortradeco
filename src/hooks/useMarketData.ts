@@ -509,11 +509,11 @@ export function useMarketData() {
       if (error) throw error;
 
       const alerts = data?.data || [];
+      const keyLevelsMap: Record<string, number[]> = data?.key_levels || {};
       if (alerts.length === 0) return;
 
       const newWhaleAlerts: FlowAlert[] = alerts
         .filter((alert: any) => {
-          // Filter out whale alerts without valid strike
           const strike = alert.strike ? parseFloat(String(alert.strike).replace(/[^0-9.]/g, '')) : NaN;
           return !isNaN(strike) && strike > 0;
         })
@@ -530,7 +530,6 @@ export function useMarketData() {
           const expiry = alert.expiry || alert.expires || '—';
           const stockPrice = parseFloat(alert.stock_price || alert.underlying_price || '0') || null;
 
-          // Compute whale conviction score
           const dte = computeDte(expiry !== '—' ? expiry : null);
           const moneynessPct = computeMoneyness(rawStrike, stockPrice);
           const scoreResult = computeWhaleConviction({
@@ -542,6 +541,9 @@ export function useMarketData() {
             openInterest: alert.open_interest || 0,
             tradeCount: alert.trade_count || 1,
             ticker,
+            strike: rawStrike,
+            stockPrice: stockPrice || undefined,
+            keyLevels: keyLevelsMap[ticker],
           });
 
           return {
