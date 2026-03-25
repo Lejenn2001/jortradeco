@@ -417,16 +417,46 @@ export function useMarketData() {
             const isBullish = s.direction === 'bullish';
             const tags = [...(s.tags || [])];
             if (s.has_sweep && !tags.includes('Sweep')) tags.push('Sweep');
-            if (s.confidence >= 9) tags.push('🔥 ACT NOW');
-            else if (s.confidence >= 8) tags.push('⚡ HIGH CONVICTION');
+
+            // Run through full whale conviction scoring model instead of simple confidence * 10
+            const strikeNum = parseFloat(String(s.strike)) || 0;
+            const premiumNum = typeof s.premium === 'number' ? s.premium : parseFloat(String(s.premium)) || 0;
+            const volumeNum = typeof s.volume === 'number' ? s.volume : 0;
+            const oiNum = typeof s.open_interest === 'number' ? s.open_interest : 0;
+            const tradeCountNum = typeof s.trade_count === 'number' ? s.trade_count : 1;
+            const stockPriceNum = typeof s.stock_price === 'number' ? s.stock_price : undefined;
+            const keyLevelsArr = Array.isArray(s.key_levels) ? s.key_levels.map(Number).filter((n: number) => !isNaN(n)) : undefined;
+
+            const scoreResult = computeWhaleConviction({
+              premium: premiumNum,
+              alertRule: s.has_sweep ? 'sweep' : (s.alert_rule || 'flow'),
+              dte: computeDte(s.expiry),
+              moneynessPct: computeMoneyness(strikeNum, stockPriceNum ?? null),
+              volume: volumeNum,
+              openInterest: oiNum,
+              tradeCount: tradeCountNum,
+              ticker: s.ticker,
+              strike: strikeNum,
+              stockPrice: stockPriceNum,
+              keyLevels: keyLevelsArr,
+              isSpread: s.is_spread || false,
+              isDeepItm: s.is_deep_itm || false,
+            });
+
+            // Use scored tags
+            if (scoreResult.score >= 85) tags.push('🔥 ACT NOW');
+            else if (scoreResult.score >= 70) tags.push('⚡ HIGH CONVICTION');
+
+            const timeframe = classifyTimeframe({ convictionScore: scoreResult.score, confidence: s.confidence, expiry: s.expiry });
 
             return {
               id: `replit-${s.ticker}-${i}`,
               ticker: s.ticker,
               type: isBullish ? 'bullish' as const : 'bearish' as const,
               confidence: s.confidence,
-              convictionScore: s.confidence * 10,
-              convictionLabel: s.confidence >= 9 ? 'Extreme Conviction' : s.confidence >= 8 ? 'Very High Conviction' : 'High Conviction',
+              convictionScore: scoreResult.score,
+              convictionLabel: scoreResult.label,
+              gammaLevelLabel: scoreResult.gammaLevelLabel,
               description: s.reason || `${s.option_type} flow on ${s.ticker} at $${s.strike} strike. Premium: $${formatPremium(s.premium)}.`,
               timestamp: 'Live',
               tags,
@@ -440,7 +470,7 @@ export function useMarketData() {
               keyLevel: s.key_level,
               targetZone: s.target,
               source: "live",
-              timeframe: s.confidence >= 9 ? 'buy_now' as SignalTimeframe : 'short_term' as SignalTimeframe,
+              timeframe,
             } as MarketSignal;
           });
 
