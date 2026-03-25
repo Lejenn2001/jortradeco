@@ -17,8 +17,8 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 
 const navItems = [
-  { icon: Users, label: "JORTRADE Chat", path: "/dashboard/community" },
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+  { icon: Users, label: "Jortrade Chat", path: "/dashboard/community" },
   { icon: Activity, label: "Signals", path: "/dashboard/signals" },
   { icon: BarChart3, label: "Market View", path: "/dashboard/market" },
   { icon: Wallet, label: "P&L Calendar", path: "/dashboard/pnl" },
