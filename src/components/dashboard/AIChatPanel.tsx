@@ -56,7 +56,8 @@ const AIChatPanel = () => {
       timestamp: timeStr,
     };
 
-    setMessages((prev) => [...prev, userMsg]);
+    const updatedMessages = [...messages, userMsg];
+    setMessages(updatedMessages);
     setInput("");
     setIsLoading(true);
 
@@ -72,8 +73,14 @@ const AIChatPanel = () => {
         instruction = `[DASHBOARD CHAT MODE] Keep your response to 3-4 sentences max. Be conversational and helpful but concise. No long breakdowns unless the user specifically asks for detail.\n\nUser says: ${text.trim()}`;
       }
 
+      // Build conversation history for context memory
+      const history = updatedMessages.slice(0, -1).map(m => ({
+        role: m.role,
+        content: m.content,
+      }));
+
       const { data, error } = await supabase.functions.invoke('ai-chat', {
-        body: { message: instruction },
+        body: { message: instruction, history },
       });
 
       if (error) throw error;
