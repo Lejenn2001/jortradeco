@@ -1,10 +1,12 @@
 import { useState, useMemo } from "react";
+import { motion } from "framer-motion";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { useMarketData, type MarketSignal, type SignalTimeframe } from "@/hooks/useMarketData";
-import { Search, Filter, TrendingUp, TrendingDown, Zap, ArrowUpDown, Clock, Flame, CalendarDays } from "lucide-react";
+import { Search, Filter, TrendingUp, TrendingDown, Zap, Clock, CalendarDays } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import SignalLegend from "@/components/dashboard/SignalLegend";
+import ConvictionScoreRing from "@/components/dashboard/ConvictionScoreRing";
 
 type FilterType = "all" | "call" | "put";
 
@@ -147,7 +149,14 @@ const DashboardSignals = () => {
                 ) : (
                   <div className="divide-y divide-border/20">
                     {sectionSignals.map((signal, i) => (
-                      <SignalRow key={`${signal.ticker}-${signal.id}-${i}`} signal={signal} />
+                      <motion.div
+                        key={`${signal.ticker}-${signal.id}-${i}`}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.35, delay: i * 0.08, ease: "easeOut" as const }}
+                      >
+                        <SignalRow signal={signal} />
+                      </motion.div>
                     ))}
                   </div>
                 )}
