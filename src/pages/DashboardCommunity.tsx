@@ -228,13 +228,13 @@ const DashboardCommunity = () => {
           </div>
 
           {/* Input */}
-          <div className="glass-panel rounded-xl p-3 flex gap-3 border-glow-blue">
+          <div className="glass-panel rounded-xl p-2.5 flex gap-2 border-glow-blue shrink-0">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={`Message as ${firstName}...`}
-              className="bg-muted/30 border-border/50 flex-1 focus:border-primary/50 transition-colors"
+              className="bg-muted/30 border-border/50 flex-1 focus:border-primary/50 transition-colors h-9 text-sm"
               maxLength={500}
             />
             <Button
@@ -242,7 +242,7 @@ const DashboardCommunity = () => {
               disabled={!input.trim() || sending}
               variant="hero"
               size="icon"
-              className="rounded-xl"
+              className="rounded-xl h-9 w-9"
             >
               <Send className="h-4 w-4" />
             </Button>
