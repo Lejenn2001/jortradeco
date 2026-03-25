@@ -572,6 +572,7 @@ export function useMarketData() {
             time: alert.created_at ? timeAgo(alert.created_at) : 'just now',
             convictionScore: scoreResult.score,
             convictionLabel: scoreResult.label,
+            gammaLevelLabel: scoreResult.gammaLevelLabel,
             explanation: `${alert.trade_count || 'Multiple'} ${putCall.toLowerCase()} ${flowPattern.toLowerCase()}${alert.trade_count > 1 ? 's' : ''} detected on ${ticker} at $${rawStrike} strike with $${premium} total premium. ${alert.volume_oi_ratio ? `Volume/OI ratio is ${parseFloat(alert.volume_oi_ratio).toFixed(1)}x — ` : ''}${isBullish ? 'Bullish' : 'Bearish'} institutional positioning. Conviction: ${scoreResult.score}/100 (${scoreResult.label}).`,
           };
         });
