@@ -494,6 +494,7 @@ export function useMarketData() {
       }
 
       const liveDeduped: MarketSignal[] = Array.from(tickerMap.values())
+        .filter(s => s.convictionScore !== undefined ? s.convictionScore >= 80 : s.confidence >= 8)
         .sort((a, b) => {
           const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
           const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
@@ -505,7 +506,7 @@ export function useMarketData() {
         }));
 
       const liveTickers = new Set(liveDeduped.map(s => s.ticker));
-      const fillerSignals = exampleSignals.filter(s => !liveTickers.has(s.ticker));
+      const fillerSignals = exampleSignals.filter(s => !liveTickers.has(s.ticker) && (s.convictionScore !== undefined ? s.convictionScore >= 80 : s.confidence >= 8));
       const merged = [...liveDeduped, ...fillerSignals];
 
       if (merged.length > 0) {
