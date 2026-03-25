@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 
 interface TickerItem {
@@ -9,21 +9,108 @@ interface TickerItem {
   isUp: boolean;
 }
 
+const SYMBOLS = ["SPY", "QQQ", "NVDA", "AAPL", "TSLA", "AMD", "AMZN", "META", "MSFT", "GOOGL"];
+
 const FALLBACK_TICKERS: TickerItem[] = [
-  { symbol: "SPY", price: "575.42", change: "+2.18", changePercent: "+0.38%", isUp: true },
-  { symbol: "QQQ", price: "487.95", change: "+3.21", changePercent: "+0.66%", isUp: true },
-  { symbol: "NVDA", price: "143.80", change: "-1.45", changePercent: "-1.00%", isUp: false },
-  { symbol: "AAPL", price: "213.50", change: "+0.87", changePercent: "+0.41%", isUp: true },
-  { symbol: "TSLA", price: "258.30", change: "-3.12", changePercent: "-1.19%", isUp: false },
-  { symbol: "AMD", price: "112.40", change: "-0.95", changePercent: "-0.84%", isUp: false },
-  { symbol: "AMZN", price: "198.20", change: "+1.56", changePercent: "+0.79%", isUp: true },
-  { symbol: "META", price: "612.80", change: "+4.30", changePercent: "+0.71%", isUp: true },
-  { symbol: "MSFT", price: "428.60", change: "+1.20", changePercent: "+0.28%", isUp: true },
-  { symbol: "GOOGL", price: "171.35", change: "-0.65", changePercent: "-0.38%", isUp: false },
+  { symbol: "SPY", price: "—", change: "", changePercent: "—", isUp: true },
+  { symbol: "QQQ", price: "—", change: "", changePercent: "—", isUp: true },
+  { symbol: "NVDA", price: "—", change: "", changePercent: "—", isUp: true },
+  { symbol: "AAPL", price: "—", change: "", changePercent: "—", isUp: true },
+  { symbol: "TSLA", price: "—", change: "", changePercent: "—", isUp: true },
+  { symbol: "AMD", price: "—", change: "", changePercent: "—", isUp: true },
+  { symbol: "AMZN", price: "—", change: "", changePercent: "—", isUp: true },
+  { symbol: "META", price: "—", change: "", changePercent: "—", isUp: true },
+  { symbol: "MSFT", price: "—", change: "", changePercent: "—", isUp: true },
+  { symbol: "GOOGL", price: "—", change: "", changePercent: "—", isUp: true },
 ];
 
 const TickerTape = () => {
-  const [tickers] = useState<TickerItem[]>(FALLBACK_TICKERS);
+  const [tickers, setTickers] = useState<TickerItem[]>(FALLBACK_TICKERS);
+
+  const fetchPrices = useCallback(async () => {
+    try {
+      // Use Yahoo Finance v8 quote endpoint via a CORS-friendly approach
+      const symbolList = SYMBOLS.join(",");
+      const res = await fetch(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${SYMBOLS[0]}?interval=1d&range=1d`
+      );
+      
+      // If Yahoo direct doesn't work due to CORS, use alternative
+      if (!res.ok) throw new Error("Yahoo blocked");
+
+      // Fetch all symbols individually (Yahoo v8 chart endpoint)
+      const results = await Promise.allSettled(
+        SYMBOLS.map(async (symbol) => {
+          const r = await fetch(
+            `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`
+          );
+          if (!r.ok) throw new Error(`Failed ${symbol}`);
+          const data = await r.json();
+          const meta = data.chart.result[0].meta;
+          const price = meta.regularMarketPrice;
+          const prevClose = meta.chartPreviousClose || meta.previousClose;
+          const change = price - prevClose;
+          const changePct = (change / prevClose) * 100;
+          return {
+            symbol,
+            price: price.toFixed(2),
+            change: `${change >= 0 ? "+" : ""}${change.toFixed(2)}`,
+            changePercent: `${changePct >= 0 ? "+" : ""}${changePct.toFixed(2)}%`,
+            isUp: change >= 0,
+          } as TickerItem;
+        })
+      );
+
+      const fetched = results
+        .filter((r): r is PromiseFulfilledResult<TickerItem> => r.status === "fulfilled")
+        .map((r) => r.value);
+
+      if (fetched.length > 0) {
+        setTickers(fetched);
+      }
+    } catch {
+      // Try Finnhub as fallback (free tier, no key needed for quotes)
+      try {
+        const results = await Promise.allSettled(
+          SYMBOLS.map(async (symbol) => {
+            const r = await fetch(
+              `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=demo`
+            );
+            if (!r.ok) throw new Error(`Failed ${symbol}`);
+            const data = await r.json();
+            if (!data.c || data.c === 0) throw new Error("No data");
+            const price = data.c;
+            const change = data.d || 0;
+            const changePct = data.dp || 0;
+            return {
+              symbol,
+              price: price.toFixed(2),
+              change: `${change >= 0 ? "+" : ""}${change.toFixed(2)}`,
+              changePercent: `${changePct >= 0 ? "+" : ""}${changePct.toFixed(2)}%`,
+              isUp: change >= 0,
+            } as TickerItem;
+          })
+        );
+
+        const fetched = results
+          .filter((r): r is PromiseFulfilledResult<TickerItem> => r.status === "fulfilled")
+          .map((r) => r.value);
+
+        if (fetched.length > 0) {
+          setTickers(fetched);
+        }
+      } catch {
+        console.warn("All ticker price sources failed");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPrices();
+    // Refresh every 60 seconds
+    const interval = setInterval(fetchPrices, 60_000);
+    return () => clearInterval(interval);
+  }, [fetchPrices]);
 
   // Double the list for seamless loop
   const allTickers = [...tickers, ...tickers];
