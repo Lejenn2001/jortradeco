@@ -57,6 +57,9 @@ interface WhaleScoreInput {
   openInterest: number;
   tradeCount: number;        // proxy for stacking
   ticker: string;
+  strike: number;            // actual strike price
+  stockPrice?: number;       // current stock price
+  keyLevels?: number[];      // high-OI gamma S/R levels for this ticker
   isSpread?: boolean;        // detected spread
   isDeepItm?: boolean;       // deep ITM likely hedge
 }
