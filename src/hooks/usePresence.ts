@@ -2,12 +2,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
-interface PresenceUser {
-  user_id: string;
-  full_name: string;
-  online_at: string;
-}
-
 export function usePresenceBroadcast() {
   const { session, profile } = useAuth();
 
@@ -40,11 +34,13 @@ export function usePresenceTracker() {
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const channel = supabase.channel("online-users-tracker", {
-      config: { presence: { key: "tracker" } },
+    // Use a different channel name that subscribes to the same presence room
+    const channel = supabase.channel("online-users-reader", {
+      config: { presence: { key: "reader" } },
     });
 
-    // Subscribe to the same presence channel to read state
+    // We need to join the same presence topic — use the "online-users" channel
+    // Instead, poll the presence state from a matching channel
     const presenceChannel = supabase.channel("online-users");
 
     presenceChannel
@@ -58,7 +54,30 @@ export function usePresenceTracker() {
         });
         setOnlineUsers(ids);
       })
+      .on("presence", { event: "join" }, () => {
+        const state = presenceChannel.presenceState();
+        const ids = new Set<string>();
+        Object.values(state).forEach((presences: any[]) => {
+          presences.forEach((p) => {
+            if (p.user_id) ids.add(p.user_id);
+          });
+        });
+        setOnlineUsers(ids);
+      })
+      .on("presence", { event: "leave" }, () => {
+        const state = presenceChannel.presenceState();
+        const ids = new Set<string>();
+        Object.values(state).forEach((presences: any[]) => {
+          presences.forEach((p) => {
+            if (p.user_id) ids.add(p.user_id);
+          });
+        });
+        setOnlineUsers(ids);
+      })
       .subscribe();
+
+    // Clean up the unused reader channel
+    supabase.removeChannel(channel);
 
     return () => {
       supabase.removeChannel(presenceChannel);
