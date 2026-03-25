@@ -476,7 +476,7 @@ export function useMarketData() {
               convictionLabel: hybridLabel,
               gammaLevelLabel: gammaLabel,
               description: s.reason || `${s.option_type} flow on ${s.ticker} at $${s.strike} strike. Premium: $${formatPremium(s.premium)}.`,
-              timestamp: 'Live',
+              timestamp: data.timestamp || 'Live',
               tags,
               strike: `$${s.strike}`,
               expiry: s.expiry,
