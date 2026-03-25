@@ -439,11 +439,13 @@ export function useMarketData() {
               invalidation: s.invalidation,
               keyLevel: s.key_level,
               targetZone: s.target,
+              source: "live",
               timeframe: s.confidence >= 9 ? 'buy_now' as SignalTimeframe : 'short_term' as SignalTimeframe,
             } as MarketSignal;
           });
 
-          setSignals(mapped);
+          // Merge live signals (first) with examples (after)
+          setSignals([...mapped, ...exampleSignals]);
           saveCachedSignals(mapped);
 
           // Log Replit signals to signal_outcomes for accuracy tracking
