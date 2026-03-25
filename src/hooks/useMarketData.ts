@@ -67,6 +67,7 @@ interface WhaleScoreInput {
 export interface WhaleScoreResult {
   score: number;
   label: string;
+  gammaLevelLabel?: string; // e.g. "At $145 gamma level" or "Near $570 S/R"
   breakdown: {
     size: number;
     aggression: number;
