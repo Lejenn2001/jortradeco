@@ -101,8 +101,8 @@ const FourPillars: React.FC = () => {
             }}>
               <div style={{ fontSize: 36 }}>{p.icon}</div>
               <div>
-                <div style={{ fontFamily: displayFont, fontSize: 28, fontWeight: 700, color: p.color, letterSpacing: "0.1em" }}>{p.name}</div>
-                <div style={{ fontFamily: bodyFont, fontSize: 20, color: "#C8CDD7", marginTop: 4 }}>{p.desc}</div>
+                <div style={{ fontFamily: displayFont, fontSize: 38, fontWeight: 700, color: p.color, letterSpacing: "0.1em" }}>{p.name}</div>
+                <div style={{ fontFamily: bodyFont, fontSize: 26, color: "#C8CDD7", marginTop: 4 }}>{p.desc}</div>
               </div>
             </div>
           );
