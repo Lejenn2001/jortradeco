@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot, User, Loader2 } from "lucide-react";
+import { Send, Bot, User, Loader2, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -30,25 +30,18 @@ const AIChatPanel = () => {
   const { profile } = useAuth();
   const firstName = profile?.full_name?.split(" ")[0] || "Trader";
   const [greeting] = useState(() => greetings[Math.floor(Math.random() * greetings.length)](firstName));
-  const [messages, setMessages] = useState<Message[]>(() => {
-    try {
-      const saved = localStorage.getItem('biddie-chat-messages');
-      if (!saved) return [];
-      const { messages: msgs, timestamp } = JSON.parse(saved);
-      if (Date.now() - timestamp > 30 * 24 * 60 * 60 * 1000) { localStorage.removeItem('biddie-chat-messages'); return []; }
-      return msgs || [];
-    } catch { return []; }
-  });
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-  }, [messages]);
+  const clearChat = () => {
+    setMessages([]);
+    localStorage.removeItem('biddie-chat-messages');
+  };
 
   useEffect(() => {
-    try { localStorage.setItem('biddie-chat-messages', JSON.stringify({ messages, timestamp: Date.now() })); } catch {}
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
 
   const sendMessage = async (text: string) => {
@@ -111,10 +104,17 @@ const AIChatPanel = () => {
           <Bot className="h-4 w-4 text-primary" />
           <span className="font-semibold text-sm text-foreground">Biddie AI</span>
         </div>
-        <span className="text-xs bg-primary/20 text-primary px-2.5 py-0.5 rounded-full flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-          Online
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs bg-primary/20 text-primary px-2.5 py-0.5 rounded-full flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            Online
+          </span>
+          {messages.length > 0 && (
+            <button onClick={clearChat} className="p-1 rounded hover:bg-destructive/20 transition-colors" title="Clear chat">
+              <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Messages */}
