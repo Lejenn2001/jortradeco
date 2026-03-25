@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+
+const CHANNEL_NAME = "presence-room";
 
 export function usePresenceBroadcast() {
   const { session, profile } = useAuth();
@@ -8,7 +10,7 @@ export function usePresenceBroadcast() {
   useEffect(() => {
     if (!session?.user?.id) return;
 
-    const channel = supabase.channel("online-users", {
+    const channel = supabase.channel(CHANNEL_NAME, {
       config: { presence: { key: session.user.id } },
     });
 
@@ -33,56 +35,30 @@ export function usePresenceBroadcast() {
 export function usePresenceTracker() {
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    // Use a different channel name that subscribes to the same presence room
-    const channel = supabase.channel("online-users-reader", {
-      config: { presence: { key: "reader" } },
+  const extractUsers = useCallback((channel: any) => {
+    const state = channel.presenceState();
+    const ids = new Set<string>();
+    Object.values(state).forEach((presences: any[]) => {
+      presences.forEach((p) => {
+        if (p.user_id) ids.add(p.user_id);
+      });
     });
+    setOnlineUsers(ids);
+  }, []);
 
-    // We need to join the same presence topic — use the "online-users" channel
-    // Instead, poll the presence state from a matching channel
-    const presenceChannel = supabase.channel("online-users");
+  useEffect(() => {
+    const channel = supabase.channel(CHANNEL_NAME);
 
-    presenceChannel
-      .on("presence", { event: "sync" }, () => {
-        const state = presenceChannel.presenceState();
-        const ids = new Set<string>();
-        Object.values(state).forEach((presences: any[]) => {
-          presences.forEach((p) => {
-            if (p.user_id) ids.add(p.user_id);
-          });
-        });
-        setOnlineUsers(ids);
-      })
-      .on("presence", { event: "join" }, () => {
-        const state = presenceChannel.presenceState();
-        const ids = new Set<string>();
-        Object.values(state).forEach((presences: any[]) => {
-          presences.forEach((p) => {
-            if (p.user_id) ids.add(p.user_id);
-          });
-        });
-        setOnlineUsers(ids);
-      })
-      .on("presence", { event: "leave" }, () => {
-        const state = presenceChannel.presenceState();
-        const ids = new Set<string>();
-        Object.values(state).forEach((presences: any[]) => {
-          presences.forEach((p) => {
-            if (p.user_id) ids.add(p.user_id);
-          });
-        });
-        setOnlineUsers(ids);
-      })
+    channel
+      .on("presence", { event: "sync" }, () => extractUsers(channel))
+      .on("presence", { event: "join" }, () => extractUsers(channel))
+      .on("presence", { event: "leave" }, () => extractUsers(channel))
       .subscribe();
 
-    // Clean up the unused reader channel
-    supabase.removeChannel(channel);
-
     return () => {
-      supabase.removeChannel(presenceChannel);
+      supabase.removeChannel(channel);
     };
-  }, []);
+  }, [extractUsers]);
 
   return onlineUsers;
 }
