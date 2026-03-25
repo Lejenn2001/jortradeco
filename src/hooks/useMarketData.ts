@@ -80,7 +80,7 @@ export interface WhaleScoreResult {
 }
 
 export function computeWhaleConviction(input: WhaleScoreInput): WhaleScoreResult {
-  const { premium, alertRule, dte, moneynessPct, volume, openInterest, tradeCount, ticker, isSpread, isDeepItm } = input;
+  const { premium, alertRule, dte, moneynessPct, volume, openInterest, tradeCount, ticker, strike, stockPrice, keyLevels, isSpread, isDeepItm } = input;
 
   // 1) Size (0–20)
   let size = 0;
