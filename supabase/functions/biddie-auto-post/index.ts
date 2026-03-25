@@ -116,8 +116,9 @@ serve(async (req) => {
       const alertMsg = `What's the latest whale flow on ${ticker}? Give me just the single highest conviction play.` + CHAT_BREVITY;
 
       const result = await fetchReplit(alertMsg);
+      const alertTimeStr = new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit", hour12: true });
       if (result.ok && result.analysis) {
-        const content = `🚨 **Whale Alert — ${ticker}**\n\n${result.analysis}`;
+        const content = `🚨 **Whale Alert — ${ticker}** _(${alertTimeStr} ET)_\n\n${result.analysis}\n\n_Prices may be delayed_`;
         await supabase.from("chat_messages").insert({
           user_id: BIDDIE_USER_ID,
           user_name: BIDDIE_NAME,
