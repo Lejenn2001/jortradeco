@@ -39,6 +39,7 @@ export interface MarketSignal {
   targetZone?: string;
   createdAt?: string;
   timeframe?: SignalTimeframe;
+  source?: "live" | "example";
 }
 
 export interface TickerData {
