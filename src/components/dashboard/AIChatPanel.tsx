@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot, User, Loader2, Flame } from "lucide-react";
+import { Send, Bot, User, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import ReactMarkdown from "react-markdown";
 import biddieRobot from "@/assets/biddie-robot.png";
 
 interface Message {
@@ -13,9 +14,9 @@ interface Message {
 }
 
 const quickPrompts = [
-  "What's the market sentiment right now?",
+  "What's the best setup for Monday?",
   "Any unusual options flow today?",
-  "Show me high-confidence setups",
+  "Show me high-confidence plays",
 ];
 
 const greetings = [
@@ -23,9 +24,6 @@ const greetings = [
   (name: string) => `Markets are moving ${name}. Let's find the edge.`,
   (name: string) => `Hey ${name}! Let's scan the markets and see what's cooking.`,
   (name: string) => `What's good ${name}? The whales are active today.`,
-  (name: string) => `${name}! The flow is looking interesting right now. Let's dive in.`,
-  (name: string) => `Hey ${name}! Ready to spot some setups? I've been watching.`,
-  (name: string) => `Good to see you ${name}. Let's break down what's moving.`,
 ];
 
 const AIChatPanel = () => {
@@ -37,8 +35,7 @@ const AIChatPanel = () => {
       const saved = localStorage.getItem('biddie-chat-messages');
       if (!saved) return [];
       const { messages: msgs, timestamp } = JSON.parse(saved);
-      const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-      if (Date.now() - timestamp > thirtyDays) { localStorage.removeItem('biddie-chat-messages'); return []; }
+      if (Date.now() - timestamp > 30 * 24 * 60 * 60 * 1000) { localStorage.removeItem('biddie-chat-messages'); return []; }
       return msgs || [];
     } catch { return []; }
   });
@@ -50,7 +47,6 @@ const AIChatPanel = () => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
 
-  // Persist messages to sessionStorage
   useEffect(() => {
     try { localStorage.setItem('biddie-chat-messages', JSON.stringify({ messages, timestamp: Date.now() })); } catch {}
   }, [messages]);
@@ -58,8 +54,7 @@ const AIChatPanel = () => {
   const sendMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;
 
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     const userMsg: Message = {
       id: `user-${Date.now()}`,
@@ -73,13 +68,8 @@ const AIChatPanel = () => {
     setIsLoading(true);
 
     try {
-      const history = [...messages, userMsg].map((m) => ({
-        role: m.role,
-        content: m.content,
-      }));
-
       const { data, error } = await supabase.functions.invoke('ai-chat', {
-        body: { message: text.trim(), history, userName: firstName },
+        body: { message: text.trim() },
       });
 
       if (error) throw error;
@@ -133,7 +123,6 @@ const AIChatPanel = () => {
           <div className="text-center py-8">
             <img src={biddieRobot} alt="Biddie" className="w-24 h-24 mx-auto mb-3 drop-shadow-[0_0_15px_hsl(230_85%_60%_/_0.4)]" />
             <p className="text-sm text-foreground font-medium">{greeting}</p>
-            
             <p className="text-xs text-muted-foreground mt-2">Powered by JORTRADE</p>
           </div>
         )}
@@ -158,7 +147,13 @@ const AIChatPanel = () => {
               </span>
               <span className="text-[10px] text-muted-foreground">{msg.timestamp}</span>
             </div>
-            <p className="text-sm text-foreground whitespace-pre-line">{msg.content}</p>
+            {msg.role === "assistant" ? (
+              <div className="prose prose-sm prose-invert max-w-none text-foreground [&_p]:text-sm [&_p]:leading-relaxed [&_p]:mb-2 [&_li]:text-sm [&_h1]:text-base [&_h2]:text-sm [&_h3]:text-sm [&_strong]:text-primary [&_h1]:text-primary [&_h2]:text-primary [&_h3]:text-foreground [&_h1]:font-bold [&_h2]:font-semibold [&_h3]:font-semibold [&_h1]:mb-2 [&_h2]:mb-1 [&_h3]:mb-1 [&_ul]:pl-4 [&_ol]:pl-4 [&_li]:mb-0.5">
+                <ReactMarkdown>{msg.content}</ReactMarkdown>
+              </div>
+            ) : (
+              <p className="text-sm text-foreground whitespace-pre-line">{msg.content}</p>
+            )}
           </div>
         ))}
 
