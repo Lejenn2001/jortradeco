@@ -160,27 +160,16 @@ serve(async (req) => {
       // Strip the @biddie tag and send the rest to Replit API
       const cleanMessage = (messageContent.replace(/@?\s*biddie\s*/i, "").trim() || "What's the market looking like right now?") + CHAT_BREVITY;
 
-      try {
-        const res = await fetch(REPLIT_API, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: cleanMessage }),
+      const result = await fetchReplit(cleanMessage);
+      if (result.ok && result.analysis) {
+        await supabase.from("chat_messages").insert({
+          user_id: BIDDIE_USER_ID,
+          user_name: BIDDIE_NAME,
+          content: result.analysis,
         });
-
-        if (res.ok) {
-          const data = await res.json();
-          const reply = data.analysis || "I'm having trouble getting data right now. Try again in a moment!";
-          await supabase.from("chat_messages").insert({
-            user_id: BIDDIE_USER_ID,
-            user_name: BIDDIE_NAME,
-            content: reply,
-          });
-          return new Response(JSON.stringify({ status: "replied" }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-      } catch (e) {
-        console.warn("Replit API failed for reply:", e);
+        return new Response(JSON.stringify({ status: "replied" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
 
       // Fallback using Lovable AI
