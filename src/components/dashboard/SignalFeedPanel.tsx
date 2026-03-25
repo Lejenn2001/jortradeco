@@ -15,7 +15,7 @@ const cardVariants = {
   hidden: { opacity: 0, y: 20, scale: 0.97 },
   visible: (i: number) => ({
     opacity: 1, y: 0, scale: 1,
-    transition: { duration: 0.4, delay: i * 0.12, ease: "easeOut" },
+    transition: { duration: 0.4, delay: i * 0.12, ease: "easeOut" as const },
   }),
 };
 
