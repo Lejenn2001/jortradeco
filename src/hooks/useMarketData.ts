@@ -403,7 +403,7 @@ export function useMarketData() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const REPLIT_SIGNALS_API = 'https://dc9f5714-8a88-4d03-b91b-f82647f969bd-00-22sbppmc01524.riker.replit.dev/api/whale/signals';
+  const REPLIT_SIGNALS_API = 'https://python-script-lejenn2001.replit.app/api/whale/signals';
 
   const fetchFlowAlerts = useCallback(async () => {
     try {

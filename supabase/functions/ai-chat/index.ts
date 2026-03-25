@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const REPLIT_API = 'https://dc9f5714-8a88-4d03-b91b-f82647f969bd-00-22sbppmc01524.riker.replit.dev/api/whale/chat';
+const REPLIT_API = 'https://python-script-lejenn2001.replit.app/api/whale/chat';
 const BIDDIE_USER_ID = "00000000-0000-0000-0000-000000000000";
 
 serve(async (req) => {
