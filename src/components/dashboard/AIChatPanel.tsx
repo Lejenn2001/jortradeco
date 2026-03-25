@@ -30,15 +30,7 @@ const AIChatPanel = () => {
   const { profile } = useAuth();
   const firstName = profile?.full_name?.split(" ")[0] || "Trader";
   const [greeting] = useState(() => greetings[Math.floor(Math.random() * greetings.length)](firstName));
-  const [messages, setMessages] = useState<Message[]>(() => {
-    try {
-      const saved = localStorage.getItem('biddie-chat-messages');
-      if (!saved) return [];
-      const { messages: msgs, timestamp } = JSON.parse(saved);
-      if (Date.now() - timestamp > 30 * 24 * 60 * 60 * 1000) { localStorage.removeItem('biddie-chat-messages'); return []; }
-      return msgs || [];
-    } catch { return []; }
-  });
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
