@@ -81,11 +81,13 @@ const exportToCSV = (members: MemberWithRoles[]) => {
 const DashboardAnalytics = () => {
   const { session } = useAuth();
   const { signals, loading: signalsLoading } = useMarketData();
+  const onlineUsers = usePresenceTracker();
   const [members, setMembers] = useState<MemberWithRoles[]>([]);
   const [chatCount, setChatCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [apiUsageToday, setApiUsageToday] = useState(0);
   const [apiUsageMinute, setApiUsageMinute] = useState(0);
 
