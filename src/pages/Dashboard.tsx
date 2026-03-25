@@ -16,6 +16,7 @@ const Dashboard = () => {
   const topSignals = useMemo(() => {
     return [...signals]
       .sort((a, b) => (b.convictionScore ?? b.confidence * 10) - (a.convictionScore ?? a.confidence * 10))
+      .filter(s => (s.convictionScore ?? s.confidence * 10) >= 60)
       .slice(0, 3);
   }, [signals]);
 
