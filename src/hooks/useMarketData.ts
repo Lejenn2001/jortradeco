@@ -230,8 +230,9 @@ export function useMarketData() {
           const volOi = alert.volume_oi_ratio ? parseFloat(alert.volume_oi_ratio) : 0;
           const totalPremium = parseFloat(alert.total_premium || alert.premium || '0');
           const tradeCount = alert.trade_count || 0;
-          // Must meet ALL minimum criteria
-          return volOi >= 5 && totalPremium >= 25000 && tradeCount >= 5;
+          const strike = alert.strike ? parseFloat(String(alert.strike).replace(/[^0-9.]/g, '')) : NaN;
+          // Must meet ALL minimum criteria — including a valid strike
+          return volOi >= 5 && totalPremium >= 25000 && tradeCount >= 5 && !isNaN(strike) && strike > 0;
         })
         .map((alert: any, i: number) => {
           const putCall = alert.type === 'call' ? 'call' : 'put';
