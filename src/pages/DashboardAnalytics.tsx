@@ -331,6 +331,7 @@ const DashboardAnalytics = () => {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border/30">
+                        <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground">Status</th>
                         <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground">Name</th>
                         <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground">Email</th>
                         <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground">Plan</th>
@@ -343,8 +344,12 @@ const DashboardAnalytics = () => {
                       {members.map((m) => {
                         const memberIsAdmin = m.roles.includes("admin");
                         const isSelf = m.id === session?.user?.id;
+                        const isOnline = onlineUsers.has(m.id);
                         return (
                           <tr key={m.id} className="border-b border-border/20 hover:bg-muted/20 transition-colors">
+                            <td className="px-5 py-3">
+                              <span className={`w-2 h-2 rounded-full inline-block ${isOnline ? "bg-emerald-400" : "bg-muted-foreground/30"}`} title={isOnline ? "Online" : "Offline"} />
+                            </td>
                             <td className="px-5 py-3 text-foreground">
                               {m.full_name || "Unknown"}
                               {isSelf && <span className="text-xs text-muted-foreground ml-2">(you)</span>}
@@ -377,21 +382,36 @@ const DashboardAnalytics = () => {
                             </td>
                             <td className="px-5 py-3 text-right">
                               {!isSelf && (
-                                <Button
-                                  size="sm"
-                                  variant={memberIsAdmin ? "destructive" : "outline"}
-                                  className="text-xs h-7 px-3"
-                                  disabled={togglingId === m.id}
-                                  onClick={() => toggleAdmin(m.id, memberIsAdmin)}
-                                >
-                                  {togglingId === m.id ? (
-                                    <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
-                                  ) : memberIsAdmin ? (
-                                    <><ShieldX className="h-3 w-3 mr-1" /> Remove Admin</>
-                                  ) : (
-                                    <><ShieldCheck className="h-3 w-3 mr-1" /> Make Admin</>
-                                  )}
-                                </Button>
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <Button
+                                    size="sm"
+                                    variant={memberIsAdmin ? "destructive" : "outline"}
+                                    className="text-xs h-7 px-3"
+                                    disabled={togglingId === m.id}
+                                    onClick={() => toggleAdmin(m.id, memberIsAdmin)}
+                                  >
+                                    {togglingId === m.id ? (
+                                      <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+                                    ) : memberIsAdmin ? (
+                                      <><ShieldX className="h-3 w-3 mr-1" /> Remove Admin</>
+                                    ) : (
+                                      <><ShieldCheck className="h-3 w-3 mr-1" /> Make Admin</>
+                                    )}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="text-xs h-7 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    disabled={deletingId === m.id}
+                                    onClick={() => deleteMember(m.id, m.full_name)}
+                                  >
+                                    {deletingId === m.id ? (
+                                      <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+                                    ) : (
+                                      <Trash2 className="h-3 w-3" />
+                                    )}
+                                  </Button>
+                                </div>
                               )}
                             </td>
                           </tr>
