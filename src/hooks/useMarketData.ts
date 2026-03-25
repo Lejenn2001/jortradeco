@@ -464,6 +464,7 @@ export function useMarketData() {
             confidence,
             convictionScore: scoreResult.score,
             convictionLabel: scoreResult.label,
+            gammaLevelLabel: scoreResult.gammaLevelLabel,
             _totalPremium: totalPremium,
             description: `${tradeCount} ${putCall} trades detected on ${ticker} at $${strikeLabel} strike. Total premium: $${premium}. Volume/OI ratio: ${volOiRatio ? volOiRatio.toFixed(1) + 'x' : 'N/A'} — ${volOiRatio >= 8 ? 'major new positioning' : 'significant new positioning'}. Conviction: ${scoreResult.score}/100 (${scoreResult.label}).`,
             timestamp: alert.created_at ? timeAgo(alert.created_at) : 'just now',
