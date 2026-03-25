@@ -8,6 +8,7 @@ const corsHeaders = {
 
 const BIDDIE_USER_ID = "00000000-0000-0000-0000-000000000000";
 const BIDDIE_NAME = "🤖 Biddie AI";
+const REPLIT_API = "https://dc9f5714-8a88-4d03-b91b-f82647f969bd-00-22sbppmc01524.riker.replit.dev/api/whale/chat";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -17,14 +18,13 @@ serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const lovableKey = Deno.env.get("LOVABLE_API_KEY");
-  const uwKey = Deno.env.get("UNUSUAL_WHALES_API_KEY");
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   try {
     const body = await req.json().catch(() => ({}));
-    const action = body.action || "morning"; // "morning", "alert", or "reply"
+    const action = body.action || "morning";
 
-    // Check if Biddie already posted today (for morning message)
+    // === MORNING MESSAGE ===
     if (action === "morning") {
       const today = new Date().toISOString().split("T")[0];
       const { data: existing } = await supabase
@@ -40,16 +40,51 @@ serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+
+      // Use Replit API for morning overview
+      try {
+        const res = await fetch(REPLIT_API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: "Good morning! Give me a quick market overview and any top setups for today." }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const content = `Good morning JORTRADE fam! 🌅\n\n${data.analysis || "Let's have a great trading day! Check the signals for early setups."}`;
+          await supabase.from("chat_messages").insert({
+            user_id: BIDDIE_USER_ID,
+            user_name: BIDDIE_NAME,
+            content,
+          });
+          return new Response(JSON.stringify({ status: "posted", action }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      } catch (e) {
+        console.warn("Replit API failed for morning post:", e);
+      }
+
+      // Fallback
+      await supabase.from("chat_messages").insert({
+        user_id: BIDDIE_USER_ID,
+        user_name: BIDDIE_NAME,
+        content: "Good morning JORTRADE fam! 🌅 Let's get it today. Check the flow and signals for early setups!",
+      });
+      return new Response(JSON.stringify({ status: "posted_fallback", action }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // For alerts, check if Biddie posted in last 30 minutes to avoid spam
+    // === WHALE ALERT AUTO-POST ===
     if (action === "alert") {
+      // Throttle: no more than 1 alert every 30 min
       const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
       const { data: recent } = await supabase
         .from("chat_messages")
         .select("id")
         .eq("user_id", BIDDIE_USER_ID)
         .gte("created_at", thirtyMinsAgo)
+        .like("content", "%🚨%")
         .limit(1);
 
       if (recent && recent.length > 0) {
@@ -57,166 +92,126 @@ serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+
+      const alertData = body.alertData || {};
+      const ticker = alertData.ticker || "Unknown";
+      const alertMsg = `What's the latest whale flow on ${ticker}? Give me a quick breakdown.`;
+
+      try {
+        const res = await fetch(REPLIT_API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: alertMsg }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const content = `🚨 **Whale Alert — ${ticker}**\n\n${data.analysis || "Big flow detected. Check the signals page for details!"}`;
+          await supabase.from("chat_messages").insert({
+            user_id: BIDDIE_USER_ID,
+            user_name: BIDDIE_NAME,
+            content,
+          });
+          return new Response(JSON.stringify({ status: "posted", action }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      } catch (e) {
+        console.warn("Replit API failed for alert:", e);
+      }
+
+      await supabase.from("chat_messages").insert({
+        user_id: BIDDIE_USER_ID,
+        user_name: BIDDIE_NAME,
+        content: `🚨 Big flow alert on **${ticker}** — check the signals page for details!`,
+      });
+      return new Response(JSON.stringify({ status: "posted_fallback", action }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // For reply action — Biddie responds to chat messages
+    // === @BIDDIE REPLY ===
     if (action === "reply") {
       const messageContent = body.message || "";
       const userName = body.user_name || "someone";
-      const messageId = body.message_id || "";
 
-      // Don't reply to Biddie's own messages
+      // Don't reply to self
       if (body.user_id === BIDDIE_USER_ID) {
         return new Response(JSON.stringify({ status: "skip_self" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      // No cooldown for replies — Biddie should always respond to users
-
-      // Fetch recent chat history for context
-      const { data: recentMessages } = await supabase
-        .from("chat_messages")
-        .select("user_name, content, user_id")
-        .order("created_at", { ascending: false })
-        .limit(10);
-
-      const chatHistory = (recentMessages || []).reverse().map((m: any) =>
-        `${m.user_id === BIDDIE_USER_ID ? "Biddie" : m.user_name}: ${m.content}`
-      ).join("\n");
-
-      // Decide if Biddie should reply — only when it makes sense
-      const shouldReplyPrompt = `You are monitoring a trading chat room. Here's the recent conversation:\n\n${chatHistory}\n\nThe latest message is from ${userName}: "${messageContent}"\n\nShould you (Biddie, the AI trading assistant) jump in? Reply ONLY with "YES" or "NO".\nSay YES if: someone asks a trading question, mentions a ticker, asks for help, says something you can add value to, greets the room, or the vibe calls for it.\nSay NO if: it's a private convo between users, small talk that doesn't need you, or you just replied recently.`;
-
-      const decisionRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${lovableKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash-lite",
-          messages: [{ role: "user", content: shouldReplyPrompt }],
-        }),
-      });
-
-      if (!decisionRes.ok) {
-        console.error("Decision AI error:", decisionRes.status);
-        return new Response(JSON.stringify({ status: "decision_error" }), {
+      // Only reply if message contains @biddie (case-insensitive)
+      const hasBiddieTag = /\b@?\s*biddie\b/i.test(messageContent);
+      if (!hasBiddieTag) {
+        return new Response(JSON.stringify({ status: "skip_no_tag" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      const decisionData = await decisionRes.json();
-      const decision = (decisionData.choices?.[0]?.message?.content || "").trim().toUpperCase();
+      // Strip the @biddie tag and send the rest to Replit API
+      const cleanMessage = messageContent.replace(/@?\s*biddie\s*/i, "").trim() || "What's the market looking like right now?";
 
-      if (!decision.includes("YES")) {
-        return new Response(JSON.stringify({ status: "skip", decision }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    }
-
-    // Fetch market context
-    let marketContext = "";
-    if (uwKey) {
       try {
-        const uwHeaders = { Authorization: `Bearer ${uwKey}`, Accept: "application/json" };
-        const [tideRes, flowRes] = await Promise.all([
-          fetch("https://api.unusualwhales.com/api/market/market-tide", { headers: uwHeaders }),
-          fetch("https://api.unusualwhales.com/api/option-trades/flow-alerts?limit=5", { headers: uwHeaders }),
-        ]);
-        const tideData = tideRes.ok ? await tideRes.json() : null;
-        const flowData = flowRes.ok ? await flowRes.json() : null;
-        if (tideData?.data) marketContext += `\nMarket Tide: ${JSON.stringify(tideData.data)}`;
-        if (flowData?.data) marketContext += `\nTop flow alerts: ${JSON.stringify(flowData.data.slice(0, 5))}`;
+        const res = await fetch(REPLIT_API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: cleanMessage }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const reply = data.analysis || "I'm having trouble getting data right now. Try again in a moment!";
+          await supabase.from("chat_messages").insert({
+            user_id: BIDDIE_USER_ID,
+            user_name: BIDDIE_NAME,
+            content: reply,
+          });
+          return new Response(JSON.stringify({ status: "replied" }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
       } catch (e) {
-        console.warn("Failed to fetch market data:", e);
+        console.warn("Replit API failed for reply:", e);
       }
-    }
 
-    let prompt = "";
-    if (action === "morning") {
-      const dayOfWeek = new Date().toLocaleDateString("en-US", { weekday: "long" });
-      prompt = `It's ${dayOfWeek} morning. Write a quick morning greeting for the JORTRADE chat room. Include a brief market outlook based on the data below. Keep it 2-3 sentences, warm and conversational. Start with something like "Good morning JORTRADE fam!" Don't use excessive slang. Be natural and helpful.${marketContext}`;
-    } else if (action === "alert") {
-      const alertData = body.alertData || "";
-      prompt = `A major options flow just came through. Summarize this alert for the JORTRADE chat room in 1-2 sentences. Be direct and informative — mention the ticker, direction, size, and what it might signal. Keep it casual but clear.${alertData ? `\n\nAlert data: ${JSON.stringify(alertData)}` : ""}${marketContext}`;
-    } else if (action === "reply") {
-      // Get recent chat for context
-      const { data: recentMessages } = await supabase
-        .from("chat_messages")
-        .select("user_name, content, user_id")
-        .order("created_at", { ascending: false })
-        .limit(10);
+      // Fallback using Lovable AI
+      if (lovableKey) {
+        const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${lovableKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-3-flash-preview",
+            messages: [
+              { role: "system", content: "You are Biddie, the AI trading assistant for JORTRADE. Keep replies to 1-3 sentences. Be helpful and conversational." },
+              { role: "user", content: `${userName} asked in the chat: "${cleanMessage}". Reply naturally.` },
+            ],
+          }),
+        });
 
-      const chatHistory = (recentMessages || []).reverse().map((m: any) =>
-        `${m.user_id === BIDDIE_USER_ID ? "Biddie" : m.user_name}: ${m.content}`
-      ).join("\n");
+        if (aiRes.ok) {
+          const aiData = await aiRes.json();
+          const reply = aiData.choices?.[0]?.message?.content || "I'm having trouble right now, try again in a sec!";
+          await supabase.from("chat_messages").insert({
+            user_id: BIDDIE_USER_ID,
+            user_name: BIDDIE_NAME,
+            content: reply,
+          });
+          return new Response(JSON.stringify({ status: "replied_fallback" }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
 
-      prompt = `You're in the JORTRADE chat room. Here's the recent conversation:\n\n${chatHistory}\n\nJump in naturally. Keep it 1-3 sentences. Be helpful if someone asked a question, or just vibe if it's casual. You have market data access.${marketContext}`;
-    }
-
-    if (!lovableKey) {
-      // Fallback if no AI key
-      const fallback = action === "morning"
-        ? "Good morning JORTRADE fam! 🌅 Let's get it today. Check the flow and signals for early setups!"
-        : "🚨 Big flow just came through — check the signals page for details!";
-
-      await supabase.from("chat_messages").insert({
-        user_id: BIDDIE_USER_ID,
-        user_name: BIDDIE_NAME,
-        content: fallback,
-      });
-
-      return new Response(JSON.stringify({ status: "posted_fallback" }), {
+      return new Response(JSON.stringify({ status: "reply_failed" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Generate message via AI
-    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${lovableKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          {
-            role: "system",
-            content: "You are Biddie, the AI trading assistant for JORTRADE. You post in the community chat room. Be warm, conversational, and knowledgeable. Light humor is welcome but keep it natural, not over the top. Never give financial advice, frame everything as analysis. IMPORTANT: Never use dashes or hyphens to separate ideas, use commas instead.",
-          },
-          { role: "user", content: prompt },
-        ],
-      }),
-    });
-
-    let messageContent: string;
-    if (aiRes.ok) {
-      const aiData = await aiRes.json();
-      messageContent = aiData.choices?.[0]?.message?.content || "Good morning JORTRADE fam! Let's have a great trading day! 🎯";
-    } else {
-      console.error("AI gateway error:", aiRes.status);
-      messageContent = action === "morning"
-        ? "Good morning JORTRADE fam! 🌅 Let's get after it today. Check the signals for early setups!"
-        : "🚨 Big flow alert just dropped — check the signals page!";
-    }
-
-    // Post to chat
-    const { error } = await supabase.from("chat_messages").insert({
-      user_id: BIDDIE_USER_ID,
-      user_name: BIDDIE_NAME,
-      content: messageContent,
-    });
-
-    if (error) {
-      console.error("Failed to insert Biddie message:", error);
-      throw error;
-    }
-
-    return new Response(JSON.stringify({ status: "posted", action }), {
+    return new Response(JSON.stringify({ status: "unknown_action" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
