@@ -4,6 +4,7 @@ import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { useMarketData, type MarketSignal, type SignalTimeframe } from "@/hooks/useMarketData";
 import { Search, Filter, TrendingUp, TrendingDown, Zap, ArrowUpDown, Clock, Flame, CalendarDays } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import SignalLegend from "@/components/dashboard/SignalLegend";
 
 type FilterType = "all" | "call" | "put";
 

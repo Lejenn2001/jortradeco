@@ -24,6 +24,8 @@ const SignalFeedPanel = ({ signals, loading, limit }: Props) => {
         </span>
       </div>
 
+      <SignalLegend />
+
       {loading && signals.length === 0 ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
