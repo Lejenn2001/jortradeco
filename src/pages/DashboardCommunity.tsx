@@ -92,22 +92,58 @@ const DashboardCommunity = () => {
     };
   }, [session?.user?.id, firstName]);
 
+  const triggerBiddie = async (userMessage: string) => {
+    try {
+      const res = await fetch(
+        "https://dc9f5714-8a88-4d03-b91b-f82647f969bd-00-22sbppmc01524.riker.replit.dev/api/whale/chat",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: userMessage }),
+        }
+      );
+      const data = await res.json();
+      const reply = data.analysis || "Biddie couldn't read the tape right now.";
+      // Post Biddie's response as a chat message
+      await supabase.from("chat_messages").insert({
+        user_id: BIDDIE_USER_ID,
+        user_name: "Biddie AI",
+        content: reply,
+      } as any);
+    } catch (e) {
+      console.error("Biddie API error:", e);
+      await supabase.from("chat_messages").insert({
+        user_id: BIDDIE_USER_ID,
+        user_name: "Biddie AI",
+        content: "⚠️ Biddie couldn't connect to the flow right now. Try again.",
+      } as any);
+    }
+  };
+
   const sendMessage = async () => {
     if (!session?.user?.id) {
       toast({ title: "Please log in", description: "You need to be signed in to send messages.", variant: "destructive" });
       return;
     }
     if (!input.trim() || sending) return;
+    const messageText = input.trim();
     setSending(true);
     const { error } = await supabase.from("chat_messages").insert({
       user_id: session.user.id,
       user_name: profile?.full_name || "Trader",
-      content: input.trim(),
+      content: messageText,
     } as any);
     if (error) {
       toast({ title: "Error sending message", description: error.message, variant: "destructive" });
     } else {
       setInput("");
+      // Check if message mentions Biddie (case-insensitive)
+      const lower = messageText.toLowerCase();
+      if (lower.includes("biddie") || lower.includes("@biddie")) {
+        // Strip the @Biddie prefix and send the rest to the API
+        const cleanMsg = messageText.replace(/@?biddie[,:]?\s*/i, "").trim() || messageText;
+        triggerBiddie(cleanMsg);
+      }
     }
     setSending(false);
   };
