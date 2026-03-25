@@ -247,12 +247,27 @@ export function useMarketData() {
           const volOiRatio = alert.volume_oi_ratio ? parseFloat(alert.volume_oi_ratio) : null;
           const tradeCount = alert.trade_count || 0;
 
-          // Confidence scoring based on how many high-conviction criteria are met
+          // Approximate average daily option premium by ticker class
+          // Mega-cap (SPY/QQQ/NVDA/AAPL/TSLA/AMZN/META/MSFT/GOOGL): ~$5M+ daily
+          // Large-cap (AMD/NFLX/BA/JPM/GS etc): ~$1-3M daily
+          // Mid-cap (PLTR/COIN/SNAP/SOFI etc): ~$200K-800K daily
+          const MEGA_CAP = ['SPY', 'QQQ', 'NVDA', 'AAPL', 'TSLA', 'AMZN', 'META', 'MSFT', 'GOOGL', 'GOOG', 'SPX', 'NDX'];
+          const LARGE_CAP = ['AMD', 'NFLX', 'BA', 'JPM', 'GS', 'DIS', 'V', 'MA', 'UNH', 'XOM', 'HD', 'CRM', 'INTC', 'COST', 'WMT'];
+          const avgDailyPremium = MEGA_CAP.includes(ticker) ? 5_000_000
+            : LARGE_CAP.includes(ticker) ? 2_000_000
+            : 500_000; // mid/small-cap default
+
+          // Premium relative to ticker's avg daily premium (how unusual is this flow?)
+          const premiumRatio = totalPremium / avgDailyPremium;
+
+          // Confidence scoring — relative to what's normal for this ticker
           let confidence = 8.5; // baseline (passed all minimum filters)
-          if (volOiRatio && volOiRatio >= 8) confidence += 0.5;    // strong new positioning
+          if (volOiRatio && volOiRatio >= 8) confidence += 0.4;    // strong new positioning
           if (volOiRatio && volOiRatio >= 12) confidence += 0.3;   // extreme new positioning
-          if (totalPremium >= 100000) confidence += 0.3; // serious capital ($100K+)
-          if (totalPremium >= 500000) confidence += 0.2; // whale-level capital ($500K+)
+          // Premium scoring relative to ticker size
+          if (premiumRatio >= 0.05) confidence += 0.2;  // notable (5%+ of daily avg)
+          if (premiumRatio >= 0.15) confidence += 0.3;  // significant (15%+ of daily avg)
+          if (premiumRatio >= 0.40) confidence += 0.3;  // massive (40%+ of daily avg)
           if (tradeCount >= 8) confidence += 0.2; // repeated conviction
           if (tradeCount >= 12) confidence += 0.2; // extreme clustering
           confidence = Math.min(10, parseFloat(confidence.toFixed(1)));
