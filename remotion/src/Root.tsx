@@ -2,12 +2,22 @@ import { Composition } from "remotion";
 import { MainVideo } from "./MainVideo";
 
 export const RemotionRoot: React.FC = () => (
-  <Composition
-    id="main"
-    component={MainVideo}
-    durationInFrames={450}
-    fps={30}
-    width={1080}
-    height={1080}
-  />
+  <>
+    <Composition
+      id="main"
+      component={MainVideo}
+      durationInFrames={450}
+      fps={30}
+      width={1080}
+      height={1080}
+    />
+    <Composition
+      id="reel"
+      component={MainVideo}
+      durationInFrames={450}
+      fps={30}
+      width={1080}
+      height={1920}
+    />
+  </>
 );
