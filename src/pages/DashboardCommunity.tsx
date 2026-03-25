@@ -23,7 +23,7 @@ interface ChatMessage {
 const BIDDIE_USER_ID = "00000000-0000-0000-0000-000000000000";
 
 const DashboardCommunity = () => {
-  const { session, profile } = useAuth();
+  const { session, profile, isAdmin } = useAuth();
   const firstName = profile?.full_name?.split(" ")[0] || "Trader";
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
