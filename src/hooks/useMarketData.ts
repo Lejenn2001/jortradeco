@@ -397,7 +397,56 @@ export function useMarketData() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const REPLIT_SIGNALS_API = 'https://dc9f5714-8a88-4d03-b91b-f82647f969bd-00-22sbppmc01524.riker.replit.dev/api/whale/signals';
+
   const fetchFlowAlerts = useCallback(async () => {
+    try {
+      // Try Replit signals API first
+      const res = await fetch(REPLIT_SIGNALS_API);
+      if (res.ok) {
+        const data = await res.json();
+        const replitSignals = data?.signals || [];
+        if (replitSignals.length > 0) {
+          const mapped: MarketSignal[] = replitSignals.map((s: any, i: number) => {
+            const isBullish = s.direction === 'bullish';
+            const tags = [...(s.tags || [])];
+            if (s.has_sweep && !tags.includes('Sweep')) tags.push('Sweep');
+            if (s.confidence >= 9) tags.push('🔥 ACT NOW');
+            else if (s.confidence >= 8) tags.push('⚡ HIGH CONVICTION');
+
+            return {
+              id: `replit-${s.ticker}-${i}`,
+              ticker: s.ticker,
+              type: isBullish ? 'bullish' as const : 'bearish' as const,
+              confidence: s.confidence,
+              convictionScore: s.confidence * 10,
+              convictionLabel: s.confidence >= 9 ? 'Extreme Conviction' : s.confidence >= 8 ? 'Very High Conviction' : 'High Conviction',
+              description: s.reason || `${s.option_type} flow on ${s.ticker} at $${s.strike} strike. Premium: $${formatPremium(s.premium)}.`,
+              timestamp: 'Live',
+              tags,
+              strike: `$${s.strike}`,
+              expiry: s.expiry,
+              premium: `$${formatPremium(s.premium)}`,
+              putCall: s.option_type as 'call' | 'put',
+              suggestedTrade: s.trade,
+              entryTrigger: s.entry_trigger,
+              invalidation: s.invalidation,
+              keyLevel: s.key_level,
+              targetZone: s.target,
+              timeframe: s.confidence >= 9 ? 'buy_now' as SignalTimeframe : 'short_term' as SignalTimeframe,
+            } as MarketSignal;
+          });
+
+          setSignals(mapped);
+          saveCachedSignals(mapped);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('Replit signals API failed, falling back to edge function:', e);
+    }
+
+    // Fallback to existing edge function
     try {
       const { data, error } = await supabase.functions.invoke('market-data', {
         body: { action: 'flow' },
@@ -434,7 +483,6 @@ export function useMarketData() {
           const tradeCount = alert.trade_count || 0;
           const stockPrice = parseFloat(alert.stock_price || alert.underlying_price || '0') || null;
 
-          // Compute whale conviction score
           const dte = computeDte(expiry !== 'N/A' ? expiry : null);
           const moneynessPct = computeMoneyness(rawStrike, stockPrice);
           const scoreResult = computeWhaleConviction({
@@ -451,9 +499,7 @@ export function useMarketData() {
             keyLevels: keyLevelsMap[ticker],
           });
 
-          // Convert 0-100 to 0-10 for backward compat display
           const confidence = Math.min(10, parseFloat((scoreResult.score / 10).toFixed(1)));
-
           const urgencyTag = scoreResult.score >= 75 ? '🔥 ACT NOW' : scoreResult.score >= 60 ? '⚡ HIGH CONVICTION' : null;
           const tags = [
             putCall === 'call' ? 'Call Flow' : 'Put Flow',
@@ -470,7 +516,7 @@ export function useMarketData() {
             convictionLabel: scoreResult.label,
             gammaLevelLabel: scoreResult.gammaLevelLabel,
             _totalPremium: totalPremium,
-            description: `${tradeCount} ${putCall} trades detected on ${ticker} at $${strikeLabel} strike. Total premium: $${premium}. Volume/OI ratio: ${volOiRatio ? volOiRatio.toFixed(1) + 'x' : 'N/A'} — ${volOiRatio >= 8 ? 'major new positioning' : 'significant new positioning'}. Conviction: ${scoreResult.score}/100 (${scoreResult.label}).`,
+            description: `${tradeCount} ${putCall} trades detected on ${ticker} at $${strikeLabel} strike. Total premium: $${premium}. Volume/OI ratio: ${volOiRatio ? volOiRatio.toFixed(1) + 'x' : 'N/A'}. Conviction: ${scoreResult.score}/100 (${scoreResult.label}).`,
             timestamp: alert.created_at ? timeAgo(alert.created_at) : 'just now',
             createdAt: alert.created_at || '',
             tags,
@@ -488,7 +534,6 @@ export function useMarketData() {
           } as SignalWithMeta;
         });
 
-      // Deduplicate: per ticker, keep only the dominant side (highest total premium)
       const tickerMap = new Map<string, (typeof allSignals)[0]>();
       for (const signal of allSignals) {
         const existing = tickerMap.get(signal.ticker);
