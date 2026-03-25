@@ -10,6 +10,31 @@ const BIDDIE_USER_ID = "00000000-0000-0000-0000-000000000000";
 const BIDDIE_NAME = "🤖 Biddie AI";
 const REPLIT_API = "https://dc9f5714-8a88-4d03-b91b-f82647f969bd-00-22sbppmc01524.riker.replit.dev/api/whale/chat";
 const CHAT_BREVITY = " IMPORTANT: Keep response to 3 sentences max. Include ONE specific actionable contract recommendation with: ticker, call/put, strike price, expiration date, and your confidence level (low/medium/high/very high). Example format: 'Watching AAPL 200C 4/18 — high confidence, premium around $2.50, targeting the $205 zone.' Be concise like a quick trade alert.";
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 5000;
+
+async function fetchReplit(message: string): Promise<{ ok: boolean; analysis?: string }> {
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      const res = await fetch(REPLIT_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return { ok: true, analysis: data.analysis };
+      }
+      console.warn(`Replit attempt ${attempt + 1} failed: ${res.status}`);
+    } catch (e) {
+      console.warn(`Replit attempt ${attempt + 1} error:`, e);
+    }
+    if (attempt < MAX_RETRIES - 1) {
+      await new Promise(r => setTimeout(r, RETRY_DELAY_MS));
+    }
+  }
+  return { ok: false };
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
