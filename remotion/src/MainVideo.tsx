@@ -1,6 +1,6 @@
 import { AbsoluteFill, Sequence, useCurrentFrame, interpolate, spring, useVideoConfig, Img, staticFile } from "remotion";
 import { loadFont } from "@remotion/google-fonts/Outfit";
-import { loadFont as loadDisplay } from "@remotion/google-fonts/BigShouldersDisplay";
+import { loadFont as loadDisplay } from "@remotion/google-fonts/BigShoulders";
 
 const { fontFamily: bodyFont } = loadFont("normal", { weights: ["400", "700"], subsets: ["latin"] });
 const { fontFamily: displayFont } = loadDisplay("normal", { weights: ["700", "800"], subsets: ["latin"] });
