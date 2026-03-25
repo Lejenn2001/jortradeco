@@ -39,6 +39,7 @@ export interface MarketSignal {
   targetZone?: string;
   createdAt?: string;
   timeframe?: SignalTimeframe;
+  source?: "live" | "example";
 }
 
 export interface TickerData {
@@ -240,6 +241,7 @@ const exampleSignals: MarketSignal[] = [
     keyLevel: "$141.50",
     targetZone: "$148.00 – $152.00",
     timeframe: "buy_now",
+    source: "example",
   },
   {
     id: "ex-2",
@@ -261,6 +263,7 @@ const exampleSignals: MarketSignal[] = [
     keyLevel: "$255.00",
     targetZone: "$242.00 – $245.00",
     timeframe: "short_term",
+    source: "example",
   },
   {
     id: "ex-3",
@@ -282,6 +285,7 @@ const exampleSignals: MarketSignal[] = [
     keyLevel: "$213.00",
     targetZone: "$218.00 – $222.00",
     timeframe: "buy_now",
+    source: "example",
   },
   {
     id: "ex-4",
@@ -303,6 +307,7 @@ const exampleSignals: MarketSignal[] = [
     keyLevel: "$573.50",
     targetZone: "$564.00 – $567.00",
     timeframe: "buy_now",
+    source: "example",
   },
   {
     id: "ex-5",
@@ -324,6 +329,7 @@ const exampleSignals: MarketSignal[] = [
     keyLevel: "$117.50",
     targetZone: "$123.00 – $126.00",
     timeframe: "swing",
+    source: "example",
   },
   {
     id: "ex-6",
@@ -345,6 +351,7 @@ const exampleSignals: MarketSignal[] = [
     keyLevel: "$112.00",
     targetZone: "$105.00 – $107.00",
     timeframe: "buy_now",
+    source: "example",
   },
 ];
 
@@ -432,11 +439,13 @@ export function useMarketData() {
               invalidation: s.invalidation,
               keyLevel: s.key_level,
               targetZone: s.target,
+              source: "live",
               timeframe: s.confidence >= 9 ? 'buy_now' as SignalTimeframe : 'short_term' as SignalTimeframe,
             } as MarketSignal;
           });
 
-          setSignals(mapped);
+          // Merge live signals (first) with examples (after)
+          setSignals([...mapped, ...exampleSignals]);
           saveCachedSignals(mapped);
 
           // Log Replit signals to signal_outcomes for accuracy tracking

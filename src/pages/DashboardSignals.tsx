@@ -192,6 +192,11 @@ function SignalRow({ signal }: { signal: MarketSignal }) {
           }`}>
             {signal.putCall === "call" ? "CALL" : "PUT"}
           </span>
+          {signal.source === "live" ? (
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 uppercase tracking-wider">Live</span>
+          ) : signal.source === "example" ? (
+            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-muted/40 text-muted-foreground uppercase tracking-wider">Example</span>
+          ) : null}
           {signal.premium && (
             <span className="text-xs text-accent font-semibold">{signal.premium}</span>
           )}
