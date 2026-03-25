@@ -1,12 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
-interface PresenceUser {
-  user_id: string;
-  full_name: string;
-  online_at: string;
-}
+const CHANNEL_NAME = "presence-room";
 
 export function usePresenceBroadcast() {
   const { session, profile } = useAuth();
@@ -14,7 +10,7 @@ export function usePresenceBroadcast() {
   useEffect(() => {
     if (!session?.user?.id) return;
 
-    const channel = supabase.channel("online-users", {
+    const channel = supabase.channel(CHANNEL_NAME, {
       config: { presence: { key: session.user.id } },
     });
 
@@ -39,31 +35,30 @@ export function usePresenceBroadcast() {
 export function usePresenceTracker() {
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    const channel = supabase.channel("online-users-tracker", {
-      config: { presence: { key: "tracker" } },
+  const extractUsers = useCallback((channel: any) => {
+    const state = channel.presenceState();
+    const ids = new Set<string>();
+    Object.values(state).forEach((presences: any[]) => {
+      presences.forEach((p) => {
+        if (p.user_id) ids.add(p.user_id);
+      });
     });
+    setOnlineUsers(ids);
+  }, []);
 
-    // Subscribe to the same presence channel to read state
-    const presenceChannel = supabase.channel("online-users");
+  useEffect(() => {
+    const channel = supabase.channel(CHANNEL_NAME);
 
-    presenceChannel
-      .on("presence", { event: "sync" }, () => {
-        const state = presenceChannel.presenceState();
-        const ids = new Set<string>();
-        Object.values(state).forEach((presences: any[]) => {
-          presences.forEach((p) => {
-            if (p.user_id) ids.add(p.user_id);
-          });
-        });
-        setOnlineUsers(ids);
-      })
+    channel
+      .on("presence", { event: "sync" }, () => extractUsers(channel))
+      .on("presence", { event: "join" }, () => extractUsers(channel))
+      .on("presence", { event: "leave" }, () => extractUsers(channel))
       .subscribe();
 
     return () => {
-      supabase.removeChannel(presenceChannel);
+      supabase.removeChannel(channel);
     };
-  }, []);
+  }, [extractUsers]);
 
   return onlineUsers;
 }
