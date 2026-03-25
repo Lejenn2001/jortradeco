@@ -220,7 +220,7 @@ const DashboardCommunity = () => {
                     </div>
 
                     {/* Delete button */}
-                    {isOwn && (
+                    {(isOwn || isAdmin) && (
                       <button
                         onClick={() => deleteMessage(msg.id)}
                         className="opacity-0 group-hover:opacity-100 transition-opacity self-center p-1 rounded hover:bg-destructive/20"
