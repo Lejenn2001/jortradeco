@@ -1,13 +1,23 @@
-import { Activity, TrendingUp, TrendingDown, Clock, AlertTriangle, Target, ShieldX, Zap, Crosshair, MapPin, Gauge } from "lucide-react";
+import { Activity, TrendingUp, TrendingDown, Clock, Target, ShieldX, Zap, Crosshair, MapPin, Gauge } from "lucide-react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import type { MarketSignal } from "@/hooks/useMarketData";
 import SignalLegend from "./SignalLegend";
+import ConvictionScoreRing from "./ConvictionScoreRing";
 
 interface Props {
   signals: MarketSignal[];
   loading: boolean;
   limit?: number;
 }
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20, scale: 0.97 },
+  visible: (i: number) => ({
+    opacity: 1, y: 0, scale: 1,
+    transition: { duration: 0.4, delay: i * 0.12, ease: "easeOut" as const },
+  }),
+};
 
 const SignalFeedPanel = ({ signals, loading, limit }: Props) => {
   const displaySignals = limit ? signals.slice(0, limit) : signals;
@@ -34,9 +44,13 @@ const SignalFeedPanel = ({ signals, loading, limit }: Props) => {
         </div>
       ) : (
         <div className="space-y-4">
-          {displaySignals.map((signal) => (
-            <div
+          {displaySignals.map((signal, index) => (
+            <motion.div
               key={signal.id}
+              custom={index}
+              initial="hidden"
+              animate="visible"
+              variants={cardVariants}
               className={`rounded-xl border overflow-hidden ${
                 signal.type === "bullish"
                   ? "border-primary/30 bg-primary/5"
@@ -71,7 +85,7 @@ const SignalFeedPanel = ({ signals, loading, limit }: Props) => {
               </div>
 
               <div className="px-4 py-3 space-y-3">
-                {/* Ticker + Direction + Conviction */}
+                {/* Ticker + Direction + Conviction Ring */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     {signal.type === "bullish" ? (
@@ -90,25 +104,10 @@ const SignalFeedPanel = ({ signals, loading, limit }: Props) => {
                       {signal.putCall === "call" ? "CALL" : signal.putCall === "put" ? "PUT" : signal.type}
                     </span>
                   </div>
-                  {(() => {
-                    const score = signal.convictionScore ?? Math.round(signal.confidence * 10);
-                    const scoreColor = score >= 90 ? "border-destructive text-destructive bg-destructive/10"
-                      : score >= 75 ? "border-accent text-accent bg-accent/10"
-                      : score >= 60 ? "border-primary text-primary bg-primary/10"
-                      : "border-muted-foreground text-muted-foreground bg-muted/20";
-                    const label = score >= 95 ? "Ultra"
-                      : score >= 90 ? "Extreme"
-                      : score >= 80 ? "Very High"
-                      : score >= 70 ? "High"
-                      : score >= 60 ? "Elevated"
-                      : "Moderate";
-                    return (
-                      <div className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 ${scoreColor}`}>
-                        <span className="text-xs font-bold">{score}</span>
-                        <span className="text-[9px] font-medium">{label}</span>
-                      </div>
-                    );
-                  })()}
+                  <ConvictionScoreRing
+                    score={signal.convictionScore ?? Math.round(signal.confidence * 10)}
+                    label={signal.convictionLabel ?? ""}
+                  />
                 </div>
 
                 {/* Description */}
@@ -203,7 +202,7 @@ const SignalFeedPanel = ({ signals, loading, limit }: Props) => {
                   )}
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       )}

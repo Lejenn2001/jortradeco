@@ -1,10 +1,12 @@
 import { useState, useMemo } from "react";
+import { motion } from "framer-motion";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { useMarketData, type MarketSignal, type SignalTimeframe } from "@/hooks/useMarketData";
-import { Search, Filter, TrendingUp, TrendingDown, Zap, ArrowUpDown, Clock, Flame, CalendarDays } from "lucide-react";
+import { Search, Filter, TrendingUp, TrendingDown, Zap, Clock, CalendarDays } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import SignalLegend from "@/components/dashboard/SignalLegend";
+import ConvictionScoreRing from "@/components/dashboard/ConvictionScoreRing";
 
 type FilterType = "all" | "call" | "put";
 
@@ -147,7 +149,14 @@ const DashboardSignals = () => {
                 ) : (
                   <div className="divide-y divide-border/20">
                     {sectionSignals.map((signal, i) => (
-                      <SignalRow key={`${signal.ticker}-${signal.id}-${i}`} signal={signal} />
+                      <motion.div
+                        key={`${signal.ticker}-${signal.id}-${i}`}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.35, delay: i * 0.08, ease: "easeOut" as const }}
+                      >
+                        <SignalRow signal={signal} />
+                      </motion.div>
                     ))}
                   </div>
                 )}
@@ -163,21 +172,6 @@ const DashboardSignals = () => {
 function SignalRow({ signal }: { signal: MarketSignal }) {
   const isCall = signal.putCall === "call" || signal.type === "bullish";
   const score = signal.convictionScore ?? Math.round(signal.confidence * 10);
-  const scoreColor = score >= 90 ? "border-destructive text-destructive" 
-    : score >= 75 ? "border-accent text-accent" 
-    : score >= 60 ? "border-primary text-primary" 
-    : "border-muted-foreground text-muted-foreground";
-  const scoreBg = score >= 90 ? "bg-destructive/10" 
-    : score >= 75 ? "bg-accent/10" 
-    : score >= 60 ? "bg-primary/10" 
-    : "bg-muted/20";
-  const convictionLabel = score >= 95 ? "Ultra Conviction"
-    : score >= 90 ? "Extreme Conviction"
-    : score >= 80 ? "Very High Conviction"
-    : score >= 70 ? "High Conviction"
-    : score >= 60 ? "Elevated Conviction"
-    : score >= 40 ? "Moderate Conviction"
-    : "Low Conviction";
 
   return (
     <div className="px-5 py-4 hover:bg-muted/20 transition-colors">
@@ -206,10 +200,10 @@ function SignalRow({ signal }: { signal: MarketSignal }) {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-[10px] text-muted-foreground">{signal.timestamp}</span>
-          <div className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 ${scoreColor} ${scoreBg}`}>
-            <span className="text-xs font-bold">{score}</span>
-            <span className="text-[9px] font-medium hidden sm:inline">{convictionLabel}</span>
-          </div>
+          <ConvictionScoreRing
+            score={score}
+            label={signal.convictionLabel ?? ""}
+          />
         </div>
       </div>
 
