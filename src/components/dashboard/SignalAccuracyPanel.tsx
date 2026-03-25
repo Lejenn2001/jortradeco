@@ -100,13 +100,14 @@ const SignalAccuracyPanel = ({ isAdmin, liveSignals = [] }: Props) => {
     try {
       const { data, error } = await supabase.functions.invoke("verify-signals");
       if (error) throw error;
+      const remaining = data.remaining_pending || 0;
       toast({
         title: "Signals Verified",
-        description: `${data.verified} signals checked — ${data.hits} hits, ${data.misses} misses`,
+        description: `${data.verified} checked — ${data.hits} hits, ${data.misses} misses${data.expired ? `, ${data.expired} expired` : ''}${remaining > 0 ? `. ${remaining} still pending — click again to verify more.` : ''}`,
       });
       fetchOutcomes();
     } catch (e) {
-      toast({ title: "Error", description: "Failed to verify signals", variant: "destructive" });
+      toast({ title: "Error", description: "Failed to verify signals. Try again.", variant: "destructive" });
     }
     setVerifying(false);
   };
