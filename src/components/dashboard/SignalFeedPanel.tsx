@@ -1,4 +1,4 @@
-import { Activity, TrendingUp, TrendingDown, Clock, AlertTriangle, Target, ShieldX, Zap, Crosshair, MapPin } from "lucide-react";
+import { Activity, TrendingUp, TrendingDown, Clock, AlertTriangle, Target, ShieldX, Zap, Crosshair, MapPin, Gauge } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { MarketSignal } from "@/hooks/useMarketData";
 
