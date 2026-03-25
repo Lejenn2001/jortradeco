@@ -17,10 +17,10 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 
 const navItems = [
+  { icon: MessageSquare, label: "Biddie AI", path: "/dashboard/chat" },
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: Activity, label: "Signals", path: "/dashboard/signals" },
   { icon: BarChart3, label: "Market View", path: "/dashboard/market" },
-  { icon: MessageSquare, label: "Biddie AI", path: "/dashboard/chat" },
   { icon: Wallet, label: "P&L Calendar", path: "/dashboard/pnl" },
   { icon: Users, label: "JORTRADE Chat", path: "/dashboard/community" },
   { icon: PieChart, label: "Analytics", path: "/dashboard/analytics" },
