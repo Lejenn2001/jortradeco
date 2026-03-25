@@ -190,8 +190,11 @@ const PortfolioPanel = ({ whaleAlerts, loading, limit }: Props) => {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <div className="text-[10px] text-muted-foreground">
-                      {alert.strike} strike • {alert.expiry}
+                    <div className="text-[10px] text-muted-foreground flex items-center gap-1.5">
+                      <span>{alert.strike} strike • {alert.expiry}</span>
+                      {alert.gammaLevelLabel && (
+                        <span className="text-accent font-semibold">• {alert.gammaLevelLabel}</span>
+                      )}
                     </div>
                     <button
                       onClick={() => setExpandedIdx(isExpanded ? null : i)}

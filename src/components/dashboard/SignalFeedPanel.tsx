@@ -1,4 +1,4 @@
-import { Activity, TrendingUp, TrendingDown, Clock, AlertTriangle, Target, ShieldX, Zap, Crosshair, MapPin } from "lucide-react";
+import { Activity, TrendingUp, TrendingDown, Clock, AlertTriangle, Target, ShieldX, Zap, Crosshair, MapPin, Gauge } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { MarketSignal } from "@/hooks/useMarketData";
 
@@ -118,6 +118,16 @@ const SignalFeedPanel = ({ signals, loading, limit }: Props) => {
                       <div>
                         <span className="text-muted-foreground">Entry trigger: </span>
                         <span className="text-foreground font-semibold">{signal.entryTrigger}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {signal.gammaLevelLabel && (
+                    <div className="flex items-start gap-2 bg-accent/10 rounded-lg px-3 py-2">
+                      <Gauge className="h-3.5 w-3.5 text-accent mt-0.5 shrink-0" />
+                      <div>
+                        <span className="text-muted-foreground">S/R alignment: </span>
+                        <span className="text-accent font-semibold">{signal.gammaLevelLabel}</span>
                       </div>
                     </div>
                   )}
