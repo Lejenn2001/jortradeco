@@ -386,6 +386,7 @@ export function useMarketData() {
       if (error) throw error;
 
       const alerts = data?.data || [];
+      const keyLevelsMap: Record<string, number[]> = data?.key_levels || {};
       
       if (alerts.length === 0) return;
 
