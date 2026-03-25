@@ -61,8 +61,19 @@ const AIChatPanel = () => {
     setIsLoading(true);
 
     try {
+      // Detect if user is telling Biddie about a trade they entered
+      const lower = text.trim().toLowerCase();
+      const isTradeEntry = /\b(i just (entered|bought|sold|opened|took)|i('m| am) (in|holding|long|short)|my position|i have a)\b/.test(lower);
+      
+      let instruction: string;
+      if (isTradeEntry) {
+        instruction = `[TRADE ADVISOR MODE] The user just told you about a trade they entered. Give a detailed analysis: check gamma levels, support/resistance alignment, VWAP positioning, and whether their direction is correct. Recommend entry/exit adjustments, stop loss, and profit targets. Be thorough here — this is their money.\n\nUser says: ${text.trim()}`;
+      } else {
+        instruction = `[DASHBOARD CHAT MODE] Keep your response to 3-4 sentences max. Be conversational and helpful but concise. No long breakdowns unless the user specifically asks for detail.\n\nUser says: ${text.trim()}`;
+      }
+
       const { data, error } = await supabase.functions.invoke('ai-chat', {
-        body: { message: text.trim() },
+        body: { message: instruction },
       });
 
       if (error) throw error;
