@@ -81,7 +81,7 @@ const FourPillars: React.FC = () => {
       }} />
 
       <div style={{ opacity: titleOpacity, transform: `translateY(${titleY}px)`, textAlign: "center", marginBottom: 50 }}>
-        <div style={{ fontFamily: displayFont, fontSize: 90, fontWeight: 800, color: "#fff" }}>THE ECOSYSTEM</div>
+        <div style={{ fontFamily: displayFont, fontSize: 110, fontWeight: 800, color: "#fff" }}>THE ECOSYSTEM</div>
         <div style={{ fontFamily: bodyFont, fontSize: 30, color: "#8C91A0", marginTop: 10, letterSpacing: "0.2em" }}>FOUR PILLARS OF EDGE</div>
       </div>
 
@@ -147,7 +147,7 @@ const BiddieReveal: React.FC = () => {
 
       {/* Text below */}
       <div style={{ opacity: textOpacity, transform: `translateY(${textY}px)`, textAlign: "center", marginTop: 30 }}>
-        <div style={{ fontFamily: displayFont, fontSize: 80, fontWeight: 800, color: "#fff" }}>MEET BIDDIE</div>
+        <div style={{ fontFamily: displayFont, fontSize: 100, fontWeight: 800, color: "#fff" }}>MEET BIDDIE</div>
         <div style={{ fontFamily: bodyFont, fontSize: 34, color: "#A050FF", marginTop: 8 }}>Your AI Trading Assistant</div>
         <div style={{ fontFamily: bodyFont, fontSize: 26, color: "#8C91A0", marginTop: 12 }}>Scans 1,000+ setups daily</div>
       </div>
@@ -257,10 +257,10 @@ export const MainVideo: React.FC = () => {
   return (
     <AbsoluteFill>
       <Sequence from={0} durationInFrames={100}><LogoReveal /></Sequence>
-      <Sequence from={100} durationInFrames={110}><FourPillars /></Sequence>
-      <Sequence from={210} durationInFrames={90}><BiddieReveal /></Sequence>
-      <Sequence from={300} durationInFrames={60}><StatsScene /></Sequence>
-      <Sequence from={360} durationInFrames={90}><ClosingCTA /></Sequence>
+      <Sequence from={100} durationInFrames={120}><FourPillars /></Sequence>
+      <Sequence from={220} durationInFrames={100}><BiddieReveal /></Sequence>
+      <Sequence from={320} durationInFrames={70}><StatsScene /></Sequence>
+      <Sequence from={390} durationInFrames={140}><ClosingCTA /></Sequence>
     </AbsoluteFill>
   );
 };
