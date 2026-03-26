@@ -4,6 +4,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const compositionId = process.argv[2] || "main";
+const outputPath = process.argv[3] || "/mnt/documents/jortrade_intro.mp4";
 
 const bundled = await bundle({
   entryPoint: path.resolve(__dirname, "../src/index.ts"),
@@ -18,19 +20,21 @@ const browser = await openBrowser("chrome", {
 
 const composition = await selectComposition({
   serveUrl: bundled,
-  id: "main",
+  id: compositionId,
   puppeteerInstance: browser,
 });
+
+console.log(`Rendering ${composition.durationInFrames} frames...`);
 
 await renderMedia({
   composition,
   serveUrl: bundled,
   codec: "h264",
-  outputLocation: "/mnt/documents/jortrade_intro.mp4",
+  outputLocation: outputPath,
   puppeteerInstance: browser,
   muted: true,
   concurrency: 1,
 });
 
 await browser.close({ silent: false });
-console.log("Video rendered to /mnt/documents/jortrade_intro.mp4");
+console.log(`Done: ${outputPath}`);
