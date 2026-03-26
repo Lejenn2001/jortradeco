@@ -9,21 +9,21 @@ const { fontFamily: displayFont } = loadDisplay("normal", { weights: ["700", "80
 const LogoReveal: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  
-  const scale = spring({ frame, fps, config: { damping: 20, stiffness: 50, mass: 2 } });
-  const opacity = interpolate(frame, [0, 35], [0, 1], { extrapolateRight: "clamp" });
-  const glowSize = interpolate(frame, [0, 60, 90], [0, 600, 400], { extrapolateRight: "clamp" });
-  const glowOpacity = interpolate(frame, [0, 30, 90], [0, 0.6, 0.2], { extrapolateRight: "clamp" });
-  const taglineOpacity = interpolate(frame, [50, 80], [0, 1], { extrapolateRight: "clamp" });
-  const taglineY = interpolate(frame, [50, 80], [30, 0], { extrapolateRight: "clamp" });
-  const lineWidth = interpolate(frame, [40, 80], [0, 300], { extrapolateRight: "clamp" });
+
+  const scale = spring({ frame, fps, config: { damping: 28, stiffness: 34, mass: 2.8 } });
+  const opacity = interpolate(frame, [0, 50], [0, 1], { extrapolateRight: "clamp" });
+  const glowSize = interpolate(frame, [0, 70, 105], [0, 620, 420], { extrapolateRight: "clamp" });
+  const glowOpacity = interpolate(frame, [0, 40, 105], [0, 0.6, 0.22], { extrapolateRight: "clamp" });
+  const taglineOpacity = interpolate(frame, [68, 102], [0, 1], { extrapolateRight: "clamp" });
+  const taglineY = interpolate(frame, [68, 102], [34, 0], { extrapolateRight: "clamp" });
+  const lineWidth = interpolate(frame, [34, 88], [0, 320], { extrapolateRight: "clamp" });
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#080E1C", justifyContent: "center", alignItems: "center" }}>
       <Img src={staticFile("images/bg_hex.png")} style={{
         position: "absolute", width: "100%", height: "100%", objectFit: "cover", opacity: 0.3,
       }} />
-      
+
       <div style={{
         position: "absolute", width: glowSize, height: glowSize,
         borderRadius: "50%",
@@ -59,8 +59,8 @@ const FourPillars: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const titleOpacity = interpolate(frame, [0, 30], [0, 1], { extrapolateRight: "clamp" });
-  const titleY = interpolate(frame, [0, 30], [40, 0], { extrapolateRight: "clamp" });
+  const titleOpacity = interpolate(frame, [0, 38], [0, 1], { extrapolateRight: "clamp" });
+  const titleY = interpolate(frame, [0, 38], [50, 0], { extrapolateRight: "clamp" });
 
   const pillars = [
     { icon: "🤖", name: "AI SIGNALS", desc: "Biddie scans 1,000+ setups", color: "#3C82FF" },
@@ -82,9 +82,9 @@ const FourPillars: React.FC = () => {
 
       <div style={{ display: "flex", flexDirection: "column", gap: 18, width: "100%" }}>
         {pillars.map((p, i) => {
-          const delay = 30 + i * 18;
-          const s = spring({ frame: frame - delay, fps, config: { damping: 25, stiffness: 80 } });
-          const x = interpolate(s, [0, 1], [-400, 0]);
+          const delay = 42 + i * 24;
+          const s = spring({ frame: frame - delay, fps, config: { damping: 30, stiffness: 60, mass: 1.8 } });
+          const x = interpolate(s, [0, 1], [-420, 0]);
           const o = interpolate(s, [0, 1], [0, 1]);
 
           return (
@@ -112,11 +112,11 @@ const BiddieReveal: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const biddieScale = spring({ frame: frame - 10, fps, config: { damping: 15, stiffness: 60, mass: 1.5 } });
-  const biddieRotate = interpolate(frame, [10, 50], [-15, 0], { extrapolateRight: "clamp" });
-  const textOpacity = interpolate(frame, [35, 60], [0, 1], { extrapolateRight: "clamp" });
-  const textY = interpolate(frame, [35, 60], [30, 0], { extrapolateRight: "clamp" });
-  const glowPulse = interpolate(frame, [0, 120], [0, Math.PI * 4]);
+  const biddieScale = spring({ frame: frame - 12, fps, config: { damping: 24, stiffness: 42, mass: 2.2 } });
+  const biddieRotate = interpolate(frame, [12, 64], [-15, 0], { extrapolateRight: "clamp" });
+  const textOpacity = interpolate(frame, [44, 80], [0, 1], { extrapolateRight: "clamp" });
+  const textY = interpolate(frame, [44, 80], [34, 0], { extrapolateRight: "clamp" });
+  const glowPulse = interpolate(frame, [0, 140], [0, Math.PI * 4]);
   const glowRadius = 350 + Math.sin(glowPulse) * 30;
 
   return (
@@ -167,8 +167,8 @@ const StatsScene: React.FC = () => {
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 20, justifyContent: "center" }}>
         {stats.map((s, i) => {
-          const delay = i * 15;
-          const sp = spring({ frame: frame - delay, fps, config: { damping: 20, stiffness: 70 } });
+          const delay = i * 18;
+          const sp = spring({ frame: frame - delay, fps, config: { damping: 28, stiffness: 55, mass: 1.8 } });
           const scale = interpolate(sp, [0, 1], [0.6, 1]);
           const o = interpolate(sp, [0, 1], [0, 1]);
 
@@ -194,12 +194,12 @@ const ClosingCTA: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const logoScale = spring({ frame, fps, config: { damping: 20, stiffness: 40, mass: 2.5 } });
-  const tagOpacity = interpolate(frame, [45, 75], [0, 1], { extrapolateRight: "clamp" });
-  const tagY = interpolate(frame, [45, 75], [25, 0], { extrapolateRight: "clamp" });
-  const urlOpacity = interpolate(frame, [80, 105], [0, 1], { extrapolateRight: "clamp" });
-  const lineWidth = interpolate(frame, [30, 70], [0, 400], { extrapolateRight: "clamp" });
-  const glowPulse = Math.sin(frame * 0.05) * 0.15 + 0.35;
+  const logoScale = spring({ frame, fps, config: { damping: 30, stiffness: 26, mass: 3.1 } });
+  const tagOpacity = interpolate(frame, [60, 105], [0, 1], { extrapolateRight: "clamp" });
+  const tagY = interpolate(frame, [60, 105], [28, 0], { extrapolateRight: "clamp" });
+  const urlOpacity = interpolate(frame, [110, 145], [0, 1], { extrapolateRight: "clamp" });
+  const lineWidth = interpolate(frame, [38, 95], [0, 420], { extrapolateRight: "clamp" });
+  const glowPulse = Math.sin(frame * 0.04) * 0.14 + 0.35;
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#080E1C", justifyContent: "center", alignItems: "center" }}>
@@ -247,11 +247,11 @@ const ClosingCTA: React.FC = () => {
 export const MainVideo: React.FC = () => {
   return (
     <AbsoluteFill>
-      <Sequence from={0} durationInFrames={100}><LogoReveal /></Sequence>
-      <Sequence from={100} durationInFrames={120}><FourPillars /></Sequence>
-      <Sequence from={220} durationInFrames={100}><BiddieReveal /></Sequence>
-      <Sequence from={320} durationInFrames={70}><StatsScene /></Sequence>
-      <Sequence from={390} durationInFrames={140}><ClosingCTA /></Sequence>
+      <Sequence from={0} durationInFrames={110}><LogoReveal /></Sequence>
+      <Sequence from={110} durationInFrames={140}><FourPillars /></Sequence>
+      <Sequence from={250} durationInFrames={110}><BiddieReveal /></Sequence>
+      <Sequence from={360} durationInFrames={80}><StatsScene /></Sequence>
+      <Sequence from={440} durationInFrames={160}><ClosingCTA /></Sequence>
     </AbsoluteFill>
   );
 };
