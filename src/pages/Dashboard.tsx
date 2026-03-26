@@ -93,7 +93,6 @@ const Dashboard = () => {
         const { data, error } = await supabase
           .from("signal_outcomes")
           .select("*")
-          .eq("signal_source", "replit")
           .gte("created_at", todayStart.toISOString())
           .order("created_at", { ascending: false })
           .limit(50);
