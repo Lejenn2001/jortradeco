@@ -9,7 +9,7 @@ import {
   Sequence,
 } from "remotion";
 import { loadFont } from "@remotion/google-fonts/Inter";
-import { loadFont as loadDisplay } from "@remotion/google-fonts/BigShouldersDisplay";
+import { loadFont as loadDisplay } from "@remotion/google-fonts/BigShoulders";
 
 const { fontFamily: bodyFont } = loadFont("normal", {
   weights: ["400", "500", "600", "700"],
