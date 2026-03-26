@@ -121,7 +121,6 @@ const Dashboard = () => {
           event: "INSERT",
           schema: "public",
           table: "signal_outcomes",
-          filter: "signal_source=eq.replit",
         },
         (payload) => {
           const row = payload.new as SignalOutcomeRow;
