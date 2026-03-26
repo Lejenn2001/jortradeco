@@ -10,29 +10,26 @@ const LogoReveal: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   
-  const scale = spring({ frame, fps, config: { damping: 15, stiffness: 80, mass: 1.5 } });
-  const opacity = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: "clamp" });
+  const scale = spring({ frame, fps, config: { damping: 20, stiffness: 50, mass: 2 } });
+  const opacity = interpolate(frame, [0, 35], [0, 1], { extrapolateRight: "clamp" });
   const glowSize = interpolate(frame, [0, 60, 90], [0, 600, 400], { extrapolateRight: "clamp" });
   const glowOpacity = interpolate(frame, [0, 30, 90], [0, 0.6, 0.2], { extrapolateRight: "clamp" });
-  const taglineOpacity = interpolate(frame, [50, 70], [0, 1], { extrapolateRight: "clamp" });
-  const taglineY = interpolate(frame, [50, 70], [30, 0], { extrapolateRight: "clamp" });
+  const taglineOpacity = interpolate(frame, [50, 80], [0, 1], { extrapolateRight: "clamp" });
+  const taglineY = interpolate(frame, [50, 80], [30, 0], { extrapolateRight: "clamp" });
   const lineWidth = interpolate(frame, [40, 80], [0, 300], { extrapolateRight: "clamp" });
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#080E1C", justifyContent: "center", alignItems: "center" }}>
-      {/* Background image */}
       <Img src={staticFile("images/bg_hex.png")} style={{
         position: "absolute", width: "100%", height: "100%", objectFit: "cover", opacity: 0.3,
       }} />
       
-      {/* Glow */}
       <div style={{
         position: "absolute", width: glowSize, height: glowSize,
         borderRadius: "50%",
         background: `radial-gradient(circle, rgba(60,130,255,${glowOpacity}) 0%, rgba(160,80,255,${glowOpacity * 0.5}) 40%, transparent 70%)`,
       }} />
 
-      {/* Logo text */}
       <div style={{
         opacity, transform: `scale(${scale})`,
         fontFamily: displayFont, fontSize: 150, fontWeight: 800,
@@ -41,13 +38,11 @@ const LogoReveal: React.FC = () => {
         JORTRADE
       </div>
 
-      {/* Accent line */}
       <div style={{
         width: lineWidth, height: 3, marginTop: 20,
         background: "linear-gradient(90deg, transparent, #3C82FF, #A050FF, transparent)",
       }} />
 
-      {/* Tagline */}
       <div style={{
         opacity: taglineOpacity, transform: `translateY(${taglineY}px)`,
         fontFamily: bodyFont, fontSize: 36, color: "#C8CDD7",
@@ -64,8 +59,8 @@ const FourPillars: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const titleOpacity = interpolate(frame, [0, 15], [0, 1], { extrapolateRight: "clamp" });
-  const titleY = interpolate(frame, [0, 15], [40, 0], { extrapolateRight: "clamp" });
+  const titleOpacity = interpolate(frame, [0, 30], [0, 1], { extrapolateRight: "clamp" });
+  const titleY = interpolate(frame, [0, 30], [40, 0], { extrapolateRight: "clamp" });
 
   const pillars = [
     { icon: "🤖", name: "AI SIGNALS", desc: "Biddie scans 1,000+ setups", color: "#3C82FF" },
@@ -87,8 +82,8 @@ const FourPillars: React.FC = () => {
 
       <div style={{ display: "flex", flexDirection: "column", gap: 18, width: "100%" }}>
         {pillars.map((p, i) => {
-          const delay = 20 + i * 12;
-          const s = spring({ frame: frame - delay, fps, config: { damping: 18, stiffness: 150 } });
+          const delay = 30 + i * 18;
+          const s = spring({ frame: frame - delay, fps, config: { damping: 25, stiffness: 80 } });
           const x = interpolate(s, [0, 1], [-400, 0]);
           const o = interpolate(s, [0, 1], [0, 1]);
 
@@ -117,10 +112,10 @@ const BiddieReveal: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const biddieScale = spring({ frame: frame - 10, fps, config: { damping: 10, stiffness: 100 } });
-  const biddieRotate = interpolate(frame, [10, 40], [-15, 0], { extrapolateRight: "clamp" });
-  const textOpacity = interpolate(frame, [25, 40], [0, 1], { extrapolateRight: "clamp" });
-  const textY = interpolate(frame, [25, 40], [30, 0], { extrapolateRight: "clamp" });
+  const biddieScale = spring({ frame: frame - 10, fps, config: { damping: 15, stiffness: 60, mass: 1.5 } });
+  const biddieRotate = interpolate(frame, [10, 50], [-15, 0], { extrapolateRight: "clamp" });
+  const textOpacity = interpolate(frame, [35, 60], [0, 1], { extrapolateRight: "clamp" });
+  const textY = interpolate(frame, [35, 60], [30, 0], { extrapolateRight: "clamp" });
   const glowPulse = interpolate(frame, [0, 120], [0, Math.PI * 4]);
   const glowRadius = 350 + Math.sin(glowPulse) * 30;
 
@@ -130,14 +125,12 @@ const BiddieReveal: React.FC = () => {
         position: "absolute", width: "100%", height: "100%", objectFit: "cover", opacity: 0.25,
       }} />
 
-      {/* Pulsing glow behind Biddie */}
       <div style={{
         position: "absolute", width: glowRadius, height: glowRadius, borderRadius: "50%",
         background: "radial-gradient(circle, rgba(160,80,255,0.3) 0%, rgba(60,130,255,0.1) 50%, transparent 70%)",
         top: "15%",
       }} />
 
-      {/* Biddie */}
       <Img src={staticFile("images/biddie.png")} style={{
         width: 350, height: 350,
         transform: `scale(${biddieScale}) rotate(${biddieRotate}deg)`,
@@ -145,7 +138,6 @@ const BiddieReveal: React.FC = () => {
         filter: "drop-shadow(0 0 40px rgba(160,80,255,0.5))",
       }} />
 
-      {/* Text below */}
       <div style={{ opacity: textOpacity, transform: `translateY(${textY}px)`, textAlign: "center", marginTop: 30 }}>
         <div style={{ fontFamily: displayFont, fontSize: 100, fontWeight: 800, color: "#fff" }}>MEET BIDDIE</div>
         <div style={{ fontFamily: bodyFont, fontSize: 34, color: "#A050FF", marginTop: 8 }}>Your AI Trading Assistant</div>
@@ -175,8 +167,8 @@ const StatsScene: React.FC = () => {
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 20, justifyContent: "center" }}>
         {stats.map((s, i) => {
-          const delay = i * 10;
-          const sp = spring({ frame: frame - delay, fps, config: { damping: 15, stiffness: 120 } });
+          const delay = i * 15;
+          const sp = spring({ frame: frame - delay, fps, config: { damping: 20, stiffness: 70 } });
           const scale = interpolate(sp, [0, 1], [0.6, 1]);
           const o = interpolate(sp, [0, 1], [0, 1]);
 
@@ -202,11 +194,11 @@ const ClosingCTA: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const logoScale = spring({ frame, fps, config: { damping: 12, stiffness: 80, mass: 1.5 } });
-  const tagOpacity = interpolate(frame, [30, 50], [0, 1], { extrapolateRight: "clamp" });
-  const tagY = interpolate(frame, [30, 50], [20, 0], { extrapolateRight: "clamp" });
-  const urlOpacity = interpolate(frame, [55, 70], [0, 1], { extrapolateRight: "clamp" });
-  const lineWidth = interpolate(frame, [20, 60], [0, 400], { extrapolateRight: "clamp" });
+  const logoScale = spring({ frame, fps, config: { damping: 20, stiffness: 40, mass: 2.5 } });
+  const tagOpacity = interpolate(frame, [45, 75], [0, 1], { extrapolateRight: "clamp" });
+  const tagY = interpolate(frame, [45, 75], [25, 0], { extrapolateRight: "clamp" });
+  const urlOpacity = interpolate(frame, [80, 105], [0, 1], { extrapolateRight: "clamp" });
+  const lineWidth = interpolate(frame, [30, 70], [0, 400], { extrapolateRight: "clamp" });
   const glowPulse = Math.sin(frame * 0.05) * 0.15 + 0.35;
 
   return (
@@ -215,7 +207,6 @@ const ClosingCTA: React.FC = () => {
         position: "absolute", width: "100%", height: "100%", objectFit: "cover", opacity: 0.2,
       }} />
 
-      {/* Glow */}
       <div style={{
         position: "absolute", width: 700, height: 700, borderRadius: "50%",
         background: `radial-gradient(circle, rgba(60,130,255,${glowPulse}) 0%, rgba(160,80,255,${glowPulse * 0.5}) 40%, transparent 65%)`,
