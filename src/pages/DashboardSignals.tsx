@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
-import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { useMarketData, type MarketSignal, type SignalTimeframe, computeWhaleConviction } from "@/hooks/useMarketData";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, Filter, TrendingUp, TrendingDown, Zap, Clock, CalendarDays, Target, ShieldX, Crosshair, MapPin, Gauge } from "lucide-react";
