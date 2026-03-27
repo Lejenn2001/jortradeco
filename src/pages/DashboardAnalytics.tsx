@@ -5,8 +5,7 @@ import { Link } from "react-router-dom";
 import SignalAccuracyPanel from "@/components/dashboard/SignalAccuracyPanel";
 import SignalFeedPanel from "@/components/dashboard/SignalFeedPanel";
 import { useMarketData } from "@/hooks/useMarketData";
-import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -206,39 +205,31 @@ const DashboardAnalytics = () => {
 
   if (isAdmin === null) {
     return (
-      <div className="h-screen flex bg-background overflow-hidden">
-        <DashboardSidebar />
+      <DashboardLayout>
         <div className="flex-1 flex items-center justify-center">
           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   if (!isAdmin) {
     return (
-      <div className="h-screen flex bg-background overflow-hidden">
-        <DashboardSidebar />
-        <div className="flex-1 flex flex-col min-w-0">
-          <DashboardHeader />
-          <main className="flex-1 flex items-center justify-center bg-mesh">
-            <div className="text-center space-y-3">
-              <ShieldAlert className="h-12 w-12 text-destructive mx-auto" />
-              <h2 className="text-lg font-bold text-foreground">Admin Access Only</h2>
-              <p className="text-sm text-muted-foreground">You don't have permission to view this page.</p>
-            </div>
-          </main>
+      <DashboardLayout>
+        <div className="flex-1 flex items-center justify-center bg-mesh">
+          <div className="text-center space-y-3">
+            <ShieldAlert className="h-12 w-12 text-destructive mx-auto" />
+            <h2 className="text-lg font-bold text-foreground">Admin Access Only</h2>
+            <p className="text-sm text-muted-foreground">You don't have permission to view this page.</p>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="h-screen flex bg-background overflow-hidden">
-      <DashboardSidebar />
-      <div className="flex-1 flex flex-col min-w-0">
-        <DashboardHeader />
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6 bg-mesh">
+    <DashboardLayout>
+      <div className="max-w-6xl mx-auto px-4 lg:px-6 py-5 bg-mesh">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h1 className="text-xl font-bold text-foreground">Analytics</h1>

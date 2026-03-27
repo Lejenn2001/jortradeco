@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Send, Trash2, Bot } from "lucide-react";
 import biddieRobot from "@/assets/biddie-robot.png";
-import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import ChatRoomHeader from "@/components/dashboard/ChatRoomHeader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -179,11 +178,8 @@ const DashboardCommunity = () => {
   };
 
   return (
-    <div className="h-screen flex bg-background overflow-hidden">
-      <DashboardSidebar />
-      <div className="flex-1 flex flex-col min-w-0">
-        <DashboardHeader />
-        <main className="flex-1 flex flex-col overflow-hidden p-1.5 sm:p-2 lg:p-3 bg-mesh">
+    <DashboardLayout showTickerTape={false}>
+      <div className="flex-1 flex flex-col overflow-hidden p-1.5 sm:p-2 lg:p-3 bg-mesh">
           {/* Compact Header — hidden on very small screens */}
           <div className="mb-1.5 sm:mb-2 shrink-0 hidden sm:block">
             <ChatRoomHeader onlineCount={onlineCount} firstName={firstName} />
@@ -293,9 +289,8 @@ const DashboardCommunity = () => {
               <Send className="h-4 w-4" />
             </Button>
           </div>
-        </main>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
