@@ -1,17 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Search, Menu } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import DockSidebar from "@/components/dashboard/DockSidebar";
-import MobileNavBar from "@/components/dashboard/MobileNavBar";
+import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import AmbientBackground from "@/components/dashboard/AmbientBackground";
 import HeroSignalCard from "@/components/dashboard/HeroSignalCard";
 import AIChatPanel from "@/components/dashboard/AIChatPanel";
 import PortfolioPanel from "@/components/dashboard/PortfolioPanel";
 import MarketStatusSign from "@/components/dashboard/MarketStatusSign";
-import TickerTape from "@/components/dashboard/TickerTape";
 import PerformanceSnapshot from "@/components/dashboard/PerformanceSnapshot";
-import SignalAlerts from "@/components/dashboard/SignalAlerts";
 import { useMarketData, type MarketSignal } from "@/hooks/useMarketData";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -70,7 +65,6 @@ const recordToDashboardSignal = (record: SignalOutcomeRow): MarketSignal => {
 const Dashboard = () => {
   const { signals, whaleAlerts, loading } = useMarketData();
   const { profile } = useAuth();
-  const firstName = profile?.full_name?.split(" ")[0] || "Trader";
   const [persistedSignals, setPersistedSignals] = useState<MarketSignal[]>([]);
   const [persistedLoading, setPersistedLoading] = useState(true);
 
@@ -152,75 +146,26 @@ const Dashboard = () => {
   const signalFeedLoading = loading || persistedLoading;
 
   return (
-    <div className="h-screen flex bg-background overflow-hidden relative">
+    <DashboardLayout>
       <AmbientBackground sentiment={sentiment} />
+      <div className="max-w-6xl mx-auto px-4 lg:px-6 py-5 space-y-5">
+        <div className="grid md:grid-cols-2 gap-4">
+          <MarketStatusSign />
+          <PerformanceSnapshot />
+        </div>
 
-      {/* Desktop dock sidebar */}
-      <DockSidebar />
+        <HeroSignalCard signal={heroSignal} loading={signalFeedLoading} />
 
-      {/* Main content area */}
-      <div className="flex-1 flex flex-col min-w-0 lg:ml-[68px] relative z-10">
-        {/* Slim header */}
-        <header className="h-14 flex items-center justify-between px-5 border-b border-border/30 bg-card/30 backdrop-blur-sm shrink-0">
-          <div className="flex items-center gap-3">
-            <motion.div
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="text-sm text-foreground"
-            >
-              <span className="text-muted-foreground">Welcome back, </span>
-              <span className="font-semibold">{firstName}</span>
-            </motion.div>
+        <div className="grid lg:grid-cols-2 gap-4">
+          <div className="h-[500px]">
+            <AIChatPanel />
           </div>
-
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:flex items-center gap-2 bg-muted/30 rounded-lg px-3 py-1.5 max-w-[200px]">
-              <Search className="h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                placeholder="Search..."
-                className="bg-transparent border-none shadow-none focus-visible:ring-0 text-xs h-auto p-0 placeholder:text-muted-foreground/60"
-              />
-            </div>
-            <SignalAlerts />
-            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-              <span className="text-xs font-bold text-primary">
-                {firstName.charAt(0).toUpperCase()}
-              </span>
-            </div>
+          <div className="h-[500px] overflow-y-auto">
+            <PortfolioPanel whaleAlerts={whaleAlerts} loading={loading} limit={5} />
           </div>
-        </header>
-
-        {/* Ticker tape */}
-        <TickerTape />
-
-        {/* Scrollable content */}
-        <main className="flex-1 overflow-y-auto pb-20 lg:pb-6">
-          <div className="max-w-6xl mx-auto px-4 lg:px-6 py-5 space-y-5">
-            {/* Row 1: Market status + Performance (compact) */}
-            <div className="grid md:grid-cols-2 gap-4">
-              <MarketStatusSign />
-              <PerformanceSnapshot />
-            </div>
-
-            {/* Row 2: Hero signal — the ONE thing to focus on */}
-            <HeroSignalCard signal={heroSignal} loading={signalFeedLoading} />
-
-            {/* Row 3: Biddie chat + Whale activity — side by side */}
-            <div className="grid lg:grid-cols-2 gap-4">
-              <div className="h-[500px]">
-                <AIChatPanel />
-              </div>
-              <div className="h-[500px] overflow-y-auto">
-                <PortfolioPanel whaleAlerts={whaleAlerts} loading={loading} limit={5} />
-              </div>
-            </div>
-          </div>
-        </main>
+        </div>
       </div>
-
-      {/* Mobile bottom nav */}
-      <MobileNavBar />
-    </div>
+    </DashboardLayout>
   );
 };
 
