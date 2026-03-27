@@ -273,8 +273,7 @@ const DashboardPnL = () => {
               </p>
             </div>
           </div>
-        </main>
-      </div>
+
 
       {/* Add Trade Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
