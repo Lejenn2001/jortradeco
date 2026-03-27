@@ -215,11 +215,8 @@ const DashboardSignals = () => {
   const totalCount = signals.filter(s => s.source !== 'example').length;
 
   return (
-    <div className="h-screen flex bg-background overflow-hidden">
-      <DashboardSidebar />
-      <div className="flex-1 flex flex-col min-w-0">
-        <DashboardHeader />
-        <main className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-4">
+    <DashboardLayout>
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-5 space-y-4">
           {/* Header */}
           <div className="flex flex-col gap-1">
             <h1 className="text-xl sm:text-2xl font-extrabold text-foreground">Live Signals</h1>
@@ -449,9 +446,8 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
               Exp: {signal.expiry}
             </span>
           )}
-        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
 

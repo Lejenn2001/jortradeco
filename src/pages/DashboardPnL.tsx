@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { ChevronLeft, ChevronRight, Flame, Trophy, Calendar as CalendarIcon, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -194,11 +193,8 @@ const DashboardPnL = () => {
   }
 
   return (
-    <div className="h-screen flex bg-background overflow-hidden">
-      <DashboardSidebar />
-      <div className="flex-1 flex flex-col min-w-0">
-        <DashboardHeader />
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6">
+    <DashboardLayout>
+      <div className="max-w-6xl mx-auto px-4 lg:px-6 py-5 space-y-6">
           {/* Stats Row */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             <div className="glass-panel rounded-xl p-4 border-glow-blue">
