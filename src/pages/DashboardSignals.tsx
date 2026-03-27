@@ -305,9 +305,8 @@ const DashboardSignals = () => {
               </div>
             );
           })}
-        </main>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
