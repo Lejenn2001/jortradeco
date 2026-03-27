@@ -445,8 +445,9 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
               Exp: {signal.expiry}
             </span>
           )}
+        </div>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }
 

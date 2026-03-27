@@ -368,7 +368,7 @@ const DashboardPnL = () => {
           </Button>
         </DialogContent>
       </Dialog>
-    </div>
+    </DashboardLayout>
   );
 };
 
