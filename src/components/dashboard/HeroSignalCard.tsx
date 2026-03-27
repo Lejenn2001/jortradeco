@@ -120,7 +120,7 @@ const HeroSignalCard = ({ signal, loading }: Props) => {
 
           {/* Right: conviction ring (large) */}
           <div className="shrink-0">
-            <ConvictionScoreRing score={score} label={signal.convictionLabel ?? ""} size={80} />
+            <ConvictionScoreRing score={score} label={signal.convictionLabel ?? ""} size="md" />
           </div>
         </div>
       </div>
