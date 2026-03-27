@@ -419,9 +419,8 @@ const DashboardAnalytics = () => {
               </div>
             </>
           )}
-        </main>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
