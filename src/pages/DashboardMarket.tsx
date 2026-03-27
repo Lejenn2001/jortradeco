@@ -1,6 +1,5 @@
 import { useState } from "react";
-import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import MarketChartPanel from "@/components/dashboard/MarketChartPanel";
 import { TrendingUp, TrendingDown, BarChart3 } from "lucide-react";
 
@@ -25,11 +24,8 @@ const DashboardMarket = () => {
   const [selectedSector, setSelectedSector] = useState<string | null>(null);
 
   return (
-    <div className="h-screen flex bg-background overflow-hidden">
-      <DashboardSidebar />
-      <div className="flex-1 flex flex-col min-w-0">
-        <DashboardHeader />
-        <main className="flex-1 overflow-y-auto space-y-5 p-3 sm:p-4 lg:p-6">
+    <DashboardLayout>
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-5 space-y-5">
           {/* Header */}
           <div className="space-y-1">
             <h1 className="text-2xl font-extrabold text-foreground">Market View</h1>
@@ -112,9 +108,8 @@ const DashboardMarket = () => {
               </div>
             )}
           </div>
-        </main>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
