@@ -74,14 +74,18 @@ function getSessions(totalMin: number): SessionInfo[] {
 }
 
 /** Option 4 — Status Row with chip badges */
-export const SessionStatusRow = () => {
+export const SessionStatusRow = ({ forceAllClosed }: { forceAllClosed?: boolean }) => {
   const [time, setTime] = useState(getETTime);
-  const sessions = getSessions(time.totalMin);
+  const sessions = getSessions(time.totalMin).map((s) =>
+    forceAllClosed ? { ...s, active: false } : s
+  );
 
   useEffect(() => {
     const id = setInterval(() => setTime(getETTime()), 10_000);
     return () => clearInterval(id);
   }, []);
+
+  const anyActive = sessions.some((s) => s.active);
 
   return (
     <div className="flex items-center gap-3 flex-wrap px-1 py-2">
@@ -112,19 +116,66 @@ export const SessionStatusRow = () => {
           </div>
         ))}
       </div>
+
+      {!anyActive && (
+        <div className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground/60">
+          <span className="uppercase tracking-wider font-medium text-destructive/70">Markets Closed</span>
+        </div>
+      )}
     </div>
   );
 };
 
 /** Option 2 — Heatmap Strip with connected segments */
-export const SessionHeatmapStrip = () => {
+export const SessionHeatmapStrip = ({ forceAllClosed, showCountdown }: { forceAllClosed?: boolean; showCountdown?: boolean }) => {
   const [time, setTime] = useState(getETTime);
-  const sessions = getSessions(time.totalMin);
+  const sessions = getSessions(time.totalMin).map((s) =>
+    forceAllClosed ? { ...s, active: false } : s
+  );
 
   useEffect(() => {
-    const id = setInterval(() => setTime(getETTime()), 10_000);
+    const id = setInterval(() => setTime(getETTime()), 1_000);
     return () => clearInterval(id);
   }, []);
+
+  const anyActive = sessions.some((s) => s.active);
+
+  // Simple countdown to next Sunday 6 PM ET (futures) for demo
+  const getCountdown = () => {
+    if (!showCountdown || anyActive) return null;
+    const now = new Date();
+    const etFormatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/New_York",
+      hour: "2-digit", minute: "2-digit", second: "2-digit",
+      hour12: false, weekday: "short",
+    });
+    const parts = etFormatter.formatToParts(now);
+    const get = (type: string) => parts.find((p) => p.type === type)?.value || "";
+    const h = parseInt(get("hour")) % 24;
+    const m = parseInt(get("minute"));
+    const s = parseInt(get("second"));
+    const totalSec = h * 3600 + m * 60 + s;
+    const dayOrder = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const dayIdx = dayOrder.indexOf(get("weekday"));
+    const futuresSec = 18 * 3600;
+
+    let remaining = 0;
+    if (dayIdx === 0 && totalSec < futuresSec) {
+      remaining = futuresSec - totalSec;
+    } else if (dayIdx === 6) {
+      remaining = (86400 - totalSec) + futuresSec;
+    } else if (dayIdx === 5 && totalSec >= 20 * 3600) {
+      remaining = (86400 - totalSec) + 86400 + futuresSec;
+    } else {
+      // For demo purposes, show a static-ish countdown
+      remaining = 47 * 3600 + 23 * 60 + (60 - s);
+    }
+
+    const rh = Math.floor(remaining / 3600);
+    const rm = Math.floor((remaining % 3600) / 60);
+    const rs = remaining % 60;
+    return `${rh}h ${rm}m ${rs}s`;
+  };
 
   const activeColors: Record<string, { bg: string; border: string; text: string; glow: string }> = {
     Asia: {
