@@ -127,14 +127,7 @@ serve(async (req) => {
       nbbo_ask: d.nbbo_ask,
     }));
 
-    // 4. Derive current price from flow data
-    const currentPrice = flowRecords[0]?.underlying_price || 'unknown';
-
-    // 5. Volume summary
-    const volumeSummary = JSON.stringify((volumeData.data || []).slice(0, 5));
-
-    // 6. Market tide
-    const tideSummary = JSON.stringify(tideData.data || tideData);
+    // volumeSummary and tideSummary no longer sent raw to avoid confusing AI with aggregate dollar amounts
 
     const name = traderName || 'Trader';
     const today = new Date().toISOString().split('T')[0];
