@@ -214,8 +214,15 @@ ${JSON.stringify(nearbyOI, null, 1)}
 ## 3. Dark Pool Trades (institutional block trades — hidden S/R at these price levels):
 ${JSON.stringify(darkPoolSummary, null, 1)}
 
-## 4. Options Volume:
-${volumeSummary}
+## 4. Options Volume Summary (directional sentiment, NOT price levels):
+${(() => {
+      const vol = (volumeData.data || [])[0] || {};
+      const callVol = parseInt(vol.call_volume || '0');
+      const putVol = parseInt(vol.put_volume || '0');
+      const pcRatio = putVol && callVol ? (putVol / callVol).toFixed(2) : 'N/A';
+      const netCallPrem = parseFloat(vol.net_call_premium || '0');
+      return `Put/Call Ratio: ${pcRatio}, Call Volume: ${callVol.toLocaleString()}, Put Volume: ${putVol.toLocaleString()}, Net call premium flow: ${netCallPrem > 0 ? 'positive (bullish)' : 'negative (bearish)'}`;
+    })()}
 
 ## 5. Market Tide (overall sentiment): ${parseFloat((tideData.data || tideData)?.net_call_premium_flow || '0') > 0 ? 'BULLISH overall market' : 'BEARISH overall market'}
 
