@@ -181,8 +181,11 @@ Given real-time data, generate a JSON response with these exact fields:
 }
 
 ## CRITICAL RULES:
+- You MUST return ALL fields listed above. Do NOT omit any field. Every single key must be present in your JSON output: bias, entry, targetZone, keyLevel, invalidation, supportResistance, strategy, contract, expiration, score, description, strategyExplanation.
 - EVERY price in your response MUST come from the actual data provided. Never invent prices.
 - Entry, target, invalidation, key level, and S/R must ALL reference real prices from flow underlying_price, OI strikes, or dark pool prices.
+- "entry" MUST include the current underlying_price and describe whether price broke or is testing a level.
+- "supportResistance" MUST cite a specific price — a round number, gamma strike, or dark pool cluster.
 - When citing a level, name its source: "OI concentration at $170", "Dark pool cluster at $166.60", "PDH at $171.14"
 - ONLY recommend: Call, Put, Call Butterfly, Put Butterfly, Bull Call Debit Spread, or Bear Put Debit Spread.
 - All recommended expirations MUST be in the future (${today} or later). Never recommend an expired contract.
