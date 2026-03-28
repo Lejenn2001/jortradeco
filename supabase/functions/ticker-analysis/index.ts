@@ -63,8 +63,21 @@ serve(async (req) => {
     // --- Build structured technical context ---
 
     // 1. Flow data: recent sweeps with underlying price, strikes, deltas, tags
-    const flowRecords = (Array.isArray(flowData) ? flowData : flowData.data || []).slice(0, 15);
-    const flowSummary = flowRecords.map((f: any) => ({
+    const flowRecords = (Array.isArray(flowData) ? flowData : flowData.data || []).slice(0, 30);
+    
+    // Get current underlying price from most recent flow
+    const currentPrice = flowRecords[0]?.underlying_price || 'unknown';
+    const priceNum = parseFloat(currentPrice) || 0;
+    
+    // Filter flow to only near-money strikes (within 25% of current price)
+    const nearMoneyFlow = priceNum > 0 
+      ? flowRecords.filter((f: any) => {
+          const s = parseFloat(f.strike || '0');
+          return s > 0 && Math.abs(s - priceNum) / priceNum < 0.25;
+        }).slice(0, 15)
+      : flowRecords.slice(0, 15);
+    
+    const flowSummary = nearMoneyFlow.map((f: any) => ({
       strike: f.strike,
       type: f.option_type,
       premium: f.premium,
