@@ -194,24 +194,33 @@ Given real-time data, generate a JSON response with these exact fields:
 - Today's date is ${today}. The year is 2026.
 - Return ONLY valid JSON, no markdown fences.`;
 
-    const userPrompt = `Analyze this comprehensive data for ${ticker} (current price: $${currentPrice}) and generate the trade recommendation JSON.
+    // Filter OI to only strikes within 15% of current price
+    const priceNum = parseFloat(currentPrice) || 0;
+    const nearbyOI = oiConcentration
+      .filter((c: any) => c.strike && Math.abs(c.strike - priceNum) / priceNum < 0.15)
+      .slice(0, 15);
 
-IMPORTANT: Today is ${today}. Only recommend contracts with future expirations.
+    const userPrompt = `## ⚠️ CRITICAL: ${ticker} CURRENT STOCK PRICE IS $${currentPrice}. All strikes and price levels MUST be near $${currentPrice} (within 15%). Do NOT use strikes far from this price.
 
-## 1. Recent Flow (last 15 trades with underlying price, strikes, deltas, tags):
+Analyze this data and generate the trade recommendation JSON with ALL 12 required fields.
+Today is ${today}. Only recommend contracts with future expirations.
+
+## 1. Recent Flow (last 15 trades — note underlying_price field = current stock price):
 ${JSON.stringify(flowSummary, null, 1)}
 
-## 2. OI Concentration by Strike (sorted by open interest — these are your S/R levels):
-${JSON.stringify(oiConcentration.slice(0, 15), null, 1)}
+## 2. OI Concentration NEAR CURRENT PRICE (sorted by open interest — these are your S/R levels):
+${JSON.stringify(nearbyOI, null, 1)}
 
-## 3. Dark Pool Trades (institutional block trades — hidden S/R):
+## 3. Dark Pool Trades (institutional block trades — hidden S/R at these price levels):
 ${JSON.stringify(darkPoolSummary, null, 1)}
 
 ## 4. Options Volume:
 ${volumeSummary}
 
-## 5. Market Tide (overall sentiment):
-${tideSummary}`;
+## 5. Market Tide (overall market sentiment — DO NOT use the dollar values here as stock prices, these are aggregate market premium flows):
+${tideSummary}
+
+REMINDER: Return ALL 12 fields including "entry" and "supportResistance". The stock trades at $${currentPrice}.`;
 
     const aiRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
