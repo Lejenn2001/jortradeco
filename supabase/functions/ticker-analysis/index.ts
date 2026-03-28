@@ -217,13 +217,10 @@ ${JSON.stringify(darkPoolSummary, null, 1)}
 ## 4. Options Volume:
 ${volumeSummary}
 
-## 5. Market Tide (overall market sentiment direction only — bullish or bearish bias in the broader market):
-${typeof tideData === 'object' ? (JSON.stringify({
-      net_call_premium_flow: (tideData.data || tideData)?.net_call_premium_flow,
-      sentiment: parseFloat((tideData.data || tideData)?.net_call_premium_flow || '0') > 0 ? 'Bullish overall market' : 'Bearish overall market',
-    })) : 'unavailable'}
+## 5. Market Tide (overall sentiment): ${parseFloat((tideData.data || tideData)?.net_call_premium_flow || '0') > 0 ? 'BULLISH overall market' : 'BEARISH overall market'}
 
-REMINDER: Return ALL 12 fields including "entry" and "supportResistance". The stock trades at $${currentPrice}.`;
+⚠️ FINAL CHECK: The stock price is $${currentPrice}. Your contract strikes, target, invalidation, and key levels must all be near $${currentPrice}. Strikes like $800, $900, $1000 are WRONG for a $${currentPrice} stock. Use the strikes from the OI data above (e.g., ${nearbyOI.slice(0,3).map((c: any) => '$' + c.strike).join(', ')}).
+Return ALL 12 JSON fields including "entry" and "supportResistance".`;
 
     const aiRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
