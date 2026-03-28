@@ -198,11 +198,25 @@ export const SessionHeatmapStrip = ({ forceAllClosed, showCountdown }: { forceAl
     },
   };
 
+  const countdown = getCountdown();
+
   return (
     <div className="space-y-2 px-1 py-2">
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Globe className="h-3.5 w-3.5" />
-        <span className="font-mono">{time.display}</span>
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <div className="flex items-center gap-1.5">
+          <Globe className="h-3.5 w-3.5" />
+          <span className="font-mono">{time.display}</span>
+        </div>
+        {!anyActive && (
+          <div className="flex items-center gap-2">
+            <span className="uppercase tracking-wider font-medium text-destructive/70 text-[10px]">Markets Closed</span>
+            {countdown && (
+              <span className="font-mono text-muted-foreground/80 text-[11px]">
+                Next open in <span className="text-foreground font-semibold">{countdown}</span>
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-3 gap-1">
@@ -219,7 +233,6 @@ export const SessionHeatmapStrip = ({ forceAllClosed, showCountdown }: { forceAl
                 }
               `}
             >
-              {/* Active pulse dot */}
               {s.active && (
                 <div className="absolute top-1.5 right-1.5">
                   <div className={`w-1.5 h-1.5 rounded-full ${s.name === "Asia" ? "bg-cyan-400" : s.name === "London" ? "bg-amber-400" : "bg-green-400"}`} />
