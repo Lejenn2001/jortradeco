@@ -19,6 +19,84 @@ const corsHeaders = {
 
 const UW_BASE = 'https://api.unusualwhales.com/api';
 
+// Parse strike from option symbol like NVDA260327P00170000 -> 170
+function parseStrike(sym: string): number | null {
+  const m = sym.match(/[CP](\d{8})$/);
+  return m ? parseInt(m[1]) / 1000 : null;
+}
+
+// Determine bias from flow tags
+function computeBias(flowRecords: any[]): { bias: string; bullishCount: number; bearishCount: number } {
+  let bullish = 0, bearish = 0;
+  for (const f of flowRecords) {
+    const tags = f.tags || [];
+    if (tags.includes('bullish')) bullish++;
+    if (tags.includes('bearish')) bearish++;
+  }
+  const bias = bullish > bearish * 1.3 ? 'Bullish Bias ↗' : bearish > bullish * 1.3 ? 'Bearish Bias ↘' : 'Neutral ↔';
+  return { bias, bullishCount: bullish, bearishCount: bearish };
+}
+
+// Find key price levels from OI concentration
+function findKeyLevels(contracts: any[], currentPrice: number, isBullish: boolean) {
+  // Parse and filter to near-money strikes
+  const parsed = contracts
+    .map((c: any) => {
+      const sym = c.option_symbol || '';
+      const strike = parseStrike(sym);
+      const isCall = sym.includes('C');
+      return {
+        strike,
+        type: isCall ? 'call' : 'put',
+        oi: parseInt(c.open_interest || '0'),
+        volume: parseInt(c.volume || '0'),
+        sweepVol: parseInt(c.sweep_volume || '0'),
+        totalPremium: parseFloat(c.total_premium || '0'),
+      };
+    })
+    .filter((c: any) => c.strike && c.oi > 500 && Math.abs(c.strike - currentPrice) / currentPrice < 0.15)
+    .sort((a: any, b: any) => b.oi - a.oi);
+
+  // Key level = highest OI strike near current price
+  const keyLevelStrike = parsed[0]?.strike || Math.round(currentPrice);
+
+  // For bullish: target = next call OI above price, invalidation = put OI below
+  // For bearish: target = next put OI below price, invalidation = call OI above
+  const above = parsed.filter(c => c.strike > currentPrice).sort((a, b) => a.strike - b.strike);
+  const below = parsed.filter(c => c.strike < currentPrice).sort((a, b) => b.strike - a.strike);
+
+  let target: number, invalidation: number;
+  if (isBullish) {
+    target = above.find(c => c.type === 'call')?.strike || above[0]?.strike || Math.round(currentPrice * 1.05);
+    invalidation = below.find(c => c.type === 'put')?.strike || below[0]?.strike || Math.round(currentPrice * 0.97);
+  } else {
+    target = below.find(c => c.type === 'put')?.strike || below[0]?.strike || Math.round(currentPrice * 0.95);
+    invalidation = above.find(c => c.type === 'call')?.strike || above[0]?.strike || Math.round(currentPrice * 1.03);
+  }
+
+  // S/R = nearest psychological round number
+  const roundLevels = [50, 100, 150, 200, 250, 300, 350, 400, 450, 500];
+  const sr = roundLevels.reduce((best, lvl) => 
+    Math.abs(lvl - currentPrice) < Math.abs(best - currentPrice) ? lvl : best
+  , roundLevels[0]);
+
+  return { keyLevelStrike, target, invalidation, sr, topStrikes: parsed.slice(0, 5) };
+}
+
+// Find dark pool levels
+function findDarkPoolLevel(records: any[], currentPrice: number): { price: number; size: number } | null {
+  if (!records.length) return null;
+  // Find largest dark pool trade near current price
+  const near = records
+    .filter((d: any) => {
+      const p = parseFloat(d.price || '0');
+      return p > 0 && Math.abs(p - currentPrice) / currentPrice < 0.05;
+    })
+    .sort((a: any, b: any) => parseInt(b.size || '0') - parseInt(a.size || '0'));
+  if (near.length) return { price: parseFloat(near[0].price), size: parseInt(near[0].size) };
+  return null;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -43,12 +121,11 @@ serve(async (req) => {
 
     const uwHeaders = { Authorization: `Bearer ${uwKey}`, Accept: 'application/json' };
 
-    // Fetch 5 data sources in parallel for comprehensive analysis
     const [flowRes, volumeRes, tideRes, contractsRes, darkPoolRes] = await Promise.all([
       fetch(`${UW_BASE}/stock/${ticker}/flow-recent`, { headers: uwHeaders }),
       fetch(`${UW_BASE}/stock/${ticker}/options-volume`, { headers: uwHeaders }),
       fetch(`${UW_BASE}/market/market-tide`, { headers: uwHeaders }),
-      fetch(`${UW_BASE}/stock/${ticker}/option-contracts?limit=20`, { headers: uwHeaders }),
+      fetch(`${UW_BASE}/stock/${ticker}/option-contracts?limit=30`, { headers: uwHeaders }),
       fetch(`${UW_BASE}/darkpool/${ticker}`, { headers: uwHeaders }),
     ]);
 
@@ -60,180 +137,118 @@ serve(async (req) => {
 
     await logApiUsage(["flow-recent", "options-volume", "market-tide", "option-contracts", "darkpool"]);
 
-    // --- Build structured technical context ---
-
-    // 1. Flow data: recent sweeps with underlying price, strikes, deltas, tags
+    // --- ALGORITHMIC LEVEL COMPUTATION ---
     const flowRecords = (Array.isArray(flowData) ? flowData : flowData.data || []).slice(0, 30);
-    
-    // Get current underlying price from most recent flow
-    const currentPrice = flowRecords[0]?.underlying_price || 'unknown';
-    const priceNum = parseFloat(currentPrice) || 0;
-    
-    // Filter flow to only near-money strikes (within 25% of current price)
-    const nearMoneyFlow = priceNum > 0 
-      ? flowRecords.filter((f: any) => {
-          const s = parseFloat(f.strike || '0');
-          return s > 0 && Math.abs(s - priceNum) / priceNum < 0.25;
-        }).slice(0, 15)
-      : flowRecords.slice(0, 15);
-    
-    const flowSummary = nearMoneyFlow.map((f: any) => ({
-      strike: f.strike,
-      type: f.option_type,
-      premium: f.premium,
-      size: f.size,
-      volume: f.volume,
-      open_interest: f.open_interest,
-      underlying_price: f.underlying_price,
-      delta: f.delta,
-      implied_volatility: f.implied_volatility,
-      expiry: f.expiry,
-      tags: f.tags,
-      executed_at: f.executed_at,
-    }));
+    const contracts = (contractsData.data || []);
+    const darkPoolRecords = (darkPoolData.data || []).slice(0, 20);
+    const volData = (volumeData.data || [])[0] || {};
 
-    // 2. Option contracts: OI concentration reveals real S/R levels
-    const contracts = (contractsData.data || []).slice(0, 20);
-    const oiConcentration = contracts
-      .filter((c: any) => parseInt(c.open_interest || '0') > 1000)
-      .map((c: any) => {
-        const sym = c.option_symbol || '';
-        const isCall = sym.includes('C');
-        // Extract strike from option symbol (e.g., NVDA260327P00170000 -> 170)
-        const strikeMatch = sym.match(/[CP](\d{8})$/);
-        const strike = strikeMatch ? parseInt(strikeMatch[1]) / 1000 : null;
-        return {
-          strike,
-          type: isCall ? 'call' : 'put',
-          open_interest: parseInt(c.open_interest || '0'),
-          volume: parseInt(c.volume || '0'),
-          total_premium: c.total_premium,
-          sweep_volume: parseInt(c.sweep_volume || '0'),
-          ask_volume: parseInt(c.ask_volume || '0'),
-          bid_volume: parseInt(c.bid_volume || '0'),
-        };
-      })
-      .filter((c: any) => c.strike)
-      .sort((a: any, b: any) => b.open_interest - a.open_interest);
+    // Current price
+    const currentPrice = parseFloat(flowRecords[0]?.underlying_price || '0');
+    if (!currentPrice) {
+      return new Response(JSON.stringify({ error: 'Could not determine current price' }), {
+        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
-    // 3. Dark pool: institutional price levels = hidden S/R
-    const darkPoolRecords = (darkPoolData.data || []).slice(0, 10);
-    const darkPoolSummary = darkPoolRecords.map((d: any) => ({
-      price: d.price,
-      size: d.size,
-      premium: d.premium,
-      executed_at: d.executed_at,
-      nbbo_bid: d.nbbo_bid,
-      nbbo_ask: d.nbbo_ask,
-    }));
+    // Bias from flow
+    const { bias, bullishCount, bearishCount } = computeBias(flowRecords);
+    const isBullish = bias.includes('Bullish');
 
-    // volumeSummary and tideSummary no longer sent raw to avoid confusing AI with aggregate dollar amounts
+    // Key levels from OI
+    const levels = findKeyLevels(contracts, currentPrice, isBullish);
+
+    // Dark pool level
+    const dpLevel = findDarkPoolLevel(darkPoolRecords, currentPrice);
+
+    // Volume sentiment
+    const callVol = parseInt(volData.call_volume || '0');
+    const putVol = parseInt(volData.put_volume || '0');
+    const pcRatio = callVol > 0 ? (putVol / callVol).toFixed(2) : 'N/A';
+    const netCallPrem = parseFloat(volData.net_call_premium || '0');
+
+    // Determine strategy
+    let strategy: string;
+    const targetDist = Math.abs(levels.target - currentPrice);
+    const hasConcentratedOI = levels.topStrikes.length >= 3;
+    if (isBullish) {
+      strategy = hasConcentratedOI && targetDist / currentPrice < 0.05 ? 'Call Butterfly' : 
+                 targetDist / currentPrice < 0.08 ? 'Bull Call Debit Spread' : 'Call';
+    } else {
+      strategy = hasConcentratedOI && targetDist / currentPrice < 0.05 ? 'Put Butterfly' :
+                 targetDist / currentPrice < 0.08 ? 'Bear Put Debit Spread' : 'Put';
+    }
+
+    // Find best expiry from flow (most common near-term future expiry)
+    const today = new Date().toISOString().split('T')[0];
+    const expiryCount: Record<string, number> = {};
+    for (const f of flowRecords) {
+      if (f.expiry && f.expiry >= today) {
+        expiryCount[f.expiry] = (expiryCount[f.expiry] || 0) + 1;
+      }
+    }
+    const bestExpiry = Object.entries(expiryCount)
+      .sort((a, b) => b[1] - a[1])[0]?.[0] || today;
+    const expDate = new Date(bestExpiry + 'T12:00:00Z');
+    const expFormatted = expDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+
+    // Pre-computed analysis object
+    const preComputed = {
+      bias,
+      currentPrice: currentPrice.toFixed(2),
+      entry: `$${currentPrice.toFixed(2)}`,
+      target: `$${levels.target.toFixed(2)}`,
+      targetRange: isBullish 
+        ? `$${levels.target.toFixed(2)} – $${(levels.target + (levels.target - currentPrice) * 0.3).toFixed(2)}`
+        : `$${(levels.target - (currentPrice - levels.target) * 0.3).toFixed(2)} – $${levels.target.toFixed(2)}`,
+      invalidation: `$${levels.invalidation.toFixed(2)}`,
+      keyLevel: `$${levels.keyLevelStrike.toFixed(2)}`,
+      sr: `$${levels.sr}`,
+      dpLevel: dpLevel ? `$${dpLevel.price.toFixed(2)} (${dpLevel.size.toLocaleString()} shares)` : null,
+      strategy,
+      expiration: expFormatted,
+      contractStrike: isBullish ? levels.target : levels.target,
+      putCall: isBullish ? 'Call' : 'Put',
+      pcRatio,
+      bullishCount,
+      bearishCount,
+      topOIStrikes: levels.topStrikes.slice(0, 3).map(s => `$${s.strike} (${s.type}, OI: ${s.oi.toLocaleString()})`).join(', '),
+    };
 
     const name = traderName || 'Trader';
-    const today = new Date().toISOString().split('T')[0];
 
-    const systemPrompt = `You are Biddie, the JORTRADE AI trading assistant. You analyze OPTIONS FLOW + TECHNICAL DATA to provide structured trade recommendations.
+    // Now ask AI ONLY for narrative description and score — all prices are pre-computed
+    const systemPrompt = `You are Biddie, the JORTRADE AI trading assistant. You will receive a PRE-COMPUTED trade analysis with all price levels already determined from real data. Your job is ONLY to:
+1. Write a natural "description" (2-3 sentences, address trader as "${name}", reference the specific data points provided)
+2. Write a "strategyExplanation" (1-2 sentences explaining why the strategy fits)
+3. Assign a "score" (X.X / 10) based on alignment strength
+4. Write an "entry" description referencing the current price and nearest key level
 
-You now receive 5 data sources:
-1. **Flow Data**: Recent option sweeps/blocks with underlying_price, strike, delta, IV, tags (bullish/bearish), premium, size
-2. **OI Concentration**: Open interest by strike — high OI strikes act as REAL support/resistance levels (market makers hedge here)
-3. **Dark Pool Data**: Large institutional block trades — these price levels reveal hidden S/R where big money transacted
-4. **Options Volume**: Volume concentration by strike/expiry
-5. **Market Tide**: Overall market sentiment
-
-## HOW TO DERIVE EACH FIELD:
-
-### Entry
-- Use the CURRENT underlying_price from flow data as the reference
-- Identify the nearest key level the price has broken through or is testing
-- Express as: "Broke below/above [level name] at $X.XX — confirmed" or "Testing [level] at $X.XX"
-- Level names: PDH (previous day high), PDL (previous day low), key OI strike, dark pool level, VWAP area
-
-### Target
-- For BULLISH: Find the next significant CALL OI concentration strike ABOVE current price — that's where resistance lives
-- For BEARISH: Find the next significant PUT OI concentration strike BELOW current price — that's where support lives
-- Dark pool price clusters in the target direction strengthen the target
-- Use the ACTUAL strike price from OI data, not an invented number
-
-### Invalidation
-- For BULLISH: The nearest significant resistance level ABOVE entry that, if price drops below support, invalidates the trade. Use the highest nearby PUT OI strike or dark pool level ABOVE entry.
-- For BEARISH: The nearest significant support level BELOW entry that, if price rises above resistance, invalidates the trade. Use the highest nearby CALL OI strike or dark pool level BELOW entry.
-- Must be a REAL price level from the data (OI concentration, dark pool, or flow reference price)
-
-### Key Level
-- The single most important price level right now — the pivot point
-- Usually the strike with the HIGHEST combined OI (calls + puts) near current price
-- Or a dark pool level where massive volume transacted
-
-### S/R (Support/Resistance)
-- Psychological round numbers ($100, $150, $170, $200)
-- OR the highest-volume dark pool price level
-- OR the strike with max gamma exposure (highest OI near the money)
-
-Given real-time data, generate a JSON response with these exact fields:
+DO NOT change any of the pre-computed price levels. Return ONLY valid JSON with these exact fields:
 {
-  "bias": "Bullish Bias ↗" or "Bearish Bias ↘" or "Neutral ↔",
-  "entry": "Broke below PDL at $X.XX — confirmed" or "Testing resistance at $X.XX" (MUST reference a real price from the data and name the level type),
-  "targetZone": "Target Zone $XXX – $XXX" (price range from OI concentration in the favorable direction),
-  "keyLevel": "Key Level: $XXX" (the most important S/R from OI + dark pool data — name what makes it key),
-  "invalidation": "Invalidation: Above/Below $XXX" (real price level from data where trade thesis breaks — MUST be a level from OI or dark pool),
-  "supportResistance": "S/R: $XXX [description]" (psychological level, max gamma strike, or biggest dark pool cluster),
-  "strategy": one of ONLY: "Call" | "Put" | "Call Butterfly" | "Put Butterfly" | "Bull Call Debit Spread" | "Bear Put Debit Spread",
-  "contract": "the specific contract(s), e.g. 'Buy NVDA Mar 28 2026 $170 Put' or for spreads list each leg",
-  "expiration": "the nearest expiration with heavy activity, format: Mon DD, YYYY",
-  "score": "X.X / 10" (probability score — base on: flow direction consistency, OI confirmation at target, dark pool alignment, premium size, sweep aggression. 9-10 = flow + OI + dark pool all aligned. 7-8 = two of three confirm. 5-6 = mixed. Below 5 = conflicting data.),
-  "description": "Hey ${name}, here's what the data shows for ${ticker}... (2-3 sentences referencing SPECIFIC numbers: sweep counts, premium sizes, OI at key strikes, dark pool levels. Explain WHY the levels matter.)",
-  "strategyExplanation": "1-2 sentences explaining WHY this strategy given the data alignment"
+  "description": "Hey ${name}, ...",
+  "strategyExplanation": "...",
+  "score": "X.X / 10",
+  "entryDescription": "Broke below/above [level] at $X.XX — confirmed" or "Testing [level] at $X.XX"
 }
 
-## CRITICAL RULES:
-- You MUST return ALL 12 fields listed above. Do NOT omit any field. Required keys: bias, entry, targetZone, keyLevel, invalidation, supportResistance, strategy, contract, expiration, score, description, strategyExplanation. If you omit ANY key, the output is invalid.
-- The current stock price is $${currentPrice}. ALL strikes, targets, invalidation levels, and contract strikes MUST be near this price (within ~15% range). Do NOT use strikes like $900 for a $167 stock.
-- EVERY price in your response MUST come from the actual data provided. Never invent prices.
-- Entry, target, invalidation, key level, and S/R must ALL reference real prices from flow underlying_price, OI strikes, or dark pool prices.
-- "entry" MUST include the current underlying_price ($${currentPrice}) and describe whether price broke or is testing a level.
-- "supportResistance" MUST cite a specific price — a round number, gamma strike, or dark pool cluster.
-- The "contract" field strikes must match actual OI concentration strikes near the current price ($${currentPrice}).
-- When citing a level, name its source: "OI concentration at $170", "Dark pool cluster at $166.60"
-- ONLY recommend: Call, Put, Call Butterfly, Put Butterfly, Bull Call Debit Spread, or Bear Put Debit Spread.
-- All recommended expirations MUST be in the future (${today} or later). Never recommend an expired contract.
-- Today's date is ${today}. The year is 2026.
-- Return ONLY valid JSON, no markdown fences.`;
+Score guide: 9-10 = all data sources aligned, 7-8 = two of three confirm, 5-6 = mixed signals, below 5 = conflicting.
+Return ONLY valid JSON, no markdown.`;
 
-    // Filter OI to only strikes within 15% of current price
-    const priceNum = parseFloat(currentPrice) || 0;
-    const nearbyOI = oiConcentration
-      .filter((c: any) => c.strike && Math.abs(c.strike - priceNum) / priceNum < 0.15)
-      .slice(0, 15);
+    const userPrompt = `Pre-computed analysis for ${ticker}:
+- Current Price: $${preComputed.currentPrice}
+- Bias: ${preComputed.bias} (${preComputed.bullishCount} bullish vs ${preComputed.bearishCount} bearish flow tags)
+- Key Level: ${preComputed.keyLevel} (highest OI strike near price)
+- Target: ${preComputed.targetRange}
+- Invalidation: ${preComputed.invalidation}
+- S/R: ${preComputed.sr} psychological level${preComputed.dpLevel ? `, Dark pool: ${preComputed.dpLevel}` : ''}
+- Strategy: ${preComputed.strategy}
+- Top OI Strikes: ${preComputed.topOIStrikes}
+- P/C Ratio: ${preComputed.pcRatio}
+- Net call premium: ${netCallPrem > 0 ? 'positive (bullish)' : 'negative (bearish)'}
+- Market tide: ${parseFloat((tideData.data || tideData)?.net_call_premium_flow || '0') > 0 ? 'bullish' : 'bearish'}
 
-    const userPrompt = `## ⚠️ CRITICAL: ${ticker} CURRENT STOCK PRICE IS $${currentPrice}. All strikes and price levels MUST be near $${currentPrice} (within 15%). Do NOT use strikes far from this price.
-
-Analyze this data and generate the trade recommendation JSON with ALL 12 required fields.
-Today is ${today}. Only recommend contracts with future expirations.
-
-## 1. Recent Flow (last 15 trades — note underlying_price field = current stock price):
-${JSON.stringify(flowSummary, null, 1)}
-
-## 2. OI Concentration NEAR CURRENT PRICE (sorted by open interest — these are your S/R levels):
-${JSON.stringify(nearbyOI, null, 1)}
-
-## 3. Dark Pool Trades (institutional block trades — hidden S/R at these price levels):
-${JSON.stringify(darkPoolSummary, null, 1)}
-
-## 4. Options Volume Summary (directional sentiment, NOT price levels):
-${(() => {
-      const vol = (volumeData.data || [])[0] || {};
-      const callVol = parseInt(vol.call_volume || '0');
-      const putVol = parseInt(vol.put_volume || '0');
-      const pcRatio = putVol && callVol ? (putVol / callVol).toFixed(2) : 'N/A';
-      const netCallPrem = parseFloat(vol.net_call_premium || '0');
-      return `Put/Call Ratio: ${pcRatio}, Call Volume: ${callVol.toLocaleString()}, Put Volume: ${putVol.toLocaleString()}, Net call premium flow: ${netCallPrem > 0 ? 'positive (bullish)' : 'negative (bearish)'}`;
-    })()}
-
-## 5. Market Tide (overall sentiment): ${parseFloat((tideData.data || tideData)?.net_call_premium_flow || '0') > 0 ? 'BULLISH overall market' : 'BEARISH overall market'}
-
-⚠️ FINAL CHECK: The stock price is $${currentPrice}. Your contract strikes, target, invalidation, and key levels must all be near $${currentPrice}. Strikes like $800, $900, $1000 are WRONG for a $${currentPrice} stock. Use the strikes from the OI data above (e.g., ${nearbyOI.slice(0,3).map((c: any) => '$' + c.strike).join(', ')}).
-Return ALL 12 JSON fields including "entry" and "supportResistance".`;
+Write the description, strategy explanation, score, and entry description.`;
 
     const aiRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -242,7 +257,7 @@ Return ALL 12 JSON fields including "entry" and "supportResistance".`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'openai/gpt-5',
+        model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
@@ -250,38 +265,59 @@ Return ALL 12 JSON fields including "entry" and "supportResistance".`;
       }),
     });
 
-    if (!aiRes.ok) {
-      const errText = await aiRes.text();
-      console.error('AI gateway error:', aiRes.status, errText);
-      return new Response(JSON.stringify({ error: `AI analysis failed [${aiRes.status}]` }), {
-        status: aiRes.status === 429 ? 429 : 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    let description = `Hey ${name}, analyzing ${ticker} flow data at $${preComputed.currentPrice}.`;
+    let strategyExplanation = `${preComputed.strategy} selected based on flow bias and OI concentration.`;
+    let score = '6.0 / 10';
+    let entryDesc = `Testing key level at ${preComputed.keyLevel}`;
+
+    if (aiRes.ok) {
+      const aiData = await aiRes.json();
+      const content = aiData.choices?.[0]?.message?.content || '';
+      try {
+        const jsonStr = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        const parsed = JSON.parse(jsonStr);
+        description = parsed.description || description;
+        strategyExplanation = parsed.strategyExplanation || strategyExplanation;
+        score = parsed.score || score;
+        entryDesc = parsed.entryDescription || entryDesc;
+      } catch {
+        console.warn('AI narrative parse failed, using defaults');
+      }
     }
 
-    const aiData = await aiRes.json();
-    const content = aiData.choices?.[0]?.message?.content || '';
-
-    let analysis;
-    try {
-      const jsonStr = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      analysis = JSON.parse(jsonStr);
-    } catch {
-      console.error('Failed to parse AI JSON:', content);
-      analysis = {
-        bias: 'Analyzing...',
-        entry: 'Calculating...',
-        targetZone: 'Calculating...',
-        invalidation: 'Pending',
-        keyLevel: 'Pending',
-        supportResistance: 'Pending',
-        strategy: 'Pending',
-        expiration: '—',
-        score: '— / 10',
-        description: `Hey ${name}, we're still processing the latest data for ${ticker}. Check back shortly.`,
-        strategyExplanation: 'Analysis in progress.',
-      };
+    // Build contract string
+    let contractStr: string;
+    const strikeStr = levels.target.toFixed(2).replace(/\.00$/, '');
+    if (strategy === 'Call' || strategy === 'Put') {
+      contractStr = `Buy ${ticker} ${expFormatted} $${strikeStr} ${preComputed.putCall}`;
+    } else if (strategy === 'Bull Call Debit Spread' || strategy === 'Bear Put Debit Spread') {
+      const leg2Strike = isBullish 
+        ? (levels.target + (levels.target - currentPrice) * 0.5).toFixed(2).replace(/\.00$/, '')
+        : (levels.target - (currentPrice - levels.target) * 0.5).toFixed(2).replace(/\.00$/, '');
+      contractStr = `Buy ${ticker} ${expFormatted} $${strikeStr} ${preComputed.putCall} / Sell ${ticker} ${expFormatted} $${leg2Strike} ${preComputed.putCall}`;
+    } else {
+      // Butterfly
+      const wing = Math.abs(levels.target - currentPrice) * 0.5;
+      const mid = levels.target;
+      const low = (mid - wing).toFixed(2).replace(/\.00$/, '');
+      const high = (mid + wing).toFixed(2).replace(/\.00$/, '');
+      contractStr = `Buy 1x $${low} ${preComputed.putCall} / Sell 2x $${strikeStr} ${preComputed.putCall} / Buy 1x $${high} ${preComputed.putCall}`;
     }
+
+    const analysis = {
+      bias: preComputed.bias,
+      entry: entryDesc,
+      targetZone: `Target Zone ${preComputed.targetRange}`,
+      keyLevel: `Key Level: ${preComputed.keyLevel}`,
+      invalidation: `Invalidation: ${isBullish ? 'Below' : 'Above'} ${preComputed.invalidation}`,
+      supportResistance: `S/R: ${preComputed.sr} psychological level${preComputed.dpLevel ? `, Dark pool at ${preComputed.dpLevel}` : ''}`,
+      strategy,
+      contract: contractStr,
+      expiration: expFormatted,
+      score,
+      description,
+      strategyExplanation,
+    };
 
     return new Response(JSON.stringify(analysis), {
       status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
