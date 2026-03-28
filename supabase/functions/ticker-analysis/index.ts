@@ -217,8 +217,11 @@ ${JSON.stringify(darkPoolSummary, null, 1)}
 ## 4. Options Volume:
 ${volumeSummary}
 
-## 5. Market Tide (overall market sentiment — DO NOT use the dollar values here as stock prices, these are aggregate market premium flows):
-${tideSummary}
+## 5. Market Tide (overall market sentiment direction only — bullish or bearish bias in the broader market):
+${typeof tideData === 'object' ? (JSON.stringify({
+      net_call_premium_flow: (tideData.data || tideData)?.net_call_premium_flow,
+      sentiment: parseFloat((tideData.data || tideData)?.net_call_premium_flow || '0') > 0 ? 'Bullish overall market' : 'Bearish overall market',
+    })) : 'unavailable'}
 
 REMINDER: Return ALL 12 fields including "entry" and "supportResistance". The stock trades at $${currentPrice}.`;
 
