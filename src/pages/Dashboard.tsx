@@ -6,6 +6,7 @@ import HeroSignalCard from "@/components/dashboard/HeroSignalCard";
 import AIChatPanel from "@/components/dashboard/AIChatPanel";
 import PortfolioPanel from "@/components/dashboard/PortfolioPanel";
 import MarketStatusSign from "@/components/dashboard/MarketStatusSign";
+import { SessionStatusRow, SessionHeatmapStrip } from "@/components/dashboard/GlobalSessionIndicator";
 import PerformanceSnapshot from "@/components/dashboard/PerformanceSnapshot";
 import { useMarketData, type MarketSignal } from "@/hooks/useMarketData";
 import { useAuth } from "@/hooks/useAuth";
@@ -152,6 +153,16 @@ const Dashboard = () => {
         <div className="grid md:grid-cols-2 gap-4">
           <MarketStatusSign />
           <PerformanceSnapshot />
+        </div>
+
+        {/* Option 4: Status Row (chip badges) */}
+        <div className="glass-panel rounded-xl px-4 py-1 border-glow-purple">
+          <SessionStatusRow />
+        </div>
+
+        {/* Option 2: Heatmap Strip (connected glowing segments) */}
+        <div className="glass-panel rounded-xl px-4 py-1 border-glow-purple">
+          <SessionHeatmapStrip />
         </div>
 
         <HeroSignalCard signal={heroSignal} loading={signalFeedLoading} />
