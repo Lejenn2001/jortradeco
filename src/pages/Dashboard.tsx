@@ -6,6 +6,7 @@ import HeroSignalCard from "@/components/dashboard/HeroSignalCard";
 import AIChatPanel from "@/components/dashboard/AIChatPanel";
 import PortfolioPanel from "@/components/dashboard/PortfolioPanel";
 import MarketStatusSign from "@/components/dashboard/MarketStatusSign";
+import { SessionStatusRow, SessionHeatmapStrip } from "@/components/dashboard/GlobalSessionIndicator";
 import PerformanceSnapshot from "@/components/dashboard/PerformanceSnapshot";
 import { useMarketData, type MarketSignal } from "@/hooks/useMarketData";
 import { useAuth } from "@/hooks/useAuth";
