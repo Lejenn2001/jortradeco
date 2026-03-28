@@ -155,14 +155,37 @@ const Dashboard = () => {
           <PerformanceSnapshot />
         </div>
 
-        {/* Option 4: Status Row (chip badges) */}
-        <div className="glass-panel rounded-xl px-4 py-1 border-glow-purple">
-          <SessionStatusRow />
+        {/* === DEMO: Live state === */}
+        <div className="space-y-1">
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 px-1">▸ Live State</p>
+          <div className="glass-panel rounded-xl px-4 py-1 border-glow-purple">
+            <SessionStatusRow />
+          </div>
+          <div className="glass-panel rounded-xl px-4 py-1 border-glow-purple">
+            <SessionHeatmapStrip />
+          </div>
         </div>
 
-        {/* Option 2: Heatmap Strip (connected glowing segments) */}
-        <div className="glass-panel rounded-xl px-4 py-1 border-glow-purple">
-          <SessionHeatmapStrip />
+        {/* === DEMO: All Dimmed — "Markets Closed" === */}
+        <div className="space-y-1">
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 px-1">▸ All Dimmed — Markets Closed</p>
+          <div className="glass-panel rounded-xl px-4 py-1 border-glow-purple">
+            <SessionStatusRow forceAllClosed />
+          </div>
+          <div className="glass-panel rounded-xl px-4 py-1 border-glow-purple">
+            <SessionHeatmapStrip forceAllClosed />
+          </div>
+        </div>
+
+        {/* === DEMO: All Dimmed + Countdown === */}
+        <div className="space-y-1">
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 px-1">▸ All Dimmed + Countdown to Next Open</p>
+          <div className="glass-panel rounded-xl px-4 py-1 border-glow-purple">
+            <SessionStatusRow forceAllClosed />
+          </div>
+          <div className="glass-panel rounded-xl px-4 py-1 border-glow-purple">
+            <SessionHeatmapStrip forceAllClosed showCountdown />
+          </div>
         </div>
 
         <HeroSignalCard signal={heroSignal} loading={signalFeedLoading} />
