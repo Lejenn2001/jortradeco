@@ -6,7 +6,6 @@ import HeroSignalCard from "@/components/dashboard/HeroSignalCard";
 import AIChatPanel from "@/components/dashboard/AIChatPanel";
 import PortfolioPanel from "@/components/dashboard/PortfolioPanel";
 import MarketStatusSign from "@/components/dashboard/MarketStatusSign";
-import MarketStatusSign from "@/components/dashboard/MarketStatusSign";
 import PerformanceSnapshot from "@/components/dashboard/PerformanceSnapshot";
 import { useMarketData, type MarketSignal } from "@/hooks/useMarketData";
 import { useAuth } from "@/hooks/useAuth";
@@ -150,42 +149,25 @@ const Dashboard = () => {
     <DashboardLayout>
       <AmbientBackground sentiment={sentiment} />
       <div className="max-w-6xl mx-auto px-4 lg:px-6 py-5 space-y-5">
-        <div className="grid md:grid-cols-2 gap-4">
-          <MarketStatusSign />
-          <PerformanceSnapshot />
-        </div>
-
-        {/* === DEMO: Live state === */}
+        {/* Live — uses real market state */}
         <div className="space-y-1">
           <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 px-1">▸ Live State</p>
-          <div className="glass-panel rounded-xl px-4 py-1 border-glow-purple">
-            <SessionStatusRow />
-          </div>
-          <div className="glass-panel rounded-xl px-4 py-1 border-glow-purple">
-            <SessionHeatmapStrip />
+          <div className="grid md:grid-cols-2 gap-4">
+            <MarketStatusSign />
+            <PerformanceSnapshot />
           </div>
         </div>
 
-        {/* === DEMO: All Dimmed — "Markets Closed" === */}
+        {/* DEMO: All sessions active — see every color */}
         <div className="space-y-1">
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 px-1">▸ All Dimmed — Markets Closed</p>
-          <div className="glass-panel rounded-xl px-4 py-1 border-glow-purple">
-            <SessionStatusRow forceAllClosed />
-          </div>
-          <div className="glass-panel rounded-xl px-4 py-1 border-glow-purple">
-            <SessionHeatmapStrip forceAllClosed />
-          </div>
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 px-1">▸ Demo — All Sessions Active</p>
+          <MarketStatusSign demoSessions="all-active" />
         </div>
 
-        {/* === DEMO: All Dimmed + Countdown === */}
+        {/* DEMO: All sessions closed */}
         <div className="space-y-1">
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 px-1">▸ All Dimmed + Countdown to Next Open</p>
-          <div className="glass-panel rounded-xl px-4 py-1 border-glow-purple">
-            <SessionStatusRow forceAllClosed />
-          </div>
-          <div className="glass-panel rounded-xl px-4 py-1 border-glow-purple">
-            <SessionHeatmapStrip forceAllClosed showCountdown />
-          </div>
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 px-1">▸ Demo — All Sessions Closed</p>
+          <MarketStatusSign demoSessions="all-closed" />
         </div>
 
         <HeroSignalCard signal={heroSignal} loading={signalFeedLoading} />
