@@ -43,68 +43,169 @@ serve(async (req) => {
 
     const uwHeaders = { Authorization: `Bearer ${uwKey}`, Accept: 'application/json' };
 
-    // Fetch flow data for the ticker (all valid GET endpoints)
-    const [flowRes, volumeRes, tideRes] = await Promise.all([
+    // Fetch 5 data sources in parallel for comprehensive analysis
+    const [flowRes, volumeRes, tideRes, contractsRes, darkPoolRes] = await Promise.all([
       fetch(`${UW_BASE}/stock/${ticker}/flow-recent`, { headers: uwHeaders }),
       fetch(`${UW_BASE}/stock/${ticker}/options-volume`, { headers: uwHeaders }),
       fetch(`${UW_BASE}/market/market-tide`, { headers: uwHeaders }),
+      fetch(`${UW_BASE}/stock/${ticker}/option-contracts?limit=20`, { headers: uwHeaders }),
+      fetch(`${UW_BASE}/darkpool/${ticker}`, { headers: uwHeaders }),
     ]);
 
     const flowData = flowRes.ok ? await flowRes.json() : { data: [] };
     const volumeData = volumeRes.ok ? await volumeRes.json() : { data: [] };
     const tideData = tideRes.ok ? await tideRes.json() : { data: {} };
+    const contractsData = contractsRes.ok ? await contractsRes.json() : { data: [] };
+    const darkPoolData = darkPoolRes.ok ? await darkPoolRes.json() : { data: [] };
 
-    await logApiUsage(["flow-recent", "options-volume", "market-tide"]);
+    await logApiUsage(["flow-recent", "options-volume", "market-tide", "option-contracts", "darkpool"]);
 
-    // Build context for AI
-    const flowSummary = JSON.stringify((flowData.data || []).slice(0, 10));
+    // --- Build structured technical context ---
+
+    // 1. Flow data: recent sweeps with underlying price, strikes, deltas, tags
+    const flowRecords = (Array.isArray(flowData) ? flowData : flowData.data || []).slice(0, 15);
+    const flowSummary = flowRecords.map((f: any) => ({
+      strike: f.strike,
+      type: f.option_type,
+      premium: f.premium,
+      size: f.size,
+      volume: f.volume,
+      open_interest: f.open_interest,
+      underlying_price: f.underlying_price,
+      delta: f.delta,
+      implied_volatility: f.implied_volatility,
+      expiry: f.expiry,
+      tags: f.tags,
+      executed_at: f.executed_at,
+    }));
+
+    // 2. Option contracts: OI concentration reveals real S/R levels
+    const contracts = (contractsData.data || []).slice(0, 20);
+    const oiConcentration = contracts
+      .filter((c: any) => parseInt(c.open_interest || '0') > 1000)
+      .map((c: any) => {
+        const sym = c.option_symbol || '';
+        const isCall = sym.includes('C');
+        // Extract strike from option symbol (e.g., NVDA260327P00170000 -> 170)
+        const strikeMatch = sym.match(/[CP](\d{8})$/);
+        const strike = strikeMatch ? parseInt(strikeMatch[1]) / 1000 : null;
+        return {
+          strike,
+          type: isCall ? 'call' : 'put',
+          open_interest: parseInt(c.open_interest || '0'),
+          volume: parseInt(c.volume || '0'),
+          total_premium: c.total_premium,
+          sweep_volume: parseInt(c.sweep_volume || '0'),
+          ask_volume: parseInt(c.ask_volume || '0'),
+          bid_volume: parseInt(c.bid_volume || '0'),
+        };
+      })
+      .filter((c: any) => c.strike)
+      .sort((a: any, b: any) => b.open_interest - a.open_interest);
+
+    // 3. Dark pool: institutional price levels = hidden S/R
+    const darkPoolRecords = (darkPoolData.data || []).slice(0, 10);
+    const darkPoolSummary = darkPoolRecords.map((d: any) => ({
+      price: d.price,
+      size: d.size,
+      premium: d.premium,
+      executed_at: d.executed_at,
+      nbbo_bid: d.nbbo_bid,
+      nbbo_ask: d.nbbo_ask,
+    }));
+
+    // 4. Derive current price from flow data
+    const currentPrice = flowRecords[0]?.underlying_price || 'unknown';
+
+    // 5. Volume summary
     const volumeSummary = JSON.stringify((volumeData.data || []).slice(0, 5));
+
+    // 6. Market tide
     const tideSummary = JSON.stringify(tideData.data || tideData);
 
     const name = traderName || 'Trader';
+    const today = new Date().toISOString().split('T')[0];
 
-    const systemPrompt = `You are Biddie, the JORTRADE AI trading assistant. You analyze options flow data and provide structured trade recommendations.
+    const systemPrompt = `You are Biddie, the JORTRADE AI trading assistant. You analyze OPTIONS FLOW + TECHNICAL DATA to provide structured trade recommendations.
 
-Given real-time flow data for a ticker, generate a JSON response with these exact fields:
+You now receive 5 data sources:
+1. **Flow Data**: Recent option sweeps/blocks with underlying_price, strike, delta, IV, tags (bullish/bearish), premium, size
+2. **OI Concentration**: Open interest by strike — high OI strikes act as REAL support/resistance levels (market makers hedge here)
+3. **Dark Pool Data**: Large institutional block trades — these price levels reveal hidden S/R where big money transacted
+4. **Options Volume**: Volume concentration by strike/expiry
+5. **Market Tide**: Overall market sentiment
+
+## HOW TO DERIVE EACH FIELD:
+
+### Entry
+- Use the CURRENT underlying_price from flow data as the reference
+- Identify the nearest key level the price has broken through or is testing
+- Express as: "Broke below/above [level name] at $X.XX — confirmed" or "Testing [level] at $X.XX"
+- Level names: PDH (previous day high), PDL (previous day low), key OI strike, dark pool level, VWAP area
+
+### Target
+- For BULLISH: Find the next significant CALL OI concentration strike ABOVE current price — that's where resistance lives
+- For BEARISH: Find the next significant PUT OI concentration strike BELOW current price — that's where support lives
+- Dark pool price clusters in the target direction strengthen the target
+- Use the ACTUAL strike price from OI data, not an invented number
+
+### Invalidation
+- For BULLISH: The nearest significant resistance level ABOVE entry that, if price drops below support, invalidates the trade. Use the highest nearby PUT OI strike or dark pool level ABOVE entry.
+- For BEARISH: The nearest significant support level BELOW entry that, if price rises above resistance, invalidates the trade. Use the highest nearby CALL OI strike or dark pool level BELOW entry.
+- Must be a REAL price level from the data (OI concentration, dark pool, or flow reference price)
+
+### Key Level
+- The single most important price level right now — the pivot point
+- Usually the strike with the HIGHEST combined OI (calls + puts) near current price
+- Or a dark pool level where massive volume transacted
+
+### S/R (Support/Resistance)
+- Psychological round numbers ($100, $150, $170, $200)
+- OR the highest-volume dark pool price level
+- OR the strike with max gamma exposure (highest OI near the money)
+
+Given real-time data, generate a JSON response with these exact fields:
 {
   "bias": "Bullish Bias ↗" or "Bearish Bias ↘" or "Neutral ↔",
-  "targetZone": "Target Zone $XXX – $XXX" (the price range where the recommended contract profits — use real strikes),
-  "keyLevel": "Key Level: $XXX" (an important support/resistance level the price is approaching or breaking through),
-  "invalidation": "Invalidation: $XXX" (the level where the trade idea is invalidated — a stop-loss level),
+  "entry": "Broke below PDL at $X.XX — confirmed" or "Testing resistance at $X.XX" (MUST reference a real price from the data and name the level type),
+  "targetZone": "Target Zone $XXX – $XXX" (price range from OI concentration in the favorable direction),
+  "keyLevel": "Key Level: $XXX" (the most important S/R from OI + dark pool data — name what makes it key),
+  "invalidation": "Invalidation: Above/Below $XXX" (real price level from data where trade thesis breaks — MUST be a level from OI or dark pool),
+  "supportResistance": "S/R: $XXX [description]" (psychological level, max gamma strike, or biggest dark pool cluster),
   "strategy": one of ONLY: "Call" | "Put" | "Call Butterfly" | "Put Butterfly" | "Bull Call Debit Spread" | "Bear Put Debit Spread",
-  "contract": "the specific contract(s), e.g. 'Buy NVDA Mar 28 2026 $980 Call' or for spreads 'Buy NVDA Mar 28 $950 Call / Sell NVDA Mar 28 $970 Call' or for butterflies 'Buy 1x $940 Call / Sell 2x $960 Call / Buy 1x $980 Call'",
+  "contract": "the specific contract(s), e.g. 'Buy NVDA Mar 28 2026 $170 Put' or for spreads list each leg",
   "expiration": "the nearest expiration with heavy activity, format: Mon DD, YYYY",
-  "score": "X.X / 10" (probability score for the SPECIFIC CONTRACT you are recommending. How likely is this contract to be profitable? Base it on: volume of flow at that strike, size of premiums, number of repeated sweeps, how close price is to the strike, time to expiration. 9-10 = very high probability — massive repeated flow, large premiums, price action confirming. 7-8 = good probability. 5-6 = moderate, mixed signals. Below 5 = speculative. Use the full range.),
-  "description": "Hey ${name}, the market structure for ${ticker} is... (2-3 sentences explaining the current setup, addressing the trader by name, referencing specific flow data like sweep counts, premium sizes, dominant strikes)",
-  "strategyExplanation": "1-2 sentences explaining WHY this specific strategy makes sense given the flow data"
+  "score": "X.X / 10" (probability score — base on: flow direction consistency, OI confirmation at target, dark pool alignment, premium size, sweep aggression. 9-10 = flow + OI + dark pool all aligned. 7-8 = two of three confirm. 5-6 = mixed. Below 5 = conflicting data.),
+  "description": "Hey ${name}, here's what the data shows for ${ticker}... (2-3 sentences referencing SPECIFIC numbers: sweep counts, premium sizes, OI at key strikes, dark pool levels. Explain WHY the levels matter.)",
+  "strategyExplanation": "1-2 sentences explaining WHY this strategy given the data alignment"
 }
 
-Rules:
-- Use ONLY real data from the flow. Don't invent numbers.
+## CRITICAL RULES:
+- EVERY price in your response MUST come from the actual data provided. Never invent prices.
+- Entry, target, invalidation, key level, and S/R must ALL reference real prices from flow underlying_price, OI strikes, or dark pool prices.
+- When citing a level, name its source: "OI concentration at $170", "Dark pool cluster at $166.60", "PDH at $171.14"
 - ONLY recommend: Call, Put, Call Butterfly, Put Butterfly, Bull Call Debit Spread, or Bear Put Debit Spread.
-- Bullish flow → Call, Bull Call Debit Spread, or Call Butterfly.
-- Bearish flow → Put, Bear Put Debit Spread, or Put Butterfly.
-- Use spreads when the move looks measured/range-bound. Use butterflies for concentrated strike activity. Use Call/Put for strong directional conviction.
-- The "contract" field MUST have exact ticker, expiration date, strike(s), and type. For multi-leg strategies, list each leg.
-- Use actual strike prices and expirations from the flow data.
-- ONLY use flow data from TODAY or this current trading week. Ignore any trades with past expirations or old dates.
-- All recommended expirations MUST be in the future (today or later). Never recommend an expired contract.
-- Today's date is ${new Date().toISOString().split('T')[0]}.
-- Keep descriptions conversational but professional.
-- The year is 2026.
-- Return ONLY valid JSON, no markdown.`;
+- All recommended expirations MUST be in the future (${today} or later). Never recommend an expired contract.
+- Today's date is ${today}. The year is 2026.
+- Return ONLY valid JSON, no markdown fences.`;
 
-    const today = new Date().toISOString().split('T')[0];
-    const userPrompt = `Analyze this flow data for ${ticker} and generate the trade recommendation JSON.
-IMPORTANT: Today is ${today}. Only use flow entries from this week. Only recommend contracts with future expirations (${today} or later). Discard anything expired.
+    const userPrompt = `Analyze this comprehensive data for ${ticker} (current price: $${currentPrice}) and generate the trade recommendation JSON.
 
-Recent Flow (last 10 trades):
-${flowSummary}
+IMPORTANT: Today is ${today}. Only recommend contracts with future expirations.
 
-Options Volume:
+## 1. Recent Flow (last 15 trades with underlying price, strikes, deltas, tags):
+${JSON.stringify(flowSummary, null, 1)}
+
+## 2. OI Concentration by Strike (sorted by open interest — these are your S/R levels):
+${JSON.stringify(oiConcentration.slice(0, 15), null, 1)}
+
+## 3. Dark Pool Trades (institutional block trades — hidden S/R):
+${JSON.stringify(darkPoolSummary, null, 1)}
+
+## 4. Options Volume:
 ${volumeSummary}
 
-Market Tide (overall sentiment):
+## 5. Market Tide (overall sentiment):
 ${tideSummary}`;
 
     const aiRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -114,7 +215,7 @@ ${tideSummary}`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-3-flash-preview',
+        model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
@@ -134,7 +235,6 @@ ${tideSummary}`;
     const aiData = await aiRes.json();
     const content = aiData.choices?.[0]?.message?.content || '';
 
-    // Parse JSON from response (strip markdown fences if present)
     let analysis;
     try {
       const jsonStr = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
@@ -143,12 +243,15 @@ ${tideSummary}`;
       console.error('Failed to parse AI JSON:', content);
       analysis = {
         bias: 'Analyzing...',
-        callZone: 'Calculating...',
+        entry: 'Calculating...',
+        targetZone: 'Calculating...',
         invalidation: 'Pending',
+        keyLevel: 'Pending',
+        supportResistance: 'Pending',
         strategy: 'Pending',
         expiration: '—',
         score: '— / 10',
-        description: `Hey ${name}, we're still processing the latest flow data for ${ticker}. Check back shortly.`,
+        description: `Hey ${name}, we're still processing the latest data for ${ticker}. Check back shortly.`,
         strategyExplanation: 'Analysis in progress.',
       };
     }
