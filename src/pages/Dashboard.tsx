@@ -155,6 +155,16 @@ const Dashboard = () => {
           <PerformanceSnapshot />
         </div>
 
+        {/* Option 4: Status Row (chip badges) */}
+        <div className="glass-panel rounded-xl px-4 py-1 border-glow-purple">
+          <SessionStatusRow />
+        </div>
+
+        {/* Option 2: Heatmap Strip (connected glowing segments) */}
+        <div className="glass-panel rounded-xl px-4 py-1 border-glow-purple">
+          <SessionHeatmapStrip />
+        </div>
+
         <HeroSignalCard signal={heroSignal} loading={signalFeedLoading} />
 
         <div className="grid lg:grid-cols-2 gap-4">
