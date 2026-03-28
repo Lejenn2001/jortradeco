@@ -181,12 +181,14 @@ Given real-time data, generate a JSON response with these exact fields:
 }
 
 ## CRITICAL RULES:
-- You MUST return ALL fields listed above. Do NOT omit any field. Every single key must be present in your JSON output: bias, entry, targetZone, keyLevel, invalidation, supportResistance, strategy, contract, expiration, score, description, strategyExplanation.
+- You MUST return ALL 12 fields listed above. Do NOT omit any field. Required keys: bias, entry, targetZone, keyLevel, invalidation, supportResistance, strategy, contract, expiration, score, description, strategyExplanation. If you omit ANY key, the output is invalid.
+- The current stock price is $${currentPrice}. ALL strikes, targets, invalidation levels, and contract strikes MUST be near this price (within ~15% range). Do NOT use strikes like $900 for a $167 stock.
 - EVERY price in your response MUST come from the actual data provided. Never invent prices.
 - Entry, target, invalidation, key level, and S/R must ALL reference real prices from flow underlying_price, OI strikes, or dark pool prices.
-- "entry" MUST include the current underlying_price and describe whether price broke or is testing a level.
+- "entry" MUST include the current underlying_price ($${currentPrice}) and describe whether price broke or is testing a level.
 - "supportResistance" MUST cite a specific price — a round number, gamma strike, or dark pool cluster.
-- When citing a level, name its source: "OI concentration at $170", "Dark pool cluster at $166.60", "PDH at $171.14"
+- The "contract" field strikes must match actual OI concentration strikes near the current price ($${currentPrice}).
+- When citing a level, name its source: "OI concentration at $170", "Dark pool cluster at $166.60"
 - ONLY recommend: Call, Put, Call Butterfly, Put Butterfly, Bull Call Debit Spread, or Bear Put Debit Spread.
 - All recommended expirations MUST be in the future (${today} or later). Never recommend an expired contract.
 - Today's date is ${today}. The year is 2026.
