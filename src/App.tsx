@@ -16,6 +16,7 @@ import DashboardAnalytics from "./pages/DashboardAnalytics.tsx";
 import DashboardSettings from "./pages/DashboardSettings.tsx";
 import DashboardScanner from "./pages/DashboardScanner.tsx";
 import DashboardPerformance from "./pages/DashboardPerformance.tsx";
+import DashboardReferrals from "./pages/DashboardReferrals.tsx";
 import Login from "./pages/Login.tsx";
 import Signup from "./pages/Signup.tsx";
 import Contact from "./pages/Contact.tsx";
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/dashboard/analytics" element={<ProtectedRoute><DashboardAnalytics /></ProtectedRoute>} />
             <Route path="/dashboard/scanner" element={<ProtectedRoute><DashboardScanner /></ProtectedRoute>} />
             <Route path="/dashboard/performance" element={<ProtectedRoute><DashboardPerformance /></ProtectedRoute>} />
+            <Route path="/dashboard/referrals" element={<ProtectedRoute><DashboardReferrals /></ProtectedRoute>} />
             <Route path="/dashboard/settings" element={<ProtectedRoute><DashboardSettings /></ProtectedRoute>} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />

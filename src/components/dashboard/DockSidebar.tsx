@@ -9,6 +9,7 @@ import {
   Bot,
   Users,
   PieChart,
+  Gift,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -33,6 +34,7 @@ const navItems = [
   { icon: Wallet, label: "P&L", path: "/dashboard/pnl" },
   { icon: Activity, label: "Performance", path: "/dashboard/performance" },
   { icon: PieChart, label: "Analytics", path: "/dashboard/analytics" },
+  { icon: Gift, label: "Referrals", path: "/dashboard/referrals" },
   { icon: Settings, label: "Settings", path: "/dashboard/settings" },
 ];
 
