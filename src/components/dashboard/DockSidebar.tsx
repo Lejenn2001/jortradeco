@@ -31,6 +31,7 @@ const navItems = [
   { icon: Activity, label: "Signals", path: "/dashboard/signals" },
   { icon: BarChart3, label: "Market", path: "/dashboard/market" },
   { icon: Wallet, label: "P&L", path: "/dashboard/pnl" },
+  { icon: Activity, label: "Performance", path: "/dashboard/performance" },
   { icon: PieChart, label: "Analytics", path: "/dashboard/analytics" },
   { icon: Settings, label: "Settings", path: "/dashboard/settings" },
 ];
