@@ -41,6 +41,7 @@ const App = () => (
             <Route path="/dashboard/pnl" element={<ProtectedRoute><DashboardPnL /></ProtectedRoute>} />
             <Route path="/dashboard/community" element={<ProtectedRoute><DashboardCommunity /></ProtectedRoute>} />
             <Route path="/dashboard/analytics" element={<ProtectedRoute><DashboardAnalytics /></ProtectedRoute>} />
+            <Route path="/dashboard/scanner" element={<ProtectedRoute><DashboardScanner /></ProtectedRoute>} />
             <Route path="/dashboard/settings" element={<ProtectedRoute><DashboardSettings /></ProtectedRoute>} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
