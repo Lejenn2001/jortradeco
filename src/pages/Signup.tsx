@@ -3,9 +3,10 @@ import Disclaimer from "@/components/Disclaimer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Check, Zap, Crown, Star, Link2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useSearchParams } from "react-router-dom";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 
@@ -79,6 +80,8 @@ const Signup = () => {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [searchParams] = useSearchParams();
+  const refCode = searchParams.get("ref");
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -102,6 +105,22 @@ const Signup = () => {
         selected_plan: selectedPlan,
         email: email,
       }).eq("id", signUpData.user.id);
+
+      // Track referral if ref code was used
+      if (refCode) {
+        const { data: codeData } = await supabase
+          .from("referral_codes")
+          .select("user_id")
+          .eq("code", refCode.toUpperCase())
+          .single();
+        if (codeData && codeData.user_id !== signUpData.user.id) {
+          await supabase.from("referrals").insert({
+            referrer_id: codeData.user_id,
+            referred_user_id: signUpData.user.id,
+            status: "trial",
+          });
+        }
+      }
     }
     setLoading(false);
     if (error) {
