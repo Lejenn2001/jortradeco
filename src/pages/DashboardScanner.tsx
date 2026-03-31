@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import ConvictionScoreRing from "@/components/dashboard/ConvictionScoreRing";
+import GammaLevelsPanel from "@/components/dashboard/GammaLevelsPanel";
 import { Bell, ChevronRight, RefreshCw, Eye, Radio, Crosshair } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -209,6 +210,9 @@ const DashboardScanner = () => {
             1 watched
           </span>
         </div>
+
+        {/* Gamma Levels Panel */}
+        <GammaLevelsPanel ticker="SPX" />
 
         {/* Cards grid */}
         <div className="grid sm:grid-cols-2 gap-4">
