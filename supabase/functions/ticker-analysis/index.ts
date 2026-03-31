@@ -375,6 +375,13 @@ Write the description, strategy explanation, score, and entry description.`;
       score,
       description,
       strategyExplanation,
+      gex: gexLevels ? {
+        gammaFlip: gexLevels.gammaFlip,
+        callWall: gexLevels.callWall,
+        putWall: gexLevels.putWall,
+        keyMagnet: gexLevels.keyMagnet,
+        dealerPositioning: gexLevels.dealerPositioning,
+      } : null,
     };
 
     return new Response(JSON.stringify(analysis), {
