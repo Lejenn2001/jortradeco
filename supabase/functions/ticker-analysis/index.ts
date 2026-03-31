@@ -174,12 +174,13 @@ serve(async (req) => {
 
     const uwHeaders = { Authorization: `Bearer ${uwKey}`, Accept: 'application/json' };
 
-    const [flowRes, volumeRes, tideRes, contractsRes, darkPoolRes] = await Promise.all([
+    const [flowRes, volumeRes, tideRes, contractsRes, darkPoolRes, spotGexRes] = await Promise.all([
       fetch(`${UW_BASE}/stock/${ticker}/flow-recent`, { headers: uwHeaders }),
       fetch(`${UW_BASE}/stock/${ticker}/options-volume`, { headers: uwHeaders }),
       fetch(`${UW_BASE}/market/market-tide`, { headers: uwHeaders }),
       fetch(`${UW_BASE}/stock/${ticker}/option-contracts?limit=30`, { headers: uwHeaders }),
       fetch(`${UW_BASE}/darkpool/${ticker}`, { headers: uwHeaders }),
+      fetch(`${UW_BASE}/stock/${ticker}/spot-exposures`, { headers: uwHeaders }),
     ]);
 
     const flowData = flowRes.ok ? await flowRes.json() : { data: [] };
@@ -187,8 +188,9 @@ serve(async (req) => {
     const tideData = tideRes.ok ? await tideRes.json() : { data: {} };
     const contractsData = contractsRes.ok ? await contractsRes.json() : { data: [] };
     const darkPoolData = darkPoolRes.ok ? await darkPoolRes.json() : { data: [] };
+    const spotGexData = spotGexRes.ok ? await spotGexRes.json() : { data: [] };
 
-    await logApiUsage(["flow-recent", "options-volume", "market-tide", "option-contracts", "darkpool"]);
+    await logApiUsage(["flow-recent", "options-volume", "market-tide", "option-contracts", "darkpool", "spot-exposures"]);
 
     // --- ALGORITHMIC LEVEL COMPUTATION ---
     const flowRecords = (Array.isArray(flowData) ? flowData : flowData.data || []).slice(0, 30);
