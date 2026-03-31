@@ -216,6 +216,9 @@ serve(async (req) => {
     // Dark pool level
     const dpLevel = findDarkPoolLevel(darkPoolRecords, currentPrice);
 
+    // GEX levels from spot-exposures
+    const spotGexRecords = (spotGexData.data || []);
+    const gexLevels = extractGexLevels(spotGexRecords, currentPrice);
     // Volume sentiment
     const callVol = parseInt(volData.call_volume || '0');
     const putVol = parseInt(volData.put_volume || '0');
