@@ -86,7 +86,6 @@ function findKeyLevels(contracts: any[], currentPrice: number, isBullish: boolea
 // Find dark pool levels
 function findDarkPoolLevel(records: any[], currentPrice: number): { price: number; size: number } | null {
   if (!records.length) return null;
-  // Find largest dark pool trade near current price
   const near = records
     .filter((d: any) => {
       const p = parseFloat(d.price || '0');
@@ -95,6 +94,60 @@ function findDarkPoolLevel(records: any[], currentPrice: number): { price: numbe
     .sort((a: any, b: any) => parseInt(b.size || '0') - parseInt(a.size || '0'));
   if (near.length) return { price: parseFloat(near[0].price), size: parseInt(near[0].size) };
   return null;
+}
+
+// Extract GEX key levels from spot-exposures data
+function extractGexLevels(spotData: any[], currentPrice: number) {
+  if (!spotData.length) return null;
+
+  // Each record has: price, gamma_per_one_percent_move_oi, gamma_per_one_percent_move_vol, gamma_per_one_percent_move_dir
+  const parsed = spotData
+    .map((d: any) => ({
+      price: parseFloat(d.price || '0'),
+      gexOI: parseFloat(d.gamma_per_one_percent_move_oi || '0'),
+      gexVol: parseFloat(d.gamma_per_one_percent_move_vol || '0'),
+      gexDir: parseFloat(d.gamma_per_one_percent_move_dir || '0'),
+    }))
+    .filter(d => d.price > 0)
+    .sort((a, b) => a.price - b.price);
+
+  if (!parsed.length) return null;
+
+  // Gamma flip = price where GEX crosses zero (dealer positioning flips)
+  let gammaFlip: number | null = null;
+  for (let i = 1; i < parsed.length; i++) {
+    if ((parsed[i - 1].gexDir <= 0 && parsed[i].gexDir > 0) ||
+        (parsed[i - 1].gexDir >= 0 && parsed[i].gexDir < 0)) {
+      // Interpolate
+      const p1 = parsed[i - 1], p2 = parsed[i];
+      const ratio = Math.abs(p1.gexDir) / (Math.abs(p1.gexDir) + Math.abs(p2.gexDir));
+      gammaFlip = p1.price + ratio * (p2.price - p1.price);
+      break;
+    }
+  }
+
+  // Call wall = strike with highest positive GEX above current price
+  const abovePrice = parsed.filter(d => d.price >= currentPrice);
+  const callWall = abovePrice.length
+    ? abovePrice.reduce((max, d) => d.gexOI > max.gexOI ? d : max, abovePrice[0])
+    : null;
+
+  // Put wall = strike with most negative GEX below current price
+  const belowPrice = parsed.filter(d => d.price < currentPrice);
+  const putWall = belowPrice.length
+    ? belowPrice.reduce((min, d) => d.gexOI < min.gexOI ? d : min, belowPrice[0])
+    : null;
+
+  // Highest absolute GEX = key magnet level
+  const keyMagnet = parsed.reduce((max, d) => Math.abs(d.gexOI) > Math.abs(max.gexOI) ? d : max, parsed[0]);
+
+  return {
+    gammaFlip: gammaFlip ? Math.round(gammaFlip * 100) / 100 : null,
+    callWall: callWall ? { price: callWall.price, gex: callWall.gexOI } : null,
+    putWall: putWall ? { price: putWall.price, gex: putWall.gexOI } : null,
+    keyMagnet: { price: keyMagnet.price, gex: keyMagnet.gexOI },
+    dealerPositioning: currentPrice > (gammaFlip || 0) ? 'Long Gamma (suppresses moves)' : 'Short Gamma (amplifies moves)',
+  };
 }
 
 serve(async (req) => {
