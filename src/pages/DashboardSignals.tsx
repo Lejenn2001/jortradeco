@@ -893,12 +893,6 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
           )}
         </div>
 
-        {/* MFE */}
-        {mfeInfo && (
-          <div className={`text-[10px] sm:text-[11px] font-semibold ${mfeInfo.color}`}>
-            📊 {mfeInfo.text}
-          </div>
-        )}
 
         {/* I Took This Trade */}
         <button
