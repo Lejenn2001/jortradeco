@@ -205,60 +205,114 @@ export type Database = {
       signal_outcomes: {
         Row: {
           alerted: boolean
+          category: string | null
           confidence: number
           created_at: string
           description: string | null
+          detected_at: string | null
           entry_price: number | null
+          entry_trigger: string | null
           expiry: string | null
+          gamma_description: string | null
+          gamma_zone: string | null
           id: string
+          invalidation: string | null
+          is_biddie_pick: boolean | null
+          key_level: string | null
+          max_favorable_price: number | null
+          mfe_percent: number | null
           outcome: string
           outcome_price: number | null
           premium: string | null
+          price_at_signal: number | null
           put_call: string | null
+          reason: string | null
           resolved_at: string | null
+          review_note: string | null
+          review_status: string | null
           signal_source: string | null
           signal_type: string
+          spread_details: Json | null
+          sr_level: string | null
           strike: string | null
+          target_near: string | null
           target_zone: string | null
           ticker: string
+          trade_status: string | null
         }
         Insert: {
           alerted?: boolean
+          category?: string | null
           confidence: number
           created_at?: string
           description?: string | null
+          detected_at?: string | null
           entry_price?: number | null
+          entry_trigger?: string | null
           expiry?: string | null
+          gamma_description?: string | null
+          gamma_zone?: string | null
           id?: string
+          invalidation?: string | null
+          is_biddie_pick?: boolean | null
+          key_level?: string | null
+          max_favorable_price?: number | null
+          mfe_percent?: number | null
           outcome?: string
           outcome_price?: number | null
           premium?: string | null
+          price_at_signal?: number | null
           put_call?: string | null
+          reason?: string | null
           resolved_at?: string | null
+          review_note?: string | null
+          review_status?: string | null
           signal_source?: string | null
           signal_type: string
+          spread_details?: Json | null
+          sr_level?: string | null
           strike?: string | null
+          target_near?: string | null
           target_zone?: string | null
           ticker: string
+          trade_status?: string | null
         }
         Update: {
           alerted?: boolean
+          category?: string | null
           confidence?: number
           created_at?: string
           description?: string | null
+          detected_at?: string | null
           entry_price?: number | null
+          entry_trigger?: string | null
           expiry?: string | null
+          gamma_description?: string | null
+          gamma_zone?: string | null
           id?: string
+          invalidation?: string | null
+          is_biddie_pick?: boolean | null
+          key_level?: string | null
+          max_favorable_price?: number | null
+          mfe_percent?: number | null
           outcome?: string
           outcome_price?: number | null
           premium?: string | null
+          price_at_signal?: number | null
           put_call?: string | null
+          reason?: string | null
           resolved_at?: string | null
+          review_note?: string | null
+          review_status?: string | null
           signal_source?: string | null
           signal_type?: string
+          spread_details?: Json | null
+          sr_level?: string | null
           strike?: string | null
+          target_near?: string | null
           target_zone?: string | null
           ticker?: string
+          trade_status?: string | null
         }
         Relationships: []
       }
