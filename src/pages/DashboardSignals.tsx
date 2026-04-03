@@ -1,34 +1,35 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import { useMarketData, type MarketSignal, type SignalTimeframe, computeWhaleConviction } from "@/hooks/useMarketData";
+import { useMarketData, type MarketSignal, type SignalTimeframe } from "@/hooks/useMarketData";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Filter, TrendingUp, TrendingDown, Zap, Clock, CalendarDays, Target, ShieldX, Crosshair, MapPin, Gauge } from "lucide-react";
+import {
+  Search, Filter, TrendingUp, TrendingDown, Zap, Clock, Target,
+  ShieldX, Crosshair, MapPin, Gauge, Waves, XCircle
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import SignalLegend from "@/components/dashboard/SignalLegend";
 import ConvictionScoreRing from "@/components/dashboard/ConvictionScoreRing";
+import SignalErrorBoundary from "@/components/dashboard/SignalErrorBoundary";
+import { dbRecordToSignal, classifyTimeframe } from "@/lib/signalMapper";
 
 type FilterType = "all" | "call" | "put";
+type ViewTab = "algorithm" | "whale" | "spread" | "spx";
 
-const SECTION_META: Record<SignalTimeframe, { label: string; icon: React.ReactNode; description: string }> = {
+const ALGO_SECTION_META = {
   buy_now: {
-    label: "🔥 BUY NOW",
-    icon: <Zap className="h-4 w-4" />,
-    description: "Highest conviction — act immediately",
+    label: "🔥 ACT NOW",
+    iconComponent: Zap,
+    iconClass: "h-4 w-4 text-emerald-400",
+    description: "Price confirmed — act immediately",
   },
   short_term: {
     label: "⚡ 1–3 DAY TRADE",
-    icon: <Clock className="h-4 w-4" />,
-    description: "Strong setups with short-term expiry",
+    iconComponent: Clock,
+    iconClass: "h-4 w-4 text-emerald-400",
+    description: "Algorithm-detected setups with short-term expiry",
   },
-  swing: {
-    label: "📈 SWING",
-    icon: <CalendarDays className="h-4 w-4" />,
-    description: "Longer-dated positioning plays",
-  },
-};
-
-const SECTION_ORDER: SignalTimeframe[] = ["buy_now", "short_term", "swing"];
+} as const;
 
 const cardVariants = {
   hidden: { opacity: 0, y: 20, scale: 0.97 },
@@ -38,277 +39,401 @@ const cardVariants = {
   }),
 };
 
-function classifyTimeframeFromRecord(record: any): SignalTimeframe {
-  const confidence = parseFloat(record.confidence) || 5;
-  const score = confidence >= 8.5 ? 85 : confidence >= 7.5 ? 75 : confidence >= 6 ? 60 : 40;
-  
-  if (score >= 75) return "buy_now";
-  
-  if (record.expiry) {
-    const expDate = new Date(record.expiry);
-    if (!isNaN(expDate.getTime())) {
-      const now = new Date();
-      const dte = Math.max(0, Math.ceil((expDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
-      if (dte <= 1) return "buy_now";
-      if (dte <= 7) return "short_term";
-      return "swing";
-    }
-  }
-  
-  if (score >= 60) return "short_term";
-  return "swing";
-}
-
-function dbRecordToSignal(record: any): MarketSignal {
-  const isBullish = record.signal_type === 'bullish';
-  const confidence = parseFloat(record.confidence) || 5;
-  
-  // Derive conviction score from confidence (1-10 scale → approximate 0-100)
-  let convictionScore = Math.round(confidence * 10);
-  if (confidence >= 9) convictionScore = Math.max(convictionScore, 85);
-  else if (confidence >= 8) convictionScore = Math.max(convictionScore, 75);
-  else if (confidence >= 7) convictionScore = Math.max(convictionScore, 65);
-
-  let convictionLabel = "Low Conviction";
-  if (convictionScore >= 90) convictionLabel = "Extreme Conviction";
-  else if (convictionScore >= 75) convictionLabel = "Very High Conviction";
-  else if (convictionScore >= 60) convictionLabel = "High Conviction";
-  else if (convictionScore >= 40) convictionLabel = "Moderate Conviction";
-
-  const tags: string[] = [];
-  if (record.put_call) tags.push(record.put_call === 'call' ? 'Call Flow' : 'Put Flow');
-  if (convictionScore >= 85) tags.push('🔥 ACT NOW');
-  else if (convictionScore >= 70) tags.push('⚡ HIGH CONVICTION');
-
-  const createdAt = record.created_at || '';
-  const timestamp = createdAt ? formatTimestamp(createdAt) : 'Today';
-
-  return {
-    id: record.id,
-    ticker: record.ticker,
-    type: isBullish ? 'bullish' : 'bearish',
-    confidence,
-    convictionScore,
-    convictionLabel,
-    description: record.description || `${record.put_call || ''} flow on ${record.ticker} at ${record.strike || 'N/A'} strike.`,
-    timestamp,
-    tags,
-    strike: record.strike || undefined,
-    expiry: record.expiry || undefined,
-    premium: record.premium || undefined,
-    putCall: record.put_call as 'call' | 'put' | undefined,
-    suggestedTrade: `Buy ${record.ticker} ${record.strike || ''} ${record.put_call === 'call' ? 'Calls' : 'Puts'}${record.expiry ? ` exp ${record.expiry}` : ''}`,
-    targetZone: record.target_zone || undefined,
-    createdAt,
-    source: 'live',
-    timeframe: classifyTimeframeFromRecord(record),
-  };
-}
-
-function formatTimestamp(isoStr: string): string {
-  const date = new Date(isoStr);
-  if (isNaN(date.getTime())) return 'Today';
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  if (diffMins < 1) return 'just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  const diffHrs = Math.floor(diffMins / 60);
-  if (diffHrs < 12) return `${diffHrs}h ago`;
-  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-}
-
 const DashboardSignals = () => {
   const { signals: liveSignals, loading: liveLoading } = useMarketData();
   const [dbSignals, setDbSignals] = useState<MarketSignal[]>([]);
   const [dbLoading, setDbLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<FilterType>("all");
+  const [viewTab, setViewTab] = useState<ViewTab>("algorithm");
+  const [showResolved, setShowResolved] = useState(false);
 
-  // Load today's signals from signal_outcomes table
   useEffect(() => {
-    const loadTodaySignals = async () => {
+    const loadSignals = async () => {
       setDbLoading(true);
       try {
-        // Get start of today in UTC
         const now = new Date();
         const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        todayStart.setHours(todayStart.getHours() - 4); // EST offset — capture full trading day
-
+        todayStart.setHours(todayStart.getHours() - 4);
         const { data, error } = await supabase
           .from("signal_outcomes")
           .select("*")
-          .eq("signal_source", "replit")
           .gte("created_at", todayStart.toISOString())
-          .order("created_at", { ascending: false });
-
+          .order("created_at", { ascending: false })
+          .limit(300);
         if (error) throw error;
-
-        if (data && data.length > 0) {
-          const mapped = data.map(dbRecordToSignal);
-          setDbSignals(mapped);
-        }
+        if (data && data.length > 0) setDbSignals(data.map(dbRecordToSignal));
       } catch (e) {
-        console.warn('Failed to load today signals from DB:', e);
+        console.warn("Failed to load signals from DB:", e);
       } finally {
         setDbLoading(false);
       }
     };
-
-    loadTodaySignals();
+    loadSignals();
   }, []);
 
-  // Merge: live signals take priority (fresher data), then fill in from DB records
   const allSignals = useMemo(() => {
-    const signalMap = new Map<string, MarketSignal>();
-
-    // DB signals first (background)
-    for (const s of dbSignals) {
-      const key = `${s.ticker}|${s.strike}|${s.expiry}`;
-      signalMap.set(key, s);
+    const dbKeys = new Set(dbSignals.map(s => `${s.ticker}|${s.strike}|${s.putCall}|${s.expiry}`));
+    const filteredLive = liveSignals.filter(s => {
+      const key = `${s.ticker}|${s.strike}|${s.putCall}|${s.expiry}`;
+      return !dbKeys.has(key) && s.source !== "example";
+    });
+    const all = [...dbSignals, ...filteredLive];
+    const seen = new Set<string>();
+    const unique: MarketSignal[] = [];
+    for (const s of all) {
+      if (!seen.has(s.id)) { seen.add(s.id); unique.push(s); }
     }
-
-    // Live signals override DB (they have richer data like entry triggers, key levels)
-    for (const s of liveSignals) {
-      if (s.source === 'example') continue; // skip Friday examples
-      const key = `${s.ticker}|${s.strike}|${s.expiry}`;
-      signalMap.set(key, s);
-    }
-
-    return Array.from(signalMap.values());
+    return unique;
   }, [liveSignals, dbSignals]);
 
   const loading = liveLoading && dbLoading;
   const signals = allSignals;
 
-  const grouped = useMemo(() => {
+  const filtered = useMemo(() => {
     let list = [...signals];
-
+    if (showResolved) {
+      list = list.filter(s => s.outcome && s.outcome !== "pending");
+    } else {
+      list = list.filter(s => !s.outcome || s.outcome === "pending");
+    }
     if (search.trim()) {
       const q = search.toLowerCase();
-      list = list.filter((s) => s.ticker.toLowerCase().includes(q) || s.description.toLowerCase().includes(q));
+      list = list.filter(s => s.ticker.toLowerCase().includes(q) || s.description.toLowerCase().includes(q));
     }
     if (filterType !== "all") {
-      list = list.filter((s) => s.putCall === filterType);
+      list = list.filter(s => s.putCall === filterType);
     }
-
     list.sort((a, b) => {
       const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
       return dateB - dateA;
     });
+    return list;
+  }, [signals, search, filterType, showResolved]);
 
-    const groups: Record<SignalTimeframe, MarketSignal[]> = {
-      buy_now: [],
-      short_term: [],
-      swing: [],
+  const resolvedCount = useMemo(() => signals.filter(s => s.outcome && s.outcome !== "pending").length, [signals]);
+
+  const algorithmSignals = useMemo(() => {
+    const algoOnly = filtered.filter(s => s.category === "algorithm" || (s.category !== "whale" && s.category !== "spread"));
+    return {
+      buy_now: algoOnly.filter(s => s.timeframe === "buy_now"),
+      short_term: algoOnly.filter(s => s.timeframe === "short_term" || s.timeframe === "swing"),
     };
+  }, [filtered]);
 
-    for (const s of list) {
-      const tf = s.timeframe || "swing";
-      groups[tf].push(s);
-    }
+  const whaleSignals = useMemo(() => filtered.filter(s => s.category === "whale"), [filtered]);
+  const spreadSignals = useMemo(() => filtered.filter(s => s.category === "spread"), [filtered]);
+  const spxSignals = useMemo(() => filtered.filter(s => s.ticker === "SPX" || s.ticker === "SPXW"), [filtered]);
 
-    return groups;
-  }, [signals, search, filterType]);
-
-  const totalCount = signals.filter(s => s.source !== 'example').length;
+  const algoCount = algorithmSignals.buy_now.length + algorithmSignals.short_term.length;
+  const whaleCount = whaleSignals.length;
+  const spreadCount = spreadSignals.length;
+  const spxCount = spxSignals.length;
+  const totalCount = signals.length;
 
   return (
     <DashboardLayout>
       <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-5 space-y-4">
-          {/* Header */}
-          <div className="flex flex-col gap-1">
-            <h1 className="text-xl sm:text-2xl font-extrabold text-foreground">Live Signals</h1>
-            <p className="text-xs text-muted-foreground">
-              Today's signal log — {totalCount} signals recorded
-            </p>
-          </div>
-
-          {/* Filters */}
-          <div className="glass-panel rounded-xl p-3 flex flex-col sm:flex-row gap-2">
-            <div className="flex items-center gap-2 flex-1">
-              <Search className="h-4 w-4 text-muted-foreground shrink-0" />
-              <Input
-                placeholder="Search ticker..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="bg-transparent border-none shadow-none focus-visible:ring-0 text-sm h-8"
-              />
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Filter className="h-3.5 w-3.5 text-muted-foreground" />
-              {(["all", "call", "put"] as FilterType[]).map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setFilterType(f)}
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors ${
-                    filterType === f
-                      ? "bg-primary/20 text-primary"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                  }`}
-                >
-                  {f === "all" ? "All" : f === "call" ? "Calls" : "Puts"}
-                </button>
-              ))}
+        {/* Decision Engine Banner */}
+        <div className="relative overflow-hidden rounded-2xl border border-border/10 bg-card/80">
+          <svg className="absolute inset-0 w-full h-full opacity-[0.35]" viewBox="0 0 800 200" preserveAspectRatio="none">
+            {[40, 90, 140, 190, 240, 290, 340, 390, 440, 490, 540, 590, 640, 690, 740].map((x, i) => {
+              const heights = [60, 45, 80, 35, 70, 90, 50, 65, 40, 85, 55, 75, 30, 60, 45];
+              const tops = [70, 85, 50, 95, 60, 30, 80, 65, 90, 45, 75, 55, 100, 70, 85];
+              const green = i % 3 !== 0;
+              return (
+                <g key={i}>
+                  <line x1={x} y1={tops[i] - 15} x2={x} y2={tops[i] + heights[i] + 15} stroke={green ? "#34d399" : "#06b6d4"} strokeWidth="1" />
+                  <rect x={x - 8} y={tops[i]} width="16" height={heights[i]} fill={green ? "#34d399" : "#06b6d4"} rx="1" />
+                </g>
+              );
+            })}
+          </svg>
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/15 via-transparent to-cyan-900/10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
+          <div className="relative px-6 py-7 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-8 rounded-full bg-gradient-to-b from-emerald-400 to-cyan-500" />
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-black tracking-[0.15em] uppercase bg-gradient-to-r from-foreground via-foreground to-foreground/60 bg-clip-text text-transparent">
+                  DECISION ENGINE
+                </h1>
+                <p className="text-[10px] uppercase tracking-[0.3em] text-emerald-400/80 font-semibold mt-0.5">
+                  Filtered · Scored · Actionable
+                </p>
+              </div>
             </div>
           </div>
+        </div>
 
-          <SignalLegend />
+        {/* Tab Switcher */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => setViewTab("algorithm")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+              viewTab === "algorithm"
+                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
+                : "bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            }`}
+          >
+            <Zap className="h-4 w-4" />
+            Algorithm Plays
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${viewTab === "algorithm" ? "bg-emerald-500/30" : "bg-muted/50"}`}>{algoCount}</span>
+          </button>
+          <button
+            onClick={() => setViewTab("whale")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+              viewTab === "whale"
+                ? "bg-blue-500/20 text-blue-400 border border-blue-500/40"
+                : "bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            }`}
+          >
+            <Waves className="h-4 w-4" />
+            Whale Activity
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${viewTab === "whale" ? "bg-blue-500/30" : "bg-muted/50"}`}>{whaleCount}</span>
+          </button>
+          <button
+            onClick={() => setViewTab("spread")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+              viewTab === "spread"
+                ? "bg-violet-500/20 text-violet-400 border border-violet-500/40"
+                : "bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            }`}
+          >
+            <Target className="h-4 w-4" />
+            Spreads & Butterflies
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${viewTab === "spread" ? "bg-violet-500/30" : "bg-muted/50"}`}>{spreadCount}</span>
+          </button>
+          <button
+            onClick={() => setViewTab("spx")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+              viewTab === "spx"
+                ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/40"
+                : "bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            }`}
+          >
+            <Gauge className="h-4 w-4" />
+            SPX / GEX
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${viewTab === "spx" ? "bg-cyan-500/30" : "bg-muted/50"}`}>{spxCount}</span>
+          </button>
+          <span className="ml-auto text-xs text-muted-foreground font-semibold">
+            Total: <span className="text-foreground">{totalCount}</span>
+          </span>
+        </div>
 
-          {loading && signals.length === 0 && (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="p-3 rounded-xl bg-muted/20 animate-pulse h-40" />
-              ))}
-            </div>
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <Input
+            type="text"
+            placeholder="Search ticker (SPY, TSLA, QQQ...)"
+            value={search}
+            onChange={(e) => setSearch(e.target.value.toUpperCase())}
+            className="pl-9 pr-9 h-10 bg-muted/30 border-border/40 text-sm font-semibold tracking-wider placeholder:text-muted-foreground/50 placeholder:font-normal placeholder:tracking-normal focus-visible:ring-emerald-500/40"
+          />
+          {search && (
+            <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+              <XCircle className="h-4 w-4" />
+            </button>
           )}
+        </div>
 
-          {!loading && signals.length === 0 && (
-            <div className="glass-panel rounded-xl p-8 text-center">
-              <p className="text-muted-foreground text-sm">No signals recorded yet today. Signals will appear here as they come in during market hours.</p>
-            </div>
-          )}
+        {/* Filters */}
+        <div className="glass-panel rounded-xl p-3 flex flex-col sm:flex-row gap-2">
+          <div className="flex items-center gap-1.5">
+            <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+            {(["all", "call", "put"] as FilterType[]).map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilterType(f)}
+                className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors ${
+                  filterType === f ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                }`}
+              >
+                {f === "all" ? "All" : f === "call" ? "Calls" : "Puts"}
+              </button>
+            ))}
+            <span className="w-px h-4 bg-border/40 mx-1" />
+            <button
+              onClick={() => setShowResolved(!showResolved)}
+              className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors ${
+                showResolved ? "bg-muted/50 text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              }`}
+            >
+              {showResolved ? "Hide Resolved" : `Show Resolved (${resolvedCount})`}
+            </button>
+          </div>
+        </div>
 
-          {/* Sections */}
-          {SECTION_ORDER.map((timeframe) => {
-            const meta = SECTION_META[timeframe];
-            const sectionSignals = grouped[timeframe];
-            if (sectionSignals.length === 0) return null;
+        <SignalLegend />
 
-            return (
-              <div key={timeframe} className="space-y-3">
-                {/* Section label */}
-                <div className="flex items-center gap-2 px-1">
-                  {meta.icon}
-                  <span className="font-bold text-xs sm:text-sm text-foreground">{meta.label}</span>
-                  <span className="text-[10px] text-muted-foreground hidden sm:inline">— {meta.description}</span>
-                  <span className="text-[10px] bg-muted/50 text-muted-foreground px-1.5 py-0.5 rounded-full ml-auto">
-                    {sectionSignals.length}
-                  </span>
+        {loading && signals.length === 0 && (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="p-3 rounded-xl bg-muted/20 animate-pulse h-40" />
+            ))}
+          </div>
+        )}
+
+        {/* Algorithm Plays Tab */}
+        {viewTab === "algorithm" && (
+          <>
+            {algoCount === 0 && !loading && (
+              <div className="glass-panel rounded-xl p-8 text-center border border-emerald-500/20">
+                <Zap className="h-8 w-8 text-emerald-400/40 mx-auto mb-3" />
+                <p className="text-muted-foreground text-sm">No algorithm plays detected yet. Signals appear here when price action confirms at key levels during market hours.</p>
+              </div>
+            )}
+            {(["buy_now", "short_term"] as const).map((timeframe) => {
+              const meta = ALGO_SECTION_META[timeframe];
+              const sectionSignals = algorithmSignals[timeframe];
+              if (sectionSignals.length === 0) return null;
+              return (
+                <div key={timeframe} className="space-y-3">
+                  <div className="flex items-center gap-2 px-1">
+                    <meta.iconComponent className={meta.iconClass} />
+                    <span className="font-bold text-xs sm:text-sm text-emerald-400">{meta.label}</span>
+                    <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-full ml-auto">{sectionSignals.length}</span>
+                  </div>
+                  <div className="space-y-3">
+                    {sectionSignals.map((signal, i) => (
+                      <motion.div key={`${signal.id}-${i}`} id={`signal-${signal.id}`} custom={i} initial="hidden" animate="visible" variants={cardVariants}>
+                        <SignalErrorBoundary>
+                          <SignalCard signal={signal} />
+                        </SignalErrorBoundary>
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
+              );
+            })}
+          </>
+        )}
 
-                {/* Signal cards */}
+        {/* Whale Plays Tab */}
+        {viewTab === "whale" && (
+          <>
+            {whaleCount === 0 && !loading && (
+              <div className="glass-panel rounded-xl p-8 text-center border border-blue-500/20">
+                <Waves className="h-8 w-8 text-blue-400/40 mx-auto mb-3" />
+                <p className="text-muted-foreground text-sm">No whale plays detected yet. These appear when large institutional orders ($250K+ premium) are identified as swing setups.</p>
+              </div>
+            )}
+            {whaleSignals.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 px-1">
+                  <Waves className="h-4 w-4 text-blue-400" />
+                  <span className="font-bold text-xs sm:text-sm text-blue-400">🐋 WHALE PLAYS</span>
+                  <span className="text-[10px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded-full ml-auto">{whaleSignals.length}</span>
+                </div>
                 <div className="space-y-3">
-                  {sectionSignals.map((signal, i) => (
-                    <motion.div
-                      key={signal.id}
-                      custom={i}
-                      initial="hidden"
-                      animate="visible"
-                      variants={cardVariants}
-                    >
-                      <SignalCard signal={signal} />
+                  {whaleSignals.map((signal, i) => (
+                    <motion.div key={`w-${signal.id}-${i}`} id={`signal-${signal.id}`} custom={i} initial="hidden" animate="visible" variants={cardVariants}>
+                      <SignalErrorBoundary><SignalCard signal={signal} /></SignalErrorBoundary>
                     </motion.div>
                   ))}
                 </div>
               </div>
-            );
-          })}
+            )}
+          </>
+        )}
+
+        {/* Spreads & Butterflies Tab */}
+        {viewTab === "spread" && (
+          <>
+            {spreadCount === 0 && !loading && (
+              <div className="glass-panel rounded-xl p-8 text-center border border-violet-500/20">
+                <Target className="h-8 w-8 text-violet-400/40 mx-auto mb-3" />
+                <p className="text-muted-foreground text-sm">No spread or butterfly plays detected yet. These appear when multi-leg strategies are identified from flow data.</p>
+              </div>
+            )}
+            {spreadSignals.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 px-1">
+                  <Target className="h-4 w-4 text-violet-400" />
+                  <span className="font-bold text-xs sm:text-sm text-violet-400">SPREADS & BUTTERFLIES</span>
+                  <span className="text-[10px] text-muted-foreground hidden sm:inline">— Defined risk multi-leg strategies</span>
+                  <span className="text-[10px] bg-violet-500/20 text-violet-400 px-1.5 py-0.5 rounded-full ml-auto">{spreadSignals.length}</span>
+                </div>
+                <div className="space-y-3">
+                  {spreadSignals.map((signal, i) => (
+                    <motion.div key={`s-${signal.id}-${i}`} id={`signal-${signal.id}`} custom={i} initial="hidden" animate="visible" variants={cardVariants}>
+                      <SignalErrorBoundary><SignalCard signal={signal} /></SignalErrorBoundary>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* SPX / GEX Tab */}
+        {viewTab === "spx" && (
+          <>
+            <div className="rounded-xl border border-cyan-500/30 bg-gradient-to-br from-cyan-950/30 via-card to-slate-950/30 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <Gauge className="h-5 w-5 text-cyan-400" />
+                <span className="font-bold text-sm text-cyan-400 tracking-wide">SPX GAMMA EXPOSURE</span>
+              </div>
+              <p className="text-xs text-muted-foreground">GEX data updates during market hours. Connect Polygon for live gamma levels.</p>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="rounded-lg bg-cyan-500/10 border border-cyan-500/20 p-3">
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Gamma Flip</div>
+                  <div className="text-lg font-black text-cyan-400 mt-0.5">—</div>
+                  <div className="text-[9px] text-muted-foreground mt-0.5">Zero-cross point</div>
+                </div>
+                <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-3">
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Call Wall</div>
+                  <div className="text-lg font-black text-emerald-400 mt-0.5">—</div>
+                  <div className="text-[9px] text-muted-foreground mt-0.5">Resistance</div>
+                </div>
+                <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-3">
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Put Wall</div>
+                  <div className="text-lg font-black text-red-400 mt-0.5">—</div>
+                  <div className="text-[9px] text-muted-foreground mt-0.5">Support</div>
+                </div>
+                <div className="rounded-lg bg-amber-500/10 border border-amber-500/20 p-3">
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Key Magnet</div>
+                  <div className="text-lg font-black text-amber-400 mt-0.5">—</div>
+                  <div className="text-[9px] text-muted-foreground mt-0.5">Highest GEX</div>
+                </div>
+              </div>
+            </div>
+
+            {spxCount === 0 && !loading && (
+              <div className="glass-panel rounded-xl p-8 text-center border border-cyan-500/20">
+                <Gauge className="h-8 w-8 text-cyan-400/40 mx-auto mb-3" />
+                <p className="text-muted-foreground text-sm">No SPX/SPXW signals detected yet. SPX flow signals appear here when institutional activity is detected on the S&P 500 index.</p>
+              </div>
+            )}
+
+            {spxSignals.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 px-1">
+                  <Gauge className="h-4 w-4 text-cyan-400" />
+                  <span className="font-bold text-xs sm:text-sm text-cyan-400">SPX INDEX SIGNALS</span>
+                  <span className="text-[10px] text-muted-foreground hidden sm:inline">— S&P 500 with gamma context</span>
+                  <span className="text-[10px] bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded-full ml-auto">{spxSignals.length}</span>
+                </div>
+                <div className="space-y-3">
+                  {spxSignals.map((signal, i) => (
+                    <motion.div key={`spx-${signal.id}-${i}`} id={`signal-${signal.id}`} custom={i} initial="hidden" animate="visible" variants={cardVariants}>
+                      <SignalErrorBoundary><SignalCard signal={signal} /></SignalErrorBoundary>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </DashboardLayout>
   );
 };
+
+/* ─── Signal Card ─────────────────────────────────────────── */
 
 function SignalCard({ signal }: { signal: MarketSignal }) {
   const isCall = signal.putCall === "call" || signal.type === "bullish";
@@ -323,17 +448,11 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
     : "border-destructive/20";
 
   return (
-    <div className={`rounded-xl border overflow-hidden transition-shadow ${glowClass} ${
-      isCall ? "bg-primary/5" : "bg-destructive/5"
-    }`}>
-      <div className={`px-3 sm:px-4 py-2 flex items-center justify-between ${
-        isCall ? "bg-primary/15" : "bg-destructive/15"
-      }`}>
+    <div className={`rounded-xl border overflow-hidden transition-shadow ${glowClass} ${isCall ? "bg-primary/5" : "bg-destructive/5"}`}>
+      <div className={`px-3 sm:px-4 py-2 flex items-center justify-between ${isCall ? "bg-primary/15" : "bg-destructive/15"}`}>
         <div className="flex items-center gap-2">
           <Zap className="h-3 w-3 text-accent" />
-          <span className="text-[9px] sm:text-[10px] font-bold tracking-widest text-accent uppercase">
-            JORTRADE Alert
-          </span>
+          <span className="text-[9px] sm:text-[10px] font-bold tracking-widest text-accent uppercase">JORTRADE Alert</span>
           <span className="text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 uppercase tracking-wider">Live</span>
         </div>
         <span className="text-[9px] sm:text-[10px] text-muted-foreground flex items-center gap-1">
@@ -345,27 +464,17 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
       <div className="px-3 sm:px-4 py-3 space-y-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            {isCall ? (
-              <TrendingUp className="h-4 w-4 text-primary" />
-            ) : (
-              <TrendingDown className="h-4 w-4 text-destructive" />
-            )}
+            {isCall ? <TrendingUp className="h-4 w-4 text-primary" /> : <TrendingDown className="h-4 w-4 text-destructive" />}
             <span className="font-bold text-sm sm:text-base text-foreground">{signal.ticker}</span>
-            <span className={`text-[9px] sm:text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full ${
-              isCall ? "bg-primary/20 text-primary" : "bg-destructive/20 text-destructive"
-            }`}>
+            <span className={`text-[9px] sm:text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full ${isCall ? "bg-primary/20 text-primary" : "bg-destructive/20 text-destructive"}`}>
               {signal.putCall === "call" ? "CALL" : "PUT"}
             </span>
-            {signal.premium && (
-              <span className="text-[10px] sm:text-xs text-accent font-semibold">{signal.premium}</span>
-            )}
+            {signal.premium && <span className="text-[10px] sm:text-xs text-accent font-semibold">{signal.premium}</span>}
           </div>
           <ConvictionScoreRing score={score} label={signal.convictionLabel ?? ""} />
         </div>
 
-        <p className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">
-          {signal.description}
-        </p>
+        <p className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">{signal.description}</p>
 
         <div className="grid grid-cols-1 gap-1.5 text-[11px] sm:text-xs">
           {signal.suggestedTrade && (
@@ -413,12 +522,12 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
               </div>
             </div>
           )}
-          {signal.gammaLevelLabel && (
+          {signal.gammaDescription && (
             <div className="flex items-start gap-2 bg-accent/10 rounded-lg px-2.5 py-1.5">
               <Gauge className="h-3 w-3 text-accent mt-0.5 shrink-0" />
               <div className="min-w-0">
-                <span className="text-muted-foreground">S/R: </span>
-                <span className="text-accent font-semibold">{signal.gammaLevelLabel}</span>
+                <span className="text-muted-foreground">GEX: </span>
+                <span className="text-accent font-semibold">{signal.gammaDescription}</span>
               </div>
             </div>
           )}
@@ -426,16 +535,9 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
 
         <div className="flex flex-wrap gap-1.5">
           {signal.tags.map((tag) => {
-            const isUrgent = tag.includes('ACT NOW') || tag.includes('HIGH CONVICTION');
+            const isUrgent = tag.includes("ACT NOW") || tag.includes("HIGH CONVICTION");
             return (
-              <span
-                key={tag}
-                className={`text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                  isUrgent
-                    ? "bg-destructive/20 text-destructive animate-pulse"
-                    : "bg-muted/50 text-muted-foreground"
-                }`}
-              >
+              <span key={tag} className={`text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full font-medium ${isUrgent ? "bg-destructive/20 text-destructive animate-pulse" : "bg-muted/50 text-muted-foreground"}`}>
                 {tag}
               </span>
             );
