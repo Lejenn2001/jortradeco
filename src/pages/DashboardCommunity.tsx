@@ -122,21 +122,8 @@ const DashboardCommunity = () => {
     };
   }, [session?.user?.id, firstName]);
 
-  const triggerBiddie = async (userMessage: string) => {
-    setBiddieTyping(true);
-    try {
-      const chatInstruction = `[COMMUNITY CHAT MODE] Keep your response SHORT — 2-3 sentences max. Only give a full detailed breakdown if you see a high-confidence alert (8+/10). For casual greetings, just be friendly and brief. For trading questions, give the #1 best play only with ticker, direction, and confidence. No long lists.\n\nUser says: ${userMessage}`;
-      const { error } = await supabase.functions.invoke("ai-chat", {
-        body: { message: chatInstruction, postToChat: true },
-      });
-      if (error) console.error("Biddie edge function error:", error);
-    } catch (e) {
-      console.error("Biddie API error:", e);
-    } finally {
-      // Fallback clear after 15s in case no message arrives
-      setTimeout(() => setBiddieTyping(false), 15000);
-    }
-  };
+  // Biddie typing is shown when a non-Biddie message arrives (DB trigger handles AI reply)
+  // We set biddieTyping=true after sending, and clear it when Biddie's message arrives via realtime
 
   const sendMessage = async (imageUrl?: string) => {
     if (!session?.user?.id) {
@@ -161,27 +148,9 @@ const DashboardCommunity = () => {
     } else {
       setInput("");
       setReplyTo(null);
-      const lower = messageText.toLowerCase();
-      const hasBiddieMention = lower.includes("biddie") || lower.includes("@biddie");
-      const tradingKeywords = [
-        "what's the play", "whats the play", "what is the play",
-        "best setup", "any plays", "what's pumping", "whats pumping",
-        "options flow", "unusual flow", "whale", "signal",
-        "calls or puts", "bull or bear", "bullish or bearish",
-        "spy", "qqq", "iwm", "nvda", "amd", "tsla", "aapl", "googl", "amzn", "meta",
-        "put spread", "call spread", "debit spread", "credit spread",
-        "what should i buy", "what should i trade", "any setups",
-        "is it bussin", "what's cooking", "whats cooking",
-        "momentum", "breakout", "breakdown", "entry", "strike",
-        "expir", "premium", "sweep", "gamma", "vwap",
-        "support", "resistance", "pivot", "target",
-        "what do you think about", "should i", "would you", "is it time",
-      ];
-      const isTradingQuestion = tradingKeywords.some((kw) => lower.includes(kw));
-      if (hasBiddieMention || isTradingQuestion) {
-        const cleanMsg = messageText.replace(/@?biddie[,:]?\s*/i, "").trim() || messageText;
-        triggerBiddie(cleanMsg);
-      }
+      // Show Biddie typing indicator — DB trigger handles the AI reply automatically
+      setBiddieTyping(true);
+      setTimeout(() => setBiddieTyping(false), 15000); // fallback clear
     }
     setSending(false);
   };
