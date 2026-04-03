@@ -92,9 +92,7 @@ const DashboardCommunity = () => {
             if (prev.some((m) => m.id === newMsg.id)) return prev;
             return [...prev, newMsg];
           });
-          // Clear biddie typing when biddie message arrives
           if (newMsg.user_id === BIDDIE_USER_ID) setBiddieTyping(false);
-          scrollToBottom();
         }
       )
       .on(
