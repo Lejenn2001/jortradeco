@@ -100,52 +100,53 @@ const ScannerCard = ({ signal, index }: { signal: ScannerSignal; index: number }
       initial={{ opacity: 0, y: 16, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.4, delay: index * 0.08 }}
-      className={`group relative rounded-2xl border ${borderColor} bg-card/60 backdrop-blur-sm p-5 hover:bg-card/80 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 cursor-pointer`}
+      className={`group relative rounded-2xl border ${borderColor} bg-card/60 backdrop-blur-sm p-4 hover:bg-card/80 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 cursor-pointer`}
     >
-      {/* Top row: ticker + badges */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
+      {/* Header: Conviction + Ticker + Price */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2.5">
           <ConvictionScoreRing score={signal.score} label={convictionLabel} size="md" />
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-xl font-black tracking-tight text-foreground">{signal.ticker}</h3>
-              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${status.bg} ${status.text} border ${status.border}`}>
-                {status.label}
-              </span>
-              {signal.putCall === "put" && (
-                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/40">
-                  ↘ PUTS
-                </span>
-              )}
-              <span className="text-[9px] font-medium px-2 py-0.5 rounded-full bg-muted/40 text-muted-foreground border border-border/40">
-                {signal.expiry}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 mt-1 text-xs">
-              <span className={`font-bold ${accentColor}`}>
-                {signal.strike} {isCall ? "CALL" : "PUT"}
-              </span>
-              <span className="text-muted-foreground/40">→</span>
-              <span className={`font-semibold ${accentColor}`}>Target {signal.target}</span>
-              {signal.squeezeSince && (
-                <>
-                  <span className="text-muted-foreground/30">|</span>
-                  <span className="text-muted-foreground/60 text-[10px]">Squeeze since {signal.squeezeSince}</span>
-                </>
-              )}
-            </div>
-          </div>
+          <h3 className="text-xl font-black tracking-tight text-foreground">{signal.ticker}</h3>
         </div>
-
-        {/* Current price */}
         <div className="text-right shrink-0">
           <p className="text-lg font-bold text-foreground">{signal.currentPrice}</p>
           <p className="text-[10px] text-emerald-400 font-medium">Just now</p>
         </div>
       </div>
 
+      {/* Badges row */}
+      <div className="flex items-center gap-1.5 flex-wrap mb-2">
+        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${status.bg} ${status.text} border ${status.border}`}>
+          {status.label}
+        </span>
+        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${isCall ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40" : "bg-red-500/20 text-red-400 border border-red-500/40"}`}>
+          {isCall ? "↗ CALLS" : "↘ PUTS"}
+        </span>
+        <span className="text-[9px] font-medium px-2 py-0.5 rounded-full bg-muted/40 text-muted-foreground border border-border/40">
+          {signal.expiry}
+        </span>
+      </div>
+
+      {/* Trade details */}
+      <div className="space-y-1 mb-3">
+        <div className="flex items-center gap-2 text-xs">
+          <span className="text-muted-foreground">Strike:</span>
+          <span className={`font-bold ${accentColor}`}>{signal.strike} {isCall ? "CALL" : "PUT"}</span>
+        </div>
+        <div className="flex items-center gap-2 text-xs">
+          <span className="text-muted-foreground">Target:</span>
+          <span className={`font-semibold ${accentColor}`}>{signal.target}</span>
+        </div>
+        {signal.squeezeSince && (
+          <div className="flex items-center gap-2 text-[10px]">
+            <span className="text-muted-foreground">Squeeze since:</span>
+            <span className="text-orange-400 font-medium">{signal.squeezeSince}</span>
+          </div>
+        )}
+      </div>
+
       {/* Bottom row: timestamp + actions */}
-      <div className="flex items-center justify-between pt-3 border-t border-border/20">
+      <div className="flex items-center justify-between pt-2.5 border-t border-border/20">
         <span className="text-[10px] text-muted-foreground/50">Posted {signal.postedAt}</span>
         <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
           <button className="p-1.5 rounded-lg hover:bg-muted/40 text-muted-foreground hover:text-foreground transition-colors">
