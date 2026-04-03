@@ -225,9 +225,9 @@ const DashboardCommunity = () => {
         {/* Messages */}
         <div
           ref={scrollRef}
-          className="flex-1 glass-panel rounded-xl border-glow-purple px-2.5 sm:px-4 py-2 sm:py-3 overflow-y-auto flex flex-col-reverse mb-1.5 sm:mb-2 min-h-0"
+          className="flex-1 glass-panel rounded-xl border-glow-purple px-2 sm:px-3 py-1.5 sm:py-2 overflow-y-auto flex flex-col-reverse mb-1 sm:mb-1.5 min-h-0"
         >
-          <div className="space-y-2">
+          <div className="space-y-1">
           {messages.length === 0 && (
             <div className="flex-1 flex items-center justify-center h-full">
               <motion.div
