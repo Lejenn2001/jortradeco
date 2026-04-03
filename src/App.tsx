@@ -44,8 +44,6 @@ const App = () => (
             <Route path="/dashboard/community" element={<ProtectedRoute><DashboardCommunity /></ProtectedRoute>} />
             <Route path="/dashboard/analytics" element={<ProtectedRoute><DashboardAnalytics /></ProtectedRoute>} />
             <Route path="/dashboard/scanner" element={<ProtectedRoute><DashboardScanner /></ProtectedRoute>} />
-            <Route path="/dashboard/performance" element={<ProtectedRoute><DashboardPerformance /></ProtectedRoute>} />
-            <Route path="/dashboard/referrals" element={<ProtectedRoute><DashboardReferrals /></ProtectedRoute>} />
             <Route path="/dashboard/trump" element={<ProtectedRoute><DashboardTrump /></ProtectedRoute>} />
             <Route path="/dashboard/settings" element={<ProtectedRoute><DashboardSettings /></ProtectedRoute>} />
             <Route path="/login" element={<Login />} />
