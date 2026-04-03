@@ -12,6 +12,7 @@ import { useMarketData, type MarketSignal } from "@/hooks/useMarketData";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { HelpCircle, X, Sparkles, Zap } from "lucide-react";
+import { dbRecordToSignal } from "@/lib/signalMapper";
 
 const getSignalScore = (signal: Pick<MarketSignal, "convictionScore" | "confidence">) =>
   signal.convictionScore ?? Math.round(signal.confidence * 10);
