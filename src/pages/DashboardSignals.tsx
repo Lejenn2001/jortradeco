@@ -762,7 +762,6 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
             <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${isCall ? "bg-primary/20 text-primary" : "bg-destructive/20 text-destructive"}`}>
               {signal.putCall === "call" ? "CALL" : "PUT"}
             </span>
-            {/* Outcome badges */}
             {isWin && (
               <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
                 <CheckCircle2 className="h-3 w-3" /> WIN
@@ -770,28 +769,24 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
             )}
             {isPartialWin && (
               <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30 flex items-center gap-1">
-                <CheckCircle2 className="h-3 w-3" /> PARTIAL
+                <CheckCircle2 className="h-3 w-3" /> PARTIAL WIN
               </span>
             )}
-            {isNearMiss && (
-              <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 flex items-center gap-1">
-                <Target className="h-3 w-3" /> NEAR MISS
-              </span>
-            )}
-            {isLoss && (
+            {isLoss && isResolved && (
               <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-destructive/20 text-destructive border border-destructive/30 flex items-center gap-1">
                 <XCircle className="h-3 w-3" /> LOSS
               </span>
             )}
-            {/* MFE badge */}
-            {signal.mfePercent != null && (
-              <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
-                signal.mfePercent >= 75 ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
-                : signal.mfePercent >= 50 ? "bg-primary/20 text-primary border-primary/30"
-                : signal.mfePercent >= 30 ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
-                : "bg-destructive/20 text-destructive border-destructive/30"
-              }`}>
-                MFE {signal.mfePercent.toFixed(0)}%
+            {/* MFE badge on resolved signals */}
+            {mfeInfo && (
+              <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border bg-muted/20 border-border/30 ${mfeInfo.color}`}>
+                {mfeInfo.text}
+              </span>
+            )}
+            {/* MFE progress on active signals */}
+            {mfeProgress && (
+              <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border bg-muted/20 border-border/30 ${mfeProgress.color}`}>
+                {mfeProgress.percent.toFixed(0)}% to TP
               </span>
             )}
             {signal.premium && <span className="text-[10px] sm:text-xs text-accent font-semibold">{signal.premium}</span>}
