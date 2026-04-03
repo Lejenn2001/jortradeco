@@ -451,6 +451,7 @@ const DashboardCommunity = () => {
           </div>
           </div>
           </ScrollArea>
+        </div>
 
         {/* Reply preview */}
         <ChatReplyPreview
