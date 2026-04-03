@@ -38,15 +38,15 @@ const MOCK_SIGNALS: MarketSignal[] = [
     invalidation: "Below $573.34",
     keyLevel: "$590 psychological level",
     srLevel: "$590 psychological level",
-    tradeStatus: "watching",
+    tradeStatus: "hit",
     timeframe: "swing",
     category: "algorithm",
     source: "live",
     gammaZone: "positive",
     gammaDescription: "Above gamma flip",
     aiEvaluated: false,
-    mfePercent: null,
-    outcome: "pending",
+    mfePercent: 92,
+    outcome: "win",
   },
   {
     id: "mock-algo-2",
@@ -100,7 +100,7 @@ const MOCK_SIGNALS: MarketSignal[] = [
     source: "live",
     aiEvaluated: true,
     mfePercent: 68,
-    outcome: "pending",
+    outcome: "partial_win",
   },
   {
     id: "mock-whale-1",
@@ -126,8 +126,8 @@ const MOCK_SIGNALS: MarketSignal[] = [
     category: "whale",
     source: "live",
     aiEvaluated: false,
-    mfePercent: null,
-    outcome: "pending",
+    mfePercent: 18,
+    outcome: "loss",
   },
   {
     id: "mock-whale-2",
@@ -154,7 +154,7 @@ const MOCK_SIGNALS: MarketSignal[] = [
     source: "live",
     aiEvaluated: true,
     mfePercent: 52,
-    outcome: "pending",
+    outcome: "partial_win",
   },
   {
     id: "mock-spread-1",
@@ -210,7 +210,7 @@ const MOCK_SIGNALS: MarketSignal[] = [
     gammaDescription: "Below gamma flip — expect volatility expansion",
     aiEvaluated: true,
     mfePercent: 45,
-    outcome: "pending",
+    outcome: "near_miss",
   },
 ];
 
