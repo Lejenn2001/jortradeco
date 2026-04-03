@@ -305,6 +305,7 @@ const TrackedTickersSection = () => {
       </CollapsibleContent>
     </Collapsible>
   );
+};
 
 const DashboardScanner = () => {
   const [isScanning, setIsScanning] = useState(false);
