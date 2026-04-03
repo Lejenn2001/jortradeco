@@ -33,21 +33,21 @@ const ChatRoomHeader = ({ onlineCount, firstName }: ChatRoomHeaderProps) => {
       {/* Banner */}
       <div className="relative overflow-hidden rounded-xl border border-border/10 bg-card/80">
         {/* Candlestick SVG background */}
-        <svg className="absolute inset-0 w-full h-full opacity-[0.25]" viewBox="0 0 1000 100" preserveAspectRatio="none">
+        <svg className="absolute inset-0 w-full h-full opacity-[0.6]" viewBox="0 0 1000 100" preserveAspectRatio="none">
           {[40, 95, 150, 205, 260, 315, 370, 425, 480, 535, 590, 645, 700, 755, 810, 865, 920].map((x, i) => {
             const heights = [30, 22, 40, 18, 35, 45, 25, 32, 20, 42, 28, 38, 15, 30, 22, 35, 28];
             const tops = [35, 42, 25, 48, 30, 15, 40, 32, 45, 22, 38, 28, 50, 35, 42, 25, 38];
             const green = i % 3 !== 0;
             return (
               <g key={i}>
-                <line x1={x} y1={tops[i] - 8} x2={x} y2={tops[i] + heights[i] + 8} stroke={green ? "hsl(var(--primary))" : "hsl(var(--accent))"} strokeWidth="1" opacity="0.3" />
-                <rect x={x - 6} y={tops[i]} width="12" height={heights[i]} fill={green ? "hsl(var(--primary))" : "hsl(var(--accent))"} rx="1" opacity="0.2" />
+                <line x1={x} y1={tops[i] - 8} x2={x} y2={tops[i] + heights[i] + 8} stroke={green ? "hsl(var(--primary))" : "hsl(var(--accent))"} strokeWidth="1.5" opacity="0.5" />
+                <rect x={x - 6} y={tops[i]} width="12" height={heights[i]} fill={green ? "hsl(var(--primary))" : "hsl(var(--accent))"} rx="1" opacity="0.4" />
               </g>
             );
           })}
         </svg>
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-accent/3 to-blue-500/5" />
-        <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-accent/5 to-blue-500/10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-card/80 via-card/20 to-transparent" />
 
         <div className="relative px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
