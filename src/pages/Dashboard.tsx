@@ -244,6 +244,9 @@ const Dashboard = () => {
           )}
         </AnimatePresence>
 
+        {/* Market Pulse */}
+        <MarketPulse />
+
         {/* Live State */}
         <div className="space-y-1">
           <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 px-1">▸ Live State</p>
