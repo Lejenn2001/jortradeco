@@ -246,7 +246,7 @@ const HowItWorksSection = () => {
             <p className="text-xs text-muted-foreground mt-1">Each factor above adds points to the score. The more factors that are active and stacking together, the higher the score — and the closer the stock is to breaking out.</p>
           </div>
           <div className="grid sm:grid-cols-2 gap-3">
-            <div className="rounded-xl border border-muted/40 bg-card/60 p-3.5">
+            <div className="rounded-xl border border-muted-foreground/30 bg-card/60 p-3.5">
               <p className="text-xs font-bold text-muted-foreground mb-1"><span className="text-foreground">20–35</span>  On Your Radar</p>
               <p className="text-[11px] text-muted-foreground">Something is starting to form but it's early. Keep an eye on it, but don't act yet — it might fizzle out.</p>
             </div>
