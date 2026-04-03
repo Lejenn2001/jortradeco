@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Trash2, Pin, Reply, PinOff } from "lucide-react";
+import { Send, Trash2, Pin, Reply, PinOff, Settings2, X, CheckSquare } from "lucide-react";
 import biddieRobot from "@/assets/biddie-robot.png";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import ChatRoomHeader from "@/components/dashboard/ChatRoomHeader";
@@ -40,8 +40,36 @@ const DashboardCommunity = () => {
   const [biddieTyping, setBiddieTyping] = useState(false);
   const [onlineCount, setOnlineCount] = useState(1);
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
+  const [manageMode, setManageMode] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const scrollRef = useRef<HTMLDivElement>(null);
   const broadcastTyping = useTypingBroadcast();
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const deleteSelected = async () => {
+    if (selected.size === 0) return;
+    const ids = Array.from(selected);
+    const { error } = await supabase.from("chat_messages").delete().in("id", ids);
+    if (error) {
+      toast({ title: "Error deleting", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: `Deleted ${ids.length} message(s)` });
+      setSelected(new Set());
+      setManageMode(false);
+    }
+  };
+
+  const exitManage = () => {
+    setManageMode(false);
+    setSelected(new Set());
+  };
 
   const scrollToBottom = () => {
     requestAnimationFrame(() => {
@@ -227,10 +255,43 @@ const DashboardCommunity = () => {
         )}
 
         {/* Messages */}
-        <div
-          ref={scrollRef}
-          className="flex-1 glass-panel rounded-lg border-glow-purple px-1.5 sm:px-2 py-1 overflow-y-auto flex flex-col-reverse mb-0.5 min-h-0"
-        >
+        <div className="relative flex-1 flex flex-col min-h-0 mb-0.5">
+          {/* Manage button */}
+          {isAdmin && (
+            <div className="absolute right-2 top-1.5 z-10 flex items-center gap-1">
+              {manageMode ? (
+                <>
+                  <button
+                    onClick={deleteSelected}
+                    disabled={selected.size === 0}
+                    className="flex items-center gap-1 rounded-md bg-destructive/90 px-2 py-1 text-[10px] font-medium text-destructive-foreground transition-colors hover:bg-destructive disabled:opacity-40"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                    Delete ({selected.size})
+                  </button>
+                  <button
+                    onClick={exitManage}
+                    className="rounded-md bg-muted/60 px-2 py-1 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-muted"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setManageMode(true)}
+                  className="flex items-center gap-1 rounded-md bg-muted/40 px-2 py-1 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground"
+                >
+                  <Settings2 className="h-3 w-3" />
+                  Manage
+                </button>
+              )}
+            </div>
+          )}
+
+          <div
+            ref={scrollRef}
+            className="flex-1 glass-panel rounded-lg border-glow-purple px-1.5 sm:px-2 py-1 overflow-y-auto flex flex-col-reverse min-h-0"
+          >
           <div className="space-y-0.5">
             {messages.length === 0 && (
               <div className="flex h-full flex-1 items-center justify-center">
@@ -259,8 +320,17 @@ const DashboardCommunity = () => {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
-                    className={`group flex gap-1.5 transition-all ${isOwn ? "flex-row-reverse" : ""}`}
+                    className={`group flex gap-1.5 transition-all ${isOwn ? "flex-row-reverse" : ""} ${manageMode && selected.has(msg.id) ? "bg-primary/5 rounded-lg" : ""}`}
+                    onClick={manageMode ? () => toggleSelect(msg.id) : undefined}
                   >
+                    {/* Manage checkbox */}
+                    {manageMode && (
+                      <div className="flex shrink-0 items-center self-center">
+                        <div className={`flex h-4 w-4 items-center justify-center rounded border ${selected.has(msg.id) ? "border-primary bg-primary" : "border-muted-foreground/40 bg-muted/20"} transition-colors`}>
+                          {selected.has(msg.id) && <CheckSquare className="h-3 w-3 text-primary-foreground" />}
+                        </div>
+                      </div>
+                    )}
                     {/* Avatar */}
                     {isBiddie ? (
                       <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full border border-primary/40 bg-primary/20">
@@ -372,6 +442,7 @@ const DashboardCommunity = () => {
 
             {/* Typing indicators */}
             <ChatTypingIndicator biddieTyping={biddieTyping} />
+          </div>
           </div>
         </div>
 
