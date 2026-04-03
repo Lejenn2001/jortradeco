@@ -11,6 +11,7 @@ import ChatUserBadge from "@/components/dashboard/chat/ChatUserBadge";
 import ChatReplyPreview from "@/components/dashboard/chat/ChatReplyPreview";
 import DailyRecapCard from "@/components/dashboard/chat/DailyRecapCard";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
