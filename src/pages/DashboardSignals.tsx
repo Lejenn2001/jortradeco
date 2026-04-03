@@ -649,8 +649,15 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
   const catIcon = cat === "whale" ? <Waves className="h-3 w-3 text-blue-400" /> : cat === "spread" ? <Target className="h-3 w-3 text-violet-400" /> : <Zap className="h-3 w-3 text-emerald-400" />;
   const headerBg = cat === "whale" ? "bg-blue-500/15" : cat === "spread" ? "bg-violet-500/15" : "bg-emerald-500/15";
 
-  const tfLabel = signal.timeframe === "buy_now" ? "BUY NOW" : "SWING TRADE";
-  const tfColor = signal.timeframe === "buy_now" ? "bg-yellow-500/90 text-yellow-950" : "bg-emerald-500/80 text-emerald-950";
+  // Auto-derive timeframe from expiry
+  const { label: tfLabel, timeframe: derivedTf } = deriveTimeframeLabel(signal.expiry);
+  const tfColor = derivedTf === "buy_now" ? "bg-yellow-500/90 text-yellow-950" : derivedTf === "short_term" ? "bg-accent/80 text-accent-foreground" : "bg-emerald-500/80 text-emerald-950";
+
+  // Outcome badges
+  const outcome = signal.outcome;
+  const isWin = outcome === "win" || outcome === "hit";
+  const isLoss = outcome === "loss" || outcome === "miss";
+  const isPending = !outcome || outcome === "pending";
 
   const statusMap: Record<string, { label: string; color: string }> = {
     watching: { label: "WATCHING", color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
@@ -680,8 +687,50 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
 
   const bgClass = cat === "whale" ? "bg-blue-500/5" : cat === "spread" ? "bg-violet-500/5" : isCall ? "bg-primary/5" : "bg-destructive/5";
 
+  // Urgency banner
+  const urgencyBanner = useMemo(() => {
+    if (signal.tradeStatus === "active" || derivedTf === "buy_now") {
+      return { label: "🔥 ACT NOW", bg: "bg-gradient-to-r from-yellow-600/90 to-amber-600/90 text-yellow-50" };
+    }
+    if (signal.tradeStatus === "watching") {
+      return { label: "👀 WATCHING", bg: "bg-gradient-to-r from-yellow-700/50 to-amber-700/50 text-yellow-300" };
+    }
+    return null;
+  }, [signal.tradeStatus, derivedTf]);
+
+  // Signal date context
+  const signalDateLabel = useMemo(() => {
+    const ts = signal.createdAt || signal.timestamp;
+    if (!ts) return null;
+    const d = new Date(ts);
+    if (isNaN(d.getTime())) return null;
+    const now = new Date();
+    const todayStr = now.toISOString().split("T")[0];
+    const sigStr = d.toISOString().split("T")[0];
+    if (sigStr === todayStr) return null; // today, no label needed
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const dayName = days[d.getDay()];
+    return `SIGNAL FROM ${dayName.toUpperCase()} ${d.getMonth() + 1}/${d.getDate()}`;
+  }, [signal.createdAt, signal.timestamp]);
+
   return (
     <div className={`rounded-xl border overflow-hidden transition-shadow ${glowClass} ${bgClass}`}>
+      {/* Urgency banner */}
+      {urgencyBanner && (
+        <div className={`px-3 py-1.5 text-[10px] font-black tracking-widest uppercase flex items-center gap-1.5 ${urgencyBanner.bg}`}>
+          <Zap className="h-3 w-3" />
+          {urgencyBanner.label}
+        </div>
+      )}
+
+      {/* Date context banner */}
+      {signalDateLabel && (
+        <div className="px-3 py-1 bg-yellow-900/30 border-b border-yellow-500/20 flex items-center gap-1.5">
+          <Clock className="h-2.5 w-2.5 text-yellow-400" />
+          <span className="text-[9px] font-bold text-yellow-400 tracking-widest uppercase">{signalDateLabel}</span>
+        </div>
+      )}
+
       {/* Category header */}
       <div className={`px-3 sm:px-4 py-2 flex items-center justify-between ${headerBg}`}>
         <div className="flex items-center gap-2 flex-wrap">
@@ -704,7 +753,7 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
       </div>
 
       <div className="px-3 sm:px-4 py-3 space-y-3">
-        {/* Ticker + CALL/PUT + Status + Conviction */}
+        {/* Ticker + CALL/PUT + WIN/LOSS + MFE + Conviction */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 flex-wrap">
             {isCall ? <TrendingUp className="h-5 w-5 text-primary" /> : <TrendingDown className="h-5 w-5 text-destructive" />}
@@ -712,6 +761,28 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
             <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${isCall ? "bg-primary/20 text-primary" : "bg-destructive/20 text-destructive"}`}>
               {signal.putCall === "call" ? "CALL" : "PUT"}
             </span>
+            {/* WIN / LOSS badge */}
+            {isWin && (
+              <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                <CheckCircle2 className="h-3 w-3" /> WIN
+              </span>
+            )}
+            {isLoss && (
+              <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-destructive/20 text-destructive border border-destructive/30 flex items-center gap-1">
+                <XCircle className="h-3 w-3" /> LOSS
+              </span>
+            )}
+            {/* MFE badge */}
+            {signal.mfePercent != null && (
+              <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
+                signal.mfePercent >= 75 ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                : signal.mfePercent >= 50 ? "bg-primary/20 text-primary border-primary/30"
+                : signal.mfePercent >= 30 ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+                : "bg-destructive/20 text-destructive border-destructive/30"
+              }`}>
+                MFE {signal.mfePercent.toFixed(0)}%
+              </span>
+            )}
             {status && (
               <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border flex items-center gap-1 ${status.color}`}>
                 <Eye className="h-2.5 w-2.5" />
