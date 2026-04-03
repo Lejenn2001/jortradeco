@@ -154,7 +154,7 @@ const MOCK_SIGNALS: MarketSignal[] = [
     source: "live",
     aiEvaluated: true,
     mfePercent: 52,
-    outcome: "pending",
+    outcome: "partial_win",
   },
   {
     id: "mock-spread-1",
