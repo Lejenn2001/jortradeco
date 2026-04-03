@@ -286,7 +286,12 @@ const DashboardSignals = () => {
   }, [liveSignals, dbSignals]);
 
   const loading = liveLoading && dbLoading;
-  const signals = allSignals.length > 0 ? allSignals : MOCK_SIGNALS;
+  // Always include mock signals so the full card format is visible for demo
+  const signals = useMemo(() => {
+    const mockIds = new Set(MOCK_SIGNALS.map(s => s.id));
+    const realWithoutDupes = allSignals.filter(s => !mockIds.has(s.id));
+    return [...MOCK_SIGNALS, ...realWithoutDupes];
+  }, [allSignals]);
 
   const filtered = useMemo(() => {
     let list = [...signals];
