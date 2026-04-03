@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Trash2, Pin, Reply, PinOff } from "lucide-react";
+import { Send, Trash2, Pin, Reply, PinOff, Settings2, X, CheckSquare } from "lucide-react";
 import biddieRobot from "@/assets/biddie-robot.png";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import ChatRoomHeader from "@/components/dashboard/ChatRoomHeader";
