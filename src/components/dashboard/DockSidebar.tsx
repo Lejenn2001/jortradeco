@@ -90,9 +90,9 @@ const DockSidebar = () => {
 
   return (
     <Sidebar collapsible="icon" className="hidden lg:flex border-r border-border/40 bg-card/80 backdrop-blur-xl">
-      <SidebarHeader className="p-3">
-        <Link to="/" className="flex items-center justify-center px-1 py-2">
-          <img src={jortradeLogo} alt="JORTRADE" className="w-14 h-14 object-contain shrink-0" />
+      <SidebarHeader className="p-4">
+        <Link to="/" className="flex items-center justify-center px-1 py-3">
+          <img src={jortradeLogo} alt="JORTRADE" className="w-20 h-20 object-contain shrink-0 rounded-xl" style={{ background: 'transparent', mixBlendMode: 'lighten' }} />
         </Link>
       </SidebarHeader>
 
