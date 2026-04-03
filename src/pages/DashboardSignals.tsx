@@ -100,7 +100,7 @@ const MOCK_SIGNALS: MarketSignal[] = [
     source: "live",
     aiEvaluated: true,
     mfePercent: 68,
-    outcome: "pending",
+    outcome: "partial_win",
   },
   {
     id: "mock-whale-1",
