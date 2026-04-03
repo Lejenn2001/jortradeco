@@ -789,12 +789,6 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
                 MFE {signal.mfePercent.toFixed(0)}%
               </span>
             )}
-            {status && (
-              <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border flex items-center gap-1 ${status.color}`}>
-                <Eye className="h-2.5 w-2.5" />
-                {status.label}
-              </span>
-            )}
             {signal.premium && <span className="text-[10px] sm:text-xs text-accent font-semibold">{signal.premium}</span>}
           </div>
           <ConvictionScoreRing score={score} label={signal.convictionLabel ?? ""} />
