@@ -449,7 +449,7 @@ const DashboardCommunity = () => {
             <ChatTypingIndicator biddieTyping={biddieTyping} />
           </div>
           </div>
-        </div>
+          </ScrollArea>
 
         {/* Reply preview */}
         <ChatReplyPreview
