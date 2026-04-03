@@ -237,13 +237,14 @@ const DashboardPerformance = () => {
     <DashboardLayout>
       <div className="max-w-6xl mx-auto px-4 lg:px-6 py-5 space-y-5">
 
-        {/* Header */}
-        <div>
-          <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-            <Activity className="h-5 w-5 text-primary" /> Performance
-          </h1>
-          <p className="text-sm text-muted-foreground">All-time trading analytics • {totalTrades} trades across {totalDays} days</p>
-        </div>
+        <PageBanner
+          title="PERFORMANCE"
+          subtitle="Analytics · Metrics · Growth"
+          accentFrom="hsl(220, 15%, 70%)"
+          accentTo="hsl(0, 0%, 90%)"
+          gradientFrom="from-slate-800/15"
+          gradientTo="to-zinc-800/10"
+        />
 
         {/* ─── Top Metrics Grid ─────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

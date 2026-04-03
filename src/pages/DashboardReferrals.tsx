@@ -68,19 +68,14 @@ const DashboardReferrals = () => {
   return (
     <DashboardLayout>
       <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">
-            Referral Program
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Invite traders, earn rewards. Every milestone unlocks a one-time perk.
-          </p>
-        </motion.div>
+        <PageBanner
+          title="REFERRALS"
+          subtitle="Invite · Earn · Grow"
+          accentFrom="hsl(270, 75%, 60%)"
+          accentTo="hsl(230, 85%, 60%)"
+          gradientFrom="from-purple-900/15"
+          gradientTo="to-blue-900/10"
+        />
 
         {/* Referral Link Card */}
         <motion.div
