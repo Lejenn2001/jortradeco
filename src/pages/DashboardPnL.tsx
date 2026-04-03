@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import PageBanner from "@/components/dashboard/PageBanner";
 import { ChevronLeft, ChevronRight, Flame, Trophy, Calendar as CalendarIcon, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
