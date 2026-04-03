@@ -1,0 +1,20 @@
+
+ALTER TABLE public.signal_outcomes
+  ADD COLUMN IF NOT EXISTS category text DEFAULT 'algorithm',
+  ADD COLUMN IF NOT EXISTS entry_trigger text,
+  ADD COLUMN IF NOT EXISTS invalidation text,
+  ADD COLUMN IF NOT EXISTS key_level text,
+  ADD COLUMN IF NOT EXISTS sr_level text,
+  ADD COLUMN IF NOT EXISTS detected_at timestamptz,
+  ADD COLUMN IF NOT EXISTS price_at_signal numeric,
+  ADD COLUMN IF NOT EXISTS trade_status text,
+  ADD COLUMN IF NOT EXISTS is_biddie_pick boolean DEFAULT false,
+  ADD COLUMN IF NOT EXISTS review_status text,
+  ADD COLUMN IF NOT EXISTS review_note text,
+  ADD COLUMN IF NOT EXISTS spread_details jsonb,
+  ADD COLUMN IF NOT EXISTS mfe_percent numeric,
+  ADD COLUMN IF NOT EXISTS max_favorable_price numeric,
+  ADD COLUMN IF NOT EXISTS gamma_zone text,
+  ADD COLUMN IF NOT EXISTS gamma_description text,
+  ADD COLUMN IF NOT EXISTS reason text,
+  ADD COLUMN IF NOT EXISTS target_near text;

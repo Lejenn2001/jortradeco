@@ -17,6 +17,8 @@ export interface FlowAlert {
 
 export type SignalTimeframe = "buy_now" | "short_term" | "swing";
 
+export type SignalCategory = "algorithm" | "whale" | "spread";
+
 export interface MarketSignal {
   id: string;
   ticker: string;
@@ -36,10 +38,35 @@ export interface MarketSignal {
   entryTrigger?: string;
   invalidation?: string;
   keyLevel?: string;
+  srLevel?: string;
   targetZone?: string;
+  targetNear?: string;
   createdAt?: string;
+  detectedAtMs?: number;
   timeframe?: SignalTimeframe;
   source?: "live" | "example";
+  priceConfirmed?: boolean;
+  pricePattern?: string | null;
+  gammaZone?: "positive" | "negative" | "neutral";
+  gammaDescription?: string;
+  category?: SignalCategory;
+  reason?: string;
+  aiEvaluated?: boolean;
+  priceAtSignal?: number;
+  outcome?: "hit" | "win" | "missed" | "loss" | "pending" | null;
+  tradeStatus?: "watching" | "active" | "hit" | "miss" | "expired" | null;
+  mfePercent?: number | null;
+  maxFavorablePrice?: number | null;
+  spreadDetails?: {
+    type: string;
+    legs: string;
+    max_profit: number | null;
+    max_loss: number | null;
+    probability: number | null;
+  } | null;
+  reviewStatus?: "correct" | "wrong" | null;
+  reviewNote?: string | null;
+  resolvedAt?: string | null;
 }
 
 export interface TickerData {
