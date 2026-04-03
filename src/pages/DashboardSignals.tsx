@@ -437,10 +437,38 @@ const DashboardSignals = () => {
 /* ─── Signal Card ─────────────────────────────────────────── */
 
 function SignalCard({ signal }: { signal: MarketSignal }) {
+  const [tookTrade, setTookTrade] = useState(false);
   const isCall = signal.putCall === "call" || signal.type === "bullish";
   const score = signal.convictionScore ?? Math.round(signal.confidence * 10);
+  const cat = signal.category || "algorithm";
 
-  const glowClass = score >= 85
+  const catLabel = cat === "whale" ? "WHALE PLAY" : cat === "spread" ? "SPREAD PLAY" : "ALGORITHM PLAY";
+  const catColor = cat === "whale" ? "text-blue-400" : cat === "spread" ? "text-violet-400" : "text-emerald-400";
+  const catIcon = cat === "whale" ? <Waves className="h-3 w-3 text-blue-400" /> : cat === "spread" ? <Target className="h-3 w-3 text-violet-400" /> : <Zap className="h-3 w-3 text-emerald-400" />;
+  const headerBg = cat === "whale" ? "bg-blue-500/15" : cat === "spread" ? "bg-violet-500/15" : "bg-emerald-500/15";
+
+  const tfLabel = signal.timeframe === "buy_now" ? "BUY NOW" : "SWING TRADE";
+  const tfColor = signal.timeframe === "buy_now" ? "bg-yellow-500/90 text-yellow-950" : "bg-emerald-500/80 text-emerald-950";
+
+  const statusMap: Record<string, { label: string; color: string }> = {
+    watching: { label: "WATCHING", color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
+    active: { label: "ACTIVE", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
+    hit: { label: "HIT ✓", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
+    miss: { label: "MISS", color: "bg-destructive/20 text-destructive border-destructive/30" },
+    expired: { label: "EXPIRED", color: "bg-muted/30 text-muted-foreground border-muted/40" },
+  };
+  const status = signal.tradeStatus ? statusMap[signal.tradeStatus] : null;
+
+  const mfeInfo = signal.mfePercent != null
+    ? signal.mfePercent >= 75 ? { text: `Full Hit (${signal.mfePercent.toFixed(0)}% MFE)`, color: "text-emerald-400" }
+    : signal.mfePercent >= 50 ? { text: `Partial Hit (${signal.mfePercent.toFixed(0)}% MFE)`, color: "text-primary" }
+    : signal.mfePercent >= 30 ? { text: `Near Miss (${signal.mfePercent.toFixed(0)}% MFE)`, color: "text-yellow-400" }
+    : { text: `Miss (${signal.mfePercent.toFixed(0)}% MFE)`, color: "text-destructive" }
+    : null;
+
+  const glowClass = signal.aiEvaluated
+    ? "shadow-[0_0_12px_-3px_rgba(16,185,129,0.35)] border-emerald-400/50"
+    : score >= 85
     ? "shadow-[0_0_15px_-3px_hsl(var(--primary)/0.4)] border-primary/40"
     : score >= 70
     ? "shadow-[0_0_10px_-3px_hsl(var(--primary)/0.25)] border-primary/30"
@@ -448,13 +476,21 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
     ? "border-primary/20"
     : "border-destructive/20";
 
+  const bgClass = cat === "whale" ? "bg-blue-500/5" : cat === "spread" ? "bg-violet-500/5" : isCall ? "bg-primary/5" : "bg-destructive/5";
+
   return (
-    <div className={`rounded-xl border overflow-hidden transition-shadow ${glowClass} ${isCall ? "bg-primary/5" : "bg-destructive/5"}`}>
-      <div className={`px-3 sm:px-4 py-2 flex items-center justify-between ${isCall ? "bg-primary/15" : "bg-destructive/15"}`}>
-        <div className="flex items-center gap-2">
-          <Zap className="h-3 w-3 text-accent" />
-          <span className="text-[9px] sm:text-[10px] font-bold tracking-widest text-accent uppercase">JORTRADE Alert</span>
-          <span className="text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 uppercase tracking-wider">Live</span>
+    <div className={`rounded-xl border overflow-hidden transition-shadow ${glowClass} ${bgClass}`}>
+      {/* Category header */}
+      <div className={`px-3 sm:px-4 py-2 flex items-center justify-between ${headerBg}`}>
+        <div className="flex items-center gap-2 flex-wrap">
+          {catIcon}
+          <span className={`text-[9px] sm:text-[10px] font-bold tracking-widest uppercase ${catColor}`}>{catLabel}</span>
+          <span className={`text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded ${tfColor}`}>{tfLabel}</span>
+          {signal.aiEvaluated && (
+            <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 uppercase tracking-wider flex items-center gap-0.5">
+              <CheckCircle2 className="h-2.5 w-2.5" /> BIDDIE PICK
+            </span>
+          )}
         </div>
         <span className="text-[9px] sm:text-[10px] text-muted-foreground flex items-center gap-1">
           <Clock className="h-2.5 w-2.5" />
@@ -462,25 +498,34 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
         </span>
       </div>
 
-      <div className="px-3 sm:px-4 py-3 space-y-2.5">
+      <div className="px-3 sm:px-4 py-3 space-y-3">
+        {/* Ticker + CALL/PUT + Status + Conviction */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {isCall ? <TrendingUp className="h-4 w-4 text-primary" /> : <TrendingDown className="h-4 w-4 text-destructive" />}
-            <span className="font-bold text-sm sm:text-base text-foreground">{signal.ticker}</span>
-            <span className={`text-[9px] sm:text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full ${isCall ? "bg-primary/20 text-primary" : "bg-destructive/20 text-destructive"}`}>
+          <div className="flex items-center gap-2 flex-wrap">
+            {isCall ? <TrendingUp className="h-5 w-5 text-primary" /> : <TrendingDown className="h-5 w-5 text-destructive" />}
+            <span className="font-bold text-foreground text-lg">{signal.ticker}</span>
+            <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${isCall ? "bg-primary/20 text-primary" : "bg-destructive/20 text-destructive"}`}>
               {signal.putCall === "call" ? "CALL" : "PUT"}
             </span>
+            {status && (
+              <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border flex items-center gap-1 ${status.color}`}>
+                <Eye className="h-2.5 w-2.5" />
+                {status.label}
+              </span>
+            )}
             {signal.premium && <span className="text-[10px] sm:text-xs text-accent font-semibold">{signal.premium}</span>}
           </div>
           <ConvictionScoreRing score={score} label={signal.convictionLabel ?? ""} />
         </div>
 
+        {/* Description */}
         <p className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">{signal.description}</p>
 
+        {/* Always-visible trade details */}
         <div className="grid grid-cols-1 gap-1.5 text-[11px] sm:text-xs">
           {signal.suggestedTrade && (
-            <div className="flex items-start gap-2 bg-muted/30 rounded-lg px-2.5 py-1.5">
-              <Target className="h-3 w-3 text-primary mt-0.5 shrink-0" />
+            <div className="flex items-start gap-2 bg-muted/30 rounded-lg px-2.5 py-2">
+              <Target className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
               <div className="min-w-0">
                 <span className="text-muted-foreground">Trade: </span>
                 <span className="text-foreground font-semibold">{signal.suggestedTrade}</span>
@@ -488,8 +533,8 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
             </div>
           )}
           {signal.entryTrigger && (
-            <div className="flex items-start gap-2 bg-muted/30 rounded-lg px-2.5 py-1.5">
-              <TrendingUp className="h-3 w-3 text-primary mt-0.5 shrink-0" />
+            <div className="flex items-start gap-2 bg-muted/30 rounded-lg px-2.5 py-2">
+              <TrendingUp className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
               <div className="min-w-0">
                 <span className="text-muted-foreground">Entry: </span>
                 <span className="text-foreground font-semibold">{signal.entryTrigger}</span>
@@ -497,17 +542,18 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
             </div>
           )}
           {signal.targetZone && (
-            <div className="flex items-start gap-2 bg-primary/10 rounded-lg px-2.5 py-1.5">
-              <MapPin className="h-3 w-3 text-primary mt-0.5 shrink-0" />
+            <div className="flex items-start gap-2 bg-primary/10 rounded-lg px-2.5 py-2">
+              <MapPin className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
               <div className="min-w-0">
                 <span className="text-muted-foreground">Target: </span>
                 <span className="text-primary font-semibold">{signal.targetZone}</span>
+                {signal.targetNear && <span className="text-primary/70 ml-1">– {signal.targetNear}</span>}
               </div>
             </div>
           )}
           {signal.invalidation && (
-            <div className="flex items-start gap-2 bg-destructive/10 rounded-lg px-2.5 py-1.5">
-              <ShieldX className="h-3 w-3 text-destructive mt-0.5 shrink-0" />
+            <div className="flex items-start gap-2 bg-destructive/10 rounded-lg px-2.5 py-2">
+              <ShieldX className="h-3.5 w-3.5 text-destructive mt-0.5 shrink-0" />
               <div className="min-w-0">
                 <span className="text-muted-foreground">Invalidation: </span>
                 <span className="text-destructive font-semibold">{signal.invalidation}</span>
@@ -515,25 +561,38 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
             </div>
           )}
           {signal.keyLevel && (
-            <div className="flex items-start gap-2 bg-primary/10 rounded-lg px-2.5 py-1.5">
-              <Crosshair className="h-3 w-3 text-primary mt-0.5 shrink-0" />
+            <div className="flex items-start gap-2 bg-blue-500/10 rounded-lg px-2.5 py-2">
+              <Crosshair className="h-3.5 w-3.5 text-blue-400 mt-0.5 shrink-0" />
               <div className="min-w-0">
-                <span className="text-muted-foreground">Key level: </span>
-                <span className="text-primary font-semibold">{signal.keyLevel}</span>
+                <span className="text-muted-foreground">Key Level: </span>
+                <span className="text-blue-400 font-semibold">{signal.keyLevel}</span>
               </div>
             </div>
           )}
-          {signal.gammaDescription && (
-            <div className="flex items-start gap-2 bg-accent/10 rounded-lg px-2.5 py-1.5">
-              <Gauge className="h-3 w-3 text-accent mt-0.5 shrink-0" />
+          {signal.srLevel && (
+            <div className="flex items-start gap-2 bg-violet-500/10 rounded-lg px-2.5 py-2">
+              <Shield className="h-3.5 w-3.5 text-violet-400 mt-0.5 shrink-0" />
               <div className="min-w-0">
-                <span className="text-muted-foreground">GEX: </span>
-                <span className="text-accent font-semibold">{signal.gammaDescription}</span>
+                <span className="text-muted-foreground">S/R: </span>
+                <span className="text-violet-400 font-semibold">{signal.srLevel}</span>
+              </div>
+            </div>
+          )}
+          {signal.gammaZone && (
+            <div className="flex items-start gap-2 bg-accent/10 rounded-lg px-2.5 py-2">
+              <Gauge className="h-3.5 w-3.5 text-accent mt-0.5 shrink-0" />
+              <div className="min-w-0">
+                <span className="text-muted-foreground">Gamma: </span>
+                <span className="text-accent font-semibold uppercase">
+                  {signal.gammaZone === "positive" ? "POS GAMMA" : signal.gammaZone === "negative" ? "NEG GAMMA" : "NEUTRAL"}
+                </span>
+                {signal.gammaDescription && <span className="text-muted-foreground ml-1 text-[10px]">({signal.gammaDescription})</span>}
               </div>
             </div>
           )}
         </div>
 
+        {/* Tags */}
         <div className="flex flex-wrap gap-1.5">
           {signal.tags.map((tag) => {
             const isUrgent = tag.includes("ACT NOW") || tag.includes("HIGH CONVICTION");
@@ -543,11 +602,51 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
               </span>
             );
           })}
+          {signal.gammaZone && (
+            <span className={`text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-0.5 ${
+              signal.gammaZone === "positive" ? "bg-emerald-500/20 text-emerald-400" : signal.gammaZone === "negative" ? "bg-red-500/20 text-red-400" : "bg-muted/50 text-muted-foreground"
+            }`}>
+              <Shield className="h-2.5 w-2.5" />
+              {signal.gammaZone === "positive" ? "POS GAMMA" : signal.gammaZone === "negative" ? "NEG GAMMA" : "NEUTRAL"}
+            </span>
+          )}
           {signal.expiry && (
             <span className="text-[9px] sm:text-[10px] bg-muted/40 text-muted-foreground px-2 py-0.5 rounded-full font-medium">
               Exp: {signal.expiry}
             </span>
           )}
+        </div>
+
+        {/* MFE */}
+        {mfeInfo && (
+          <div className={`text-[10px] sm:text-[11px] font-semibold ${mfeInfo.color}`}>
+            📊 {mfeInfo.text}
+          </div>
+        )}
+
+        {/* I Took This Trade */}
+        <button
+          onClick={() => setTookTrade(true)}
+          disabled={tookTrade}
+          className={`w-full rounded-lg border py-2 text-xs font-medium transition-all ${
+            tookTrade
+              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400 cursor-default"
+              : "border-border/60 bg-muted/20 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+          }`}
+        >
+          {tookTrade ? (
+            <span className="flex items-center justify-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5" /> Trade Logged</span>
+          ) : (
+            <span className="flex items-center justify-center gap-1.5"><Plus className="h-3.5 w-3.5" /> I Took This Trade</span>
+          )}
+        </button>
+
+        {/* Review */}
+        <div className="flex items-center gap-3 text-muted-foreground text-[11px]">
+          <span className="text-[10px]">Review:</span>
+          <button className="hover:text-emerald-400 transition-colors p-1 rounded hover:bg-emerald-500/10"><ThumbsUp className="h-3.5 w-3.5" /></button>
+          <button className="hover:text-destructive transition-colors p-1 rounded hover:bg-destructive/10"><ThumbsDown className="h-3.5 w-3.5" /></button>
+          <button className="hover:text-foreground transition-colors p-1 rounded hover:bg-muted/30"><MessageSquare className="h-3.5 w-3.5" /></button>
         </div>
       </div>
     </div>
