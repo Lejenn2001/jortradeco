@@ -1,19 +1,20 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Activity, BarChart3, Users, Flame, Crosshair, Wallet, Settings, MoreHorizontal } from "lucide-react";
+import { LayoutDashboard, Activity, BarChart3, Users, MoreHorizontal, Crosshair, Megaphone, Wallet, Settings, PieChart } from "lucide-react";
 import { useState } from "react";
 
 const primaryNavItems = [
   { icon: LayoutDashboard, label: "Home", path: "/dashboard" },
-  { icon: Activity, label: "Signals", path: "/dashboard/signals" },
   { icon: Users, label: "Chat", path: "/dashboard/community" },
+  { icon: Activity, label: "Signals", path: "/dashboard/signals" },
   { icon: BarChart3, label: "Market", path: "/dashboard/market" },
   { icon: MoreHorizontal, label: "More", path: "__more__" },
 ];
 
 const moreNavItems = [
   { icon: Crosshair, label: "Scanner", path: "/dashboard/scanner" },
-  { icon: Flame, label: "Trump", path: "/dashboard/trump" },
+  { icon: Megaphone, label: "Trump", path: "/dashboard/trump" },
   { icon: Wallet, label: "P&L", path: "/dashboard/pnl" },
+  { icon: PieChart, label: "Analytics", path: "/dashboard/analytics" },
   { icon: Settings, label: "Settings", path: "/dashboard/settings" },
 ];
 
@@ -25,11 +26,10 @@ const MobileNavBar = () => {
 
   return (
     <>
-      {/* More menu overlay */}
       {showMore && (
         <div className="lg:hidden fixed inset-0 z-40" onClick={() => setShowMore(false)}>
           <div className="absolute bottom-16 left-0 right-0 bg-card/95 backdrop-blur-xl border-t border-border/40 rounded-t-2xl shadow-2xl">
-            <div className="grid grid-cols-4 gap-1 p-3">
+            <div className="grid grid-cols-5 gap-1 p-3">
               {moreNavItems.map((item) => {
                 const isActive = location.pathname === item.path;
                 return (
@@ -51,7 +51,6 @@ const MobileNavBar = () => {
         </div>
       )}
 
-      {/* Bottom nav */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-xl border-t border-border/40">
         <div className="flex items-center justify-around py-2 px-1">
           {primaryNavItems.map((item) => {
