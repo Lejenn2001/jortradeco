@@ -10,12 +10,11 @@ import Dashboard from "./pages/Dashboard.tsx";
 import DashboardSignals from "./pages/DashboardSignals.tsx";
 import DashboardMarket from "./pages/DashboardMarket.tsx";
 import DashboardChat from "./pages/DashboardChat.tsx";
-import DashboardPnL from "./pages/DashboardPnL.tsx";
 import DashboardCommunity from "./pages/DashboardCommunity.tsx";
 import DashboardAnalytics from "./pages/DashboardAnalytics.tsx";
+import DashboardAdmin from "./pages/DashboardAdmin.tsx";
 import DashboardSettings from "./pages/DashboardSettings.tsx";
 import DashboardScanner from "./pages/DashboardScanner.tsx";
-// Performance and Referrals are now tabs within P&L
 import DashboardTrump from "./pages/DashboardTrump.tsx";
 import Login from "./pages/Login.tsx";
 import Signup from "./pages/Signup.tsx";
@@ -40,9 +39,9 @@ const App = () => (
             <Route path="/dashboard/signals" element={<ProtectedRoute><DashboardSignals /></ProtectedRoute>} />
             <Route path="/dashboard/market" element={<ProtectedRoute><DashboardMarket /></ProtectedRoute>} />
             <Route path="/dashboard/chat" element={<ProtectedRoute><DashboardChat /></ProtectedRoute>} />
-            <Route path="/dashboard/pnl" element={<ProtectedRoute><DashboardPnL /></ProtectedRoute>} />
             <Route path="/dashboard/community" element={<ProtectedRoute><DashboardCommunity /></ProtectedRoute>} />
             <Route path="/dashboard/analytics" element={<ProtectedRoute><DashboardAnalytics /></ProtectedRoute>} />
+            <Route path="/dashboard/admin" element={<ProtectedRoute><DashboardAdmin /></ProtectedRoute>} />
             <Route path="/dashboard/scanner" element={<ProtectedRoute><DashboardScanner /></ProtectedRoute>} />
             <Route path="/dashboard/trump" element={<ProtectedRoute><DashboardTrump /></ProtectedRoute>} />
             <Route path="/dashboard/settings" element={<ProtectedRoute><DashboardSettings /></ProtectedRoute>} />

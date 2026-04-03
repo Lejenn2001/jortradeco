@@ -11,7 +11,6 @@ import {
   Crosshair,
   Megaphone,
   ShieldCheck,
-  Wallet,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -33,7 +32,6 @@ const navItems = [
   { icon: Activity, label: "Decision Engine", path: "/dashboard/signals" },
   { icon: Crosshair, label: "Breakout Scanner", path: "/dashboard/scanner" },
   { icon: BarChart3, label: "Market View", path: "/dashboard/market" },
-  { icon: Wallet, label: "P&L Tracker", path: "/dashboard/pnl" },
   { icon: PieChart, label: "Analytics", path: "/dashboard/analytics" },
   { icon: Megaphone, label: "Trump Feed", path: "/dashboard/trump" },
   { icon: Settings, label: "Settings", path: "/dashboard/settings" },

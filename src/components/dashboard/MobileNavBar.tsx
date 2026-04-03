@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Activity, BarChart3, Users, MoreHorizontal, Crosshair, Megaphone, Wallet, Settings, PieChart } from "lucide-react";
+import { LayoutDashboard, Activity, BarChart3, Users, MoreHorizontal, Crosshair, Megaphone, PieChart, Settings } from "lucide-react";
 import { useState } from "react";
 
 const primaryNavItems = [
@@ -12,9 +12,8 @@ const primaryNavItems = [
 
 const moreNavItems = [
   { icon: Crosshair, label: "Scanner", path: "/dashboard/scanner" },
-  { icon: Megaphone, label: "Trump", path: "/dashboard/trump" },
-  { icon: Wallet, label: "P&L", path: "/dashboard/pnl" },
   { icon: PieChart, label: "Analytics", path: "/dashboard/analytics" },
+  { icon: Megaphone, label: "Trump", path: "/dashboard/trump" },
   { icon: Settings, label: "Settings", path: "/dashboard/settings" },
 ];
 
@@ -29,7 +28,7 @@ const MobileNavBar = () => {
       {showMore && (
         <div className="lg:hidden fixed inset-0 z-40" onClick={() => setShowMore(false)}>
           <div className="absolute bottom-16 left-0 right-0 bg-card/95 backdrop-blur-xl border-t border-border/40 rounded-t-2xl shadow-2xl">
-            <div className="grid grid-cols-5 gap-1 p-3">
+            <div className="grid grid-cols-4 gap-1 p-3">
               {moreNavItems.map((item) => {
                 const isActive = location.pathname === item.path;
                 return (
