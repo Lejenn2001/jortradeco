@@ -1,9 +1,7 @@
-import { useState, useEffect } from "react";
-import { Users, Clock, MapPin } from "lucide-react";
-import { useWeather, getBiddieOutfit } from "@/hooks/useWeather";
+import { useState } from "react";
+import { Users } from "lucide-react";
 import { motion } from "framer-motion";
 import biddieRobot from "@/assets/biddie-robot.png";
-import MarketStatusSign from "@/components/dashboard/MarketStatusSign";
 
 const QUOTES = [
   "The stock market is a device for transferring money from the impatient to the patient.",
@@ -28,96 +26,67 @@ interface ChatRoomHeaderProps {
 }
 
 const ChatRoomHeader = ({ onlineCount, firstName }: ChatRoomHeaderProps) => {
-  const { weather } = useWeather();
-  const [currentTime, setCurrentTime] = useState(new Date());
   const [quote] = useState(() => QUOTES[Math.floor(Math.random() * QUOTES.length)]);
 
-  useEffect(() => {
-    const interval = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const timeStr = currentTime.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    second: "2-digit",
-    timeZone: "America/New_York",
-  });
-
-  const dateStr = currentTime.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "short",
-    day: "numeric",
-    timeZone: "America/New_York",
-  });
-
-  const biddieOutfit = weather ? getBiddieOutfit(weather.condition) : "looking fresh 🤖";
-
   return (
-    <div className="space-y-3">
-      {/* Top bar */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <div className="glass-panel rounded-xl px-4 py-2.5 flex items-center gap-2.5">
-          <Clock className="h-4 w-4 text-primary" />
-          <div>
-            <p className="text-sm font-semibold text-foreground tracking-wide">{timeStr}</p>
-            <p className="text-[10px] text-muted-foreground">{dateStr} EST</p>
-          </div>
-        </div>
+    <div className="space-y-2">
+      {/* Banner */}
+      <div className="relative overflow-hidden rounded-xl border border-border/10 bg-card/80">
+        {/* Candlestick SVG background */}
+        <svg className="absolute inset-0 w-full h-full opacity-[0.25]" viewBox="0 0 1000 100" preserveAspectRatio="none">
+          {[40, 95, 150, 205, 260, 315, 370, 425, 480, 535, 590, 645, 700, 755, 810, 865, 920].map((x, i) => {
+            const heights = [30, 22, 40, 18, 35, 45, 25, 32, 20, 42, 28, 38, 15, 30, 22, 35, 28];
+            const tops = [35, 42, 25, 48, 30, 15, 40, 32, 45, 22, 38, 28, 50, 35, 42, 25, 38];
+            const green = i % 3 !== 0;
+            return (
+              <g key={i}>
+                <line x1={x} y1={tops[i] - 8} x2={x} y2={tops[i] + heights[i] + 8} stroke={green ? "hsl(var(--primary))" : "hsl(var(--accent))"} strokeWidth="1" opacity="0.3" />
+                <rect x={x - 6} y={tops[i]} width="12" height={heights[i]} fill={green ? "hsl(var(--primary))" : "hsl(var(--accent))"} rx="1" opacity="0.2" />
+              </g>
+            );
+          })}
+        </svg>
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-accent/3 to-blue-500/5" />
+        <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
 
-        {weather && (
-          <div className="glass-panel rounded-xl px-4 py-2.5 flex items-center gap-2.5">
-            <span className="text-xl">{weather.icon}</span>
+        <div className="relative px-5 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-1 h-8 rounded-full bg-gradient-to-b from-blue-400 via-primary to-blue-400/50" />
             <div>
-              <p className="text-sm font-semibold text-foreground">{weather.temp}°F</p>
-              <div className="flex items-center gap-1">
-                <MapPin className="h-2.5 w-2.5 text-muted-foreground" />
-                <p className="text-[10px] text-muted-foreground">{weather.location}</p>
-              </div>
+              <h1 className="text-xl sm:text-2xl font-black tracking-[0.15em] uppercase bg-gradient-to-r from-foreground via-foreground to-foreground/50 bg-clip-text text-transparent">
+                JORTRADE CHAT
+              </h1>
+              <p className="text-[9px] uppercase tracking-[0.3em] text-blue-400/80 font-semibold">
+                Talk Trades · Share Setups · Build Together
+              </p>
             </div>
           </div>
-        )}
 
-        <div className="glass-panel rounded-xl px-4 py-2.5 flex items-center gap-2.5">
-          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <Users className="h-3.5 w-3.5 text-emerald-400" />
-          <span className="text-sm font-medium text-emerald-400">{onlineCount} online</span>
-        </div>
-
-        <MarketStatusSign />
-
-        <div className="flex-1" />
-
-        <div className="text-right">
-          <h1 className="text-lg font-bold text-foreground">JORTRADE CHAT</h1>
-          <p className="text-[10px] text-muted-foreground">Talk trades · Share setups · Build together</p>
+          {/* Online count badge */}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <Users className="h-3.5 w-3.5 text-emerald-400" />
+            <span className="text-xs font-semibold text-emerald-400">{onlineCount} online</span>
+          </div>
         </div>
       </div>
 
-      {/* Biddie + Quote Row */}
-      <div className="glass-panel rounded-xl p-3 border-glow-blue flex items-center gap-4">
+      {/* Biddie Quote Card */}
+      <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 flex items-center gap-3">
         <motion.div
-          animate={{ y: [0, -6, 0] }}
+          animate={{ y: [0, -4, 0] }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
           className="flex-shrink-0"
         >
           <img
             src={biddieRobot}
             alt="Biddie"
-            className="w-16 h-16 object-contain drop-shadow-[0_0_12px_hsl(230_85%_60%_/_0.4)]"
+            className="w-12 h-12 object-contain drop-shadow-[0_0_12px_hsl(230_85%_60%_/_0.4)]"
           />
         </motion.div>
-
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <p className="text-xs font-semibold text-primary">Biddie AI</p>
-          </div>
-          <p className="text-xs text-muted-foreground/80 italic truncate">"{quote}"</p>
-        </div>
-
-        <div className="hidden md:block text-right flex-shrink-0">
-          <p className="text-xs text-muted-foreground">Welcome back</p>
-          <p className="text-sm font-semibold text-foreground">{firstName} 👋</p>
+          <p className="text-xs font-semibold text-primary mb-0.5">Biddie AI</p>
+          <p className="text-[11px] text-muted-foreground/80 italic truncate">"{quote}"</p>
         </div>
       </div>
     </div>
