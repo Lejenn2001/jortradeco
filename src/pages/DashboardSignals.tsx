@@ -656,7 +656,7 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
   // Outcome badges
   const outcome = signal.outcome;
   const isWin = outcome === "win" || outcome === "hit";
-  const isLoss = outcome === "loss" || outcome === "miss";
+  const isLoss = outcome === "loss" || outcome === "missed";
   const isPending = !outcome || outcome === "pending";
 
   const statusMap: Record<string, { label: string; color: string }> = {
