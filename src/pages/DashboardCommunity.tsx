@@ -208,14 +208,14 @@ const DashboardCommunity = () => {
 
   return (
     <DashboardLayout showTickerTape={false}>
-      <div className="flex-1 flex flex-col overflow-hidden p-1.5 sm:p-2 lg:p-3 bg-mesh">
+      <div className="flex-1 flex flex-col overflow-hidden p-1.5 sm:p-2 bg-mesh">
         {/* Header */}
-        <div className="mb-1.5 sm:mb-2 shrink-0 hidden sm:block">
+        <div className="mb-1 shrink-0 hidden sm:block">
           <ChatRoomHeader onlineCount={onlineCount} firstName={firstName} />
         </div>
 
         {/* Daily Recap */}
-        <div className="mb-1.5 shrink-0">
+        <div className="mb-1 shrink-0">
           <DailyRecapCard />
         </div>
 
