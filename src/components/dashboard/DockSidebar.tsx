@@ -5,7 +5,13 @@ import {
   BarChart3,
   Settings,
   LogOut,
-  Bot,
+  Users,
+  PieChart,
+  Crosshair,
+  Megaphone,
+  ShieldCheck,
+} from "lucide-react";
+import jortradeLogo from "@/assets/jortrade_logo_dark.png";
   Users,
   PieChart,
   Crosshair,
