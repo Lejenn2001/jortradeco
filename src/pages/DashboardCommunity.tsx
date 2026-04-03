@@ -256,35 +256,29 @@ const DashboardCommunity = () => {
 
         {/* Messages */}
         <div className="relative flex-1 flex flex-col min-h-0 mb-0.5">
-          {/* Manage button */}
-          {isAdmin && (
-            <div className="absolute right-2 top-1.5 z-10 flex items-center gap-1">
-              {manageMode ? (
-                <>
-                  <button
-                    onClick={deleteSelected}
-                    disabled={selected.size === 0}
-                    className="flex items-center gap-1 rounded-md bg-destructive/90 px-2 py-1 text-[10px] font-medium text-destructive-foreground transition-colors hover:bg-destructive disabled:opacity-40"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                    Delete ({selected.size})
-                  </button>
-                  <button
-                    onClick={exitManage}
-                    className="rounded-md bg-muted/60 px-2 py-1 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-muted"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => setManageMode(true)}
-                  className="flex items-center gap-1 rounded-md bg-muted/40 px-2 py-1 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground"
-                >
-                  <Settings2 className="h-3 w-3" />
-                  Manage
-                </button>
-              )}
+          {/* Manage button - top right */}
+          {isAdmin && !manageMode && (
+            <div className="absolute right-2 top-1.5 z-10">
+              <button
+                onClick={() => setManageMode(true)}
+                className="flex items-center gap-1 rounded-md bg-muted/40 px-2 py-1 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground"
+              >
+                <Settings2 className="h-3 w-3" />
+                Manage
+              </button>
+            </div>
+          )}
+
+          {/* Cancel button - top right in manage mode */}
+          {manageMode && (
+            <div className="absolute right-2 top-1.5 z-10">
+              <button
+                onClick={exitManage}
+                className="flex items-center gap-1 rounded-md bg-muted/60 px-2 py-1 text-[10px] font-medium text-destructive transition-colors hover:bg-muted"
+              >
+                <X className="h-3 w-3" />
+                Cancel
+              </button>
             </div>
           )}
 
