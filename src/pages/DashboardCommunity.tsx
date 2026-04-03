@@ -11,6 +11,7 @@ import ChatUserBadge from "@/components/dashboard/chat/ChatUserBadge";
 import ChatReplyPreview from "@/components/dashboard/chat/ChatReplyPreview";
 import DailyRecapCard from "@/components/dashboard/chat/DailyRecapCard";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -82,7 +83,10 @@ const DashboardCommunity = () => {
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
       if (scrollRef.current) {
-        scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+        const viewport = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
+        if (viewport) {
+          viewport.scrollTo({ top: viewport.scrollHeight, behavior: "smooth" });
+        }
       }
     }, 50);
   }, []);
@@ -290,10 +294,11 @@ const DashboardCommunity = () => {
             </div>
           )}
 
-          <div
+          <ScrollArea
             ref={scrollRef}
-            className="flex-1 glass-panel rounded-lg border-glow-purple px-1.5 sm:px-2 pt-7 pb-1 overflow-y-auto min-h-0"
+            className="flex-1 glass-panel rounded-lg border-glow-purple min-h-0"
           >
+          <div className="px-1.5 sm:px-2 pt-7 pb-1">
           <div className="space-y-0.5">
             {messages.length === 0 && (
               <div className="flex h-full flex-1 items-center justify-center">
@@ -446,6 +451,7 @@ const DashboardCommunity = () => {
             <ChatTypingIndicator biddieTyping={biddieTyping} />
           </div>
           </div>
+          </ScrollArea>
         </div>
 
         {/* Reply preview */}
