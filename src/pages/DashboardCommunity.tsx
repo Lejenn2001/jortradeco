@@ -214,6 +214,11 @@ const DashboardCommunity = () => {
           <ChatRoomHeader onlineCount={onlineCount} firstName={firstName} />
         </div>
 
+        {/* Daily Recap */}
+        <div className="mb-1.5 shrink-0">
+          <DailyRecapCard />
+        </div>
+
         {/* Pinned messages */}
         <ChatPinnedBar messages={pinnedMessages} onJumpTo={scrollToMessage} />
 
