@@ -662,6 +662,8 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
   // Outcome badges
   const outcome = signal.outcome;
   const isWin = outcome === "win" || outcome === "hit";
+  const isPartialWin = outcome === "partial_win";
+  const isNearMiss = outcome === "near_miss";
   const isLoss = outcome === "loss" || outcome === "missed";
   const isPending = !outcome || outcome === "pending";
 
@@ -669,6 +671,7 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
     watching: { label: "WATCHING", color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
     active: { label: "ACTIVE", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
     hit: { label: "HIT ✓", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
+    stopped: { label: "STOPPED", color: "bg-destructive/20 text-destructive border-destructive/30" },
     miss: { label: "MISS", color: "bg-destructive/20 text-destructive border-destructive/30" },
     expired: { label: "EXPIRED", color: "bg-muted/30 text-muted-foreground border-muted/40" },
   };
@@ -767,10 +770,20 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
             <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${isCall ? "bg-primary/20 text-primary" : "bg-destructive/20 text-destructive"}`}>
               {signal.putCall === "call" ? "CALL" : "PUT"}
             </span>
-            {/* WIN / LOSS badge */}
+            {/* Outcome badges */}
             {isWin && (
               <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
                 <CheckCircle2 className="h-3 w-3" /> WIN
+              </span>
+            )}
+            {isPartialWin && (
+              <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30 flex items-center gap-1">
+                <CheckCircle2 className="h-3 w-3" /> PARTIAL
+              </span>
+            )}
+            {isNearMiss && (
+              <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 flex items-center gap-1">
+                <Target className="h-3 w-3" /> NEAR MISS
               </span>
             )}
             {isLoss && (

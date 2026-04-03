@@ -7,11 +7,36 @@ const corsHeaders = {
 };
 
 const UW_BASE = "https://api.unusualwhales.com/api";
+const POLYGON_BASE = "https://api.polygon.io";
 const BATCH_SIZE = 10;
 
-// Extract invalidation price from signal description or dedicated field
+// ── MFE Tier Classification ──────────────────────────────────────
+// Full Hit:    MFE ≥ 75% → outcome = "win"
+// Partial Hit: MFE ≥ 50% → outcome = "partial_win"
+// Near Miss:   MFE ≥ 30% → outcome = "near_miss"
+// Miss:        MFE < 30% → outcome = "loss"
+function classifyOutcomeByMfe(mfePercent: number): string {
+  if (mfePercent >= 75) return "win";
+  if (mfePercent >= 50) return "partial_win";
+  if (mfePercent >= 30) return "near_miss";
+  return "loss";
+}
+
+function mfeTierLabel(mfePercent: number): string {
+  if (mfePercent >= 75) return "Full Hit";
+  if (mfePercent >= 50) return "Partial Hit";
+  if (mfePercent >= 30) return "Near Miss";
+  return "Miss";
+}
+
+// Extract invalidation price from signal fields
 function extractInvalidation(signal: any): number | null {
-  // Check description for invalidation patterns
+  // First check the dedicated invalidation field
+  if (signal.invalidation) {
+    const match = signal.invalidation.match(/\$?([\d,.]+)/);
+    if (match) return parseFloat(match[1].replace(/,/g, ''));
+  }
+  // Fallback: parse from description/target_zone
   const text = `${signal.description || ''} ${signal.target_zone || ''}`;
   const patterns = [
     /invalidation[:\s]*\$?([\d,.]+)/i,
@@ -34,12 +59,89 @@ function extractTarget(signal: any): number | null {
   return null;
 }
 
+// ── Fetch intraday high/low from Polygon for MFE calc ────────────
+async function fetchIntradayExtremes(
+  ticker: string,
+  fromDate: string,
+  toDate: string,
+  polygonKey: string
+): Promise<{ high: number; low: number } | null> {
+  try {
+    // Use daily aggregates to get high/low range since signal creation
+    const url = `${POLYGON_BASE}/v2/aggs/ticker/${ticker}/range/1/day/${fromDate}/${toDate}?adjusted=true&sort=asc&apiKey=${polygonKey}`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const json = await res.json();
+    const results = json?.results;
+    if (!results || results.length === 0) return null;
+
+    let high = -Infinity;
+    let low = Infinity;
+    for (const bar of results) {
+      if (bar.h > high) high = bar.h;
+      if (bar.l < low) low = bar.l;
+    }
+    return { high, low };
+  } catch (e) {
+    console.warn(`Polygon fetch failed for ${ticker}:`, e);
+    return null;
+  }
+}
+
+// ── Compute MFE% ─────────────────────────────────────────────────
+function computeMfe(
+  isBullish: boolean,
+  entryPrice: number,
+  targetPrice: number,
+  extremes: { high: number; low: number }
+): { mfePercent: number; maxFavorablePrice: number } {
+  if (isBullish) {
+    // Calls: how far price moved UP toward target
+    const maxFavorablePrice = extremes.high;
+    const totalDistance = targetPrice - entryPrice;
+    if (totalDistance <= 0) return { mfePercent: 0, maxFavorablePrice };
+    const mfePercent = Math.min(((maxFavorablePrice - entryPrice) / totalDistance) * 100, 150);
+    return { mfePercent: Math.max(mfePercent, 0), maxFavorablePrice };
+  } else {
+    // Puts: how far price moved DOWN toward target
+    const maxFavorablePrice = extremes.low;
+    const totalDistance = entryPrice - targetPrice;
+    if (totalDistance <= 0) return { mfePercent: 0, maxFavorablePrice };
+    const mfePercent = Math.min(((entryPrice - maxFavorablePrice) / totalDistance) * 100, 150);
+    return { mfePercent: Math.max(mfePercent, 0), maxFavorablePrice };
+  }
+}
+
+// ── Derive trade_status from current price position ──────────────
+function deriveTradeStatus(
+  isBullish: boolean,
+  currentPrice: number,
+  entryPrice: number | null,
+  targetPrice: number | null,
+  invalPrice: number | null
+): string {
+  if (!entryPrice) return "watching";
+  
+  if (isBullish) {
+    if (targetPrice && currentPrice >= targetPrice) return "hit";
+    if (invalPrice && currentPrice <= invalPrice) return "stopped";
+    if (currentPrice > entryPrice) return "active"; // in profit
+    return "watching";
+  } else {
+    if (targetPrice && currentPrice <= targetPrice) return "hit";
+    if (invalPrice && currentPrice >= invalPrice) return "stopped";
+    if (currentPrice < entryPrice) return "active"; // in profit
+    return "watching";
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   const apiKey = Deno.env.get("UNUSUAL_WHALES_API_KEY");
+  const polygonKey = Deno.env.get("POLYGON_API_KEY");
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -62,6 +164,7 @@ serve(async (req) => {
 
     const tickers = [...new Set(pending.map((s: any) => s.ticker))];
     const priceMap: Record<string, number> = {};
+    const extremesMap: Record<string, { high: number; low: number }> = {};
 
     const uwHeaders = {
       Authorization: `Bearer ${apiKey}`,
@@ -72,7 +175,7 @@ serve(async (req) => {
       tickers.map((t) => ({ api_name: "unusual_whales", endpoint: `verify-flow-${t}` }))
     );
 
-    // Fetch prices sequentially
+    // Fetch current prices from UW
     for (const ticker of tickers) {
       try {
         const res = await fetch(`${UW_BASE}/stock/${ticker}/flow-recent?limit=1`, { headers: uwHeaders });
@@ -91,7 +194,24 @@ serve(async (req) => {
       await new Promise((r) => setTimeout(r, 600));
     }
 
-    let verified = 0, hits = 0, misses = 0, expired = 0, alertCount = 0;
+    // Fetch intraday extremes from Polygon for MFE calculation
+    if (polygonKey) {
+      const today = new Date().toISOString().slice(0, 10);
+      for (const signal of pending as any[]) {
+        const ticker = signal.ticker;
+        const cacheKey = `${ticker}_${signal.created_at}`;
+        if (extremesMap[cacheKey]) continue;
+
+        const fromDate = new Date(signal.created_at).toISOString().slice(0, 10);
+        const extremes = await fetchIntradayExtremes(ticker, fromDate, today, polygonKey);
+        if (extremes) {
+          extremesMap[cacheKey] = extremes;
+        }
+        await new Promise((r) => setTimeout(r, 250)); // Polygon rate limit
+      }
+    }
+
+    let verified = 0, hits = 0, misses = 0, expired = 0, partialWins = 0, nearMisses = 0, alertCount = 0;
     const newAlerts: any[] = [];
 
     for (const signal of pending as any[]) {
@@ -104,80 +224,128 @@ serve(async (req) => {
       const isExpired = expiryDate && expiryDate < now;
       const isBullish = signal.signal_type === "bullish" || signal.put_call === "call";
 
+      const entryPrice = signal.entry_price || signal.price_at_signal || (strike > 0 ? strike : null);
+      const targetPrice = extractTarget(signal);
+      const invalPrice = extractInvalidation(signal);
+
       let outcome: string | null = null;
       let alertType: string | null = null;
       let alertMessage: string | null = null;
       let triggerPrice: number | null = null;
+      let mfePercent: number | null = signal.mfe_percent;
+      let maxFavorablePrice: number | null = signal.max_favorable_price;
 
-      // 1) Check invalidation — price crossed stop level
-      const invalPrice = extractInvalidation(signal);
+      // ── Calculate MFE from Polygon data ──
+      const cacheKey = `${signal.ticker}_${signal.created_at}`;
+      const extremes = extremesMap[cacheKey];
+      if (extremes && entryPrice && targetPrice) {
+        const mfeResult = computeMfe(isBullish, entryPrice, targetPrice, extremes);
+        mfePercent = Math.round(mfeResult.mfePercent * 100) / 100;
+        maxFavorablePrice = mfeResult.maxFavorablePrice;
+      }
+
+      // ── Derive current trade_status ──
+      const tradeStatus = deriveTradeStatus(isBullish, currentPrice, entryPrice, targetPrice, invalPrice);
+
+      // ── 1) Check invalidation — price crossed stop ──
       if (invalPrice && invalPrice > 0) {
         if (isBullish && currentPrice <= invalPrice) {
-          outcome = "loss";
-          misses++;
+          // Even though invalidated, classify by MFE tier
+          outcome = mfePercent != null ? classifyOutcomeByMfe(mfePercent) : "loss";
+          if (outcome === "loss") misses++;
+          else if (outcome === "partial_win") partialWins++;
+          else if (outcome === "near_miss") nearMisses++;
           alertType = "invalidated";
           triggerPrice = invalPrice;
-          alertMessage = `🚨 ${signal.ticker} INVALIDATED — Price dropped to $${currentPrice.toFixed(2)}, below stop at $${invalPrice.toFixed(2)}. Signal was ${signal.put_call?.toUpperCase() || 'BULLISH'} $${signal.strike || 'N/A'}.`;
+          const tierLabel = mfePercent != null ? ` (${mfeTierLabel(mfePercent)} — MFE ${mfePercent.toFixed(0)}%)` : "";
+          alertMessage = `🚨 ${signal.ticker} INVALIDATED${tierLabel} — Price dropped to $${currentPrice.toFixed(2)}, below stop at $${invalPrice.toFixed(2)}.`;
         } else if (!isBullish && currentPrice >= invalPrice) {
-          outcome = "loss";
-          misses++;
+          outcome = mfePercent != null ? classifyOutcomeByMfe(mfePercent) : "loss";
+          if (outcome === "loss") misses++;
+          else if (outcome === "partial_win") partialWins++;
+          else if (outcome === "near_miss") nearMisses++;
           alertType = "invalidated";
           triggerPrice = invalPrice;
-          alertMessage = `🚨 ${signal.ticker} INVALIDATED — Price rose to $${currentPrice.toFixed(2)}, above stop at $${invalPrice.toFixed(2)}. Signal was ${signal.put_call?.toUpperCase() || 'BEARISH'} $${signal.strike || 'N/A'}.`;
+          const tierLabel = mfePercent != null ? ` (${mfeTierLabel(mfePercent)} — MFE ${mfePercent.toFixed(0)}%)` : "";
+          alertMessage = `🚨 ${signal.ticker} INVALIDATED${tierLabel} — Price rose to $${currentPrice.toFixed(2)}, above stop at $${invalPrice.toFixed(2)}.`;
         }
       }
 
-      // 2) Check target zone — price reached target
+      // ── 2) Check target zone — price reached target ──
       if (!outcome) {
-        const targetPrice = extractTarget(signal);
         if (targetPrice && targetPrice > 0) {
           if (isBullish && currentPrice >= targetPrice) {
             outcome = "win";
             hits++;
             alertType = "target_hit";
             triggerPrice = targetPrice;
-            alertMessage = `🎯 ${signal.ticker} TARGET HIT — Price reached $${currentPrice.toFixed(2)}, target was $${targetPrice.toFixed(2)}. ${signal.put_call?.toUpperCase() || 'BULLISH'} $${signal.strike || 'N/A'} is a WIN!`;
+            const mfeText = mfePercent != null ? ` (MFE ${mfePercent.toFixed(0)}%)` : "";
+            alertMessage = `🎯 ${signal.ticker} TARGET HIT${mfeText} — Price reached $${currentPrice.toFixed(2)}, target was $${targetPrice.toFixed(2)}. WIN!`;
           } else if (!isBullish && currentPrice <= targetPrice) {
             outcome = "win";
             hits++;
             alertType = "target_hit";
             triggerPrice = targetPrice;
-            alertMessage = `🎯 ${signal.ticker} TARGET HIT — Price dropped to $${currentPrice.toFixed(2)}, target was $${targetPrice.toFixed(2)}. ${signal.put_call?.toUpperCase() || 'BEARISH'} $${signal.strike || 'N/A'} is a WIN!`;
+            const mfeText = mfePercent != null ? ` (MFE ${mfePercent.toFixed(0)}%)` : "";
+            alertMessage = `🎯 ${signal.ticker} TARGET HIT${mfeText} — Price dropped to $${currentPrice.toFixed(2)}, target was $${targetPrice.toFixed(2)}. WIN!`;
           }
         }
       }
 
-      // 3) Strike-based fallback
+      // ── 3) Strike-based fallback ──
       if (!outcome && strike > 0) {
         if (isBullish) {
           if (currentPrice > strike * 1.02) { outcome = "win"; hits++; }
-          else if (isExpired && currentPrice < strike) { outcome = "loss"; misses++; }
+          else if (isExpired && currentPrice < strike) {
+            outcome = mfePercent != null ? classifyOutcomeByMfe(mfePercent) : "loss";
+            if (outcome === "loss") misses++;
+            else if (outcome === "partial_win") partialWins++;
+            else if (outcome === "near_miss") nearMisses++;
+          }
         } else {
           if (currentPrice < strike * 0.98) { outcome = "win"; hits++; }
-          else if (isExpired && currentPrice > strike) { outcome = "loss"; misses++; }
+          else if (isExpired && currentPrice > strike) {
+            outcome = mfePercent != null ? classifyOutcomeByMfe(mfePercent) : "loss";
+            if (outcome === "loss") misses++;
+            else if (outcome === "partial_win") partialWins++;
+            else if (outcome === "near_miss") nearMisses++;
+          }
         }
       }
 
-      // 4) Expiry check
+      // ── 4) Expiry check — classify expired signals by MFE tier ──
       if (!outcome) {
         const ageDays = (now.getTime() - new Date(signal.created_at).getTime()) / (1000 * 60 * 60 * 24);
         if (ageDays > 30 || isExpired) {
-          outcome = "expired";
-          expired++;
+          // Use MFE-based classification if we have data, otherwise "expired"
+          if (mfePercent != null && mfePercent >= 30) {
+            outcome = classifyOutcomeByMfe(mfePercent);
+            if (outcome === "win") hits++;
+            else if (outcome === "partial_win") partialWins++;
+            else if (outcome === "near_miss") nearMisses++;
+          } else {
+            outcome = "expired";
+            expired++;
+          }
           alertType = "expired";
-          alertMessage = `⏰ ${signal.ticker} ${signal.put_call?.toUpperCase() || ''} $${signal.strike || 'N/A'} has expired without hitting target or invalidation.`;
+          const tierLabel = mfePercent != null ? ` (${mfeTierLabel(mfePercent)} — MFE ${mfePercent.toFixed(0)}%)` : "";
+          alertMessage = `⏰ ${signal.ticker} EXPIRED${tierLabel} — ${signal.put_call?.toUpperCase() || ''} $${signal.strike || 'N/A'}.`;
         }
       }
 
+      // ── Update signal — always update MFE + trade_status even if not resolved ──
+      const updatePayload: Record<string, any> = {};
+
+      if (mfePercent != null) updatePayload.mfe_percent = mfePercent;
+      if (maxFavorablePrice != null) updatePayload.max_favorable_price = maxFavorablePrice;
+      updatePayload.trade_status = tradeStatus;
+
       if (outcome) {
-        await supabase.from("signal_outcomes").update({
-          outcome,
-          outcome_price: currentPrice,
-          resolved_at: new Date().toISOString(),
-        }).eq("id", signal.id);
+        updatePayload.outcome = outcome;
+        updatePayload.outcome_price = currentPrice;
+        updatePayload.resolved_at = new Date().toISOString();
         verified++;
 
-        // Queue alert if we have one
         if (alertType && alertMessage) {
           newAlerts.push({
             signal_id: signal.id,
@@ -188,6 +356,10 @@ serve(async (req) => {
             trigger_price: triggerPrice,
           });
         }
+      }
+
+      if (Object.keys(updatePayload).length > 0) {
+        await supabase.from("signal_outcomes").update(updatePayload).eq("id", signal.id);
       }
     }
 
@@ -206,7 +378,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         message: `Verified ${verified} signals, ${alertCount} alerts sent`,
-        verified, hits, misses, expired, alerts: alertCount,
+        verified, hits, misses, expired, partial_wins: partialWins, near_misses: nearMisses,
+        alerts: alertCount,
         prices: priceMap,
         batch_size: pending.length,
         remaining_pending: remainingCount || 0,
