@@ -292,7 +292,7 @@ const DashboardCommunity = () => {
 
           <div
             ref={scrollRef}
-            className="flex-1 glass-panel rounded-lg border-glow-purple px-1.5 sm:px-2 pt-7 pb-1 overflow-y-auto flex flex-col min-h-0"
+            className="flex-1 glass-panel rounded-lg border-glow-purple px-1.5 sm:px-2 pt-7 pb-1 overflow-y-auto min-h-0"
           >
           <div className="space-y-0.5">
             {messages.length === 0 && (
