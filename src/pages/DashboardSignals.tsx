@@ -67,7 +67,7 @@ const MOCK_SIGNALS: MarketSignal[] = [
     targetZone: "$6594.22 – $6601.91 (previous swing high)",
     invalidation: "Below $6559.4 (VWAP break invalidates bullish thesis)",
     tradeStatus: "watching",
-    timeframe: "buy_now",
+    timeframe: "short_term",
     category: "algorithm",
     source: "live",
     aiEvaluated: true,
