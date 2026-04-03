@@ -12,88 +12,10 @@ import { useMarketData, type MarketSignal } from "@/hooks/useMarketData";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { HelpCircle, X, Sparkles, Zap } from "lucide-react";
+import { dbRecordToSignal } from "@/lib/signalMapper";
 
 const getSignalScore = (signal: Pick<MarketSignal, "convictionScore" | "confidence">) =>
   signal.convictionScore ?? Math.round(signal.confidence * 10);
-
-const formatRelativeTimestamp = (isoString: string) => {
-  const date = new Date(isoString);
-  if (Number.isNaN(date.getTime())) return "Today";
-  const eastern = new Date(date.toLocaleString("en-US", { timeZone: "America/New_York" }));
-  const month = eastern.getMonth() + 1;
-  const day = eastern.getDate();
-  const year = eastern.getFullYear();
-  const time = date.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-    timeZone: "America/New_York",
-  });
-  return `${month}/${day}/${year} ${time}`;
-};
-
-const recordToDashboardSignal = (record: any): MarketSignal => {
-  const confidence = Number(record.confidence) || 0;
-  let convictionScore = Math.round(confidence * 10);
-  if (confidence >= 9) convictionScore = Math.max(convictionScore, 92);
-  else if (confidence >= 8) convictionScore = Math.max(convictionScore, 85);
-  else if (confidence >= 7) convictionScore = Math.max(convictionScore, 78);
-  else if (confidence >= 6) convictionScore = Math.max(convictionScore, 70);
-
-  const isBullish = record.signal_type === "bullish";
-  const putCall = record.put_call || "call";
-  const tags = [putCall === "call" ? "Call Flow" : "Put Flow"];
-  if (convictionScore >= 85) tags.push("🔥 ACT NOW");
-  else if (convictionScore >= 70) tags.push("⚡ HIGH CONVICTION");
-
-  const createdAt = record.detected_at || record.created_at;
-
-  return {
-    id: record.id,
-    ticker: record.ticker,
-    type: isBullish ? "bullish" : "bearish",
-    confidence,
-    convictionScore,
-    convictionLabel:
-      convictionScore >= 90 ? "Extreme Conviction"
-        : convictionScore >= 80 ? "Very High Conviction"
-        : convictionScore >= 68 ? "High Conviction"
-        : convictionScore >= 50 ? "Moderate Conviction"
-        : "Low Conviction",
-    description: (() => {
-      let desc = record.description || record.reason ||
-        `${putCall === "call" ? "Call" : "Put"} flow on ${record.ticker}${record.strike ? ` at ${record.strike}` : ""}.`;
-      if (record.price_at_signal && !desc.includes('Price at $')) {
-        desc += ` Price at $${Number(record.price_at_signal).toFixed(2)}.`;
-      }
-      return desc;
-    })(),
-    timestamp: formatRelativeTimestamp(createdAt),
-    tags,
-    strike: record.strike ?? undefined,
-    expiry: record.expiry ?? undefined,
-    premium: record.premium ?? undefined,
-    putCall: (putCall as "call" | "put") ?? undefined,
-    suggestedTrade: `Buy ${record.ticker}${record.strike ? ` ${record.strike}` : ""} ${putCall === "put" ? "Puts" : "Calls"}${record.expiry ? ` exp ${record.expiry}` : ""}`,
-    targetZone: record.target_zone ?? undefined,
-    createdAt,
-    source: "live",
-    category: record.category || "algorithm",
-    reason: record.reason,
-    entryTrigger: record.entry_trigger,
-    invalidation: record.invalidation,
-    keyLevel: record.key_level,
-    srLevel: record.sr_level,
-    targetNear: record.target_near || undefined,
-    tradeStatus: record.trade_status || null,
-    aiEvaluated: !!record.is_biddie_pick,
-    priceAtSignal: record.price_at_signal ? Number(record.price_at_signal) : undefined,
-    outcome: record.outcome || null,
-    resolvedAt: record.resolved_at || null,
-    mfePercent: record.mfe_percent != null ? Number(record.mfe_percent) : null,
-    maxFavorablePrice: record.max_favorable_price != null ? Number(record.max_favorable_price) : null,
-  };
-};
 
 const Dashboard = () => {
   const { signals, whaleAlerts, loading } = useMarketData();
@@ -141,7 +63,7 @@ const Dashboard = () => {
           .order("created_at", { ascending: false })
           .limit(300);
         if (error) throw error;
-        setPersistedSignals((data ?? []).filter((s: any) => s.review_status !== 'wrong').map(recordToDashboardSignal));
+        setPersistedSignals((data ?? []).filter((s: any) => s.review_status !== 'wrong').map(dbRecordToSignal));
       } catch (error) {
         console.warn("Failed to load persisted signals:", error);
         setPersistedSignals([]);
@@ -158,7 +80,7 @@ const Dashboard = () => {
       .channel("dashboard-signals-realtime")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "signal_outcomes" }, (payload) => {
         const row = payload.new as any;
-        const mapped = recordToDashboardSignal(row);
+        const mapped = dbRecordToSignal(row);
         setPersistedSignals((prev) => {
           const key = `${mapped.ticker}|${mapped.strike}|${mapped.expiry}`;
           const exists = prev.some((s) => `${s.ticker}|${s.strike}|${s.expiry}` === key);
