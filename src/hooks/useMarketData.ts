@@ -53,8 +53,8 @@ export interface MarketSignal {
   reason?: string;
   aiEvaluated?: boolean;
   priceAtSignal?: number;
-  outcome?: "hit" | "win" | "missed" | "loss" | "pending" | null;
-  tradeStatus?: "watching" | "active" | "hit" | "miss" | "expired" | null;
+  outcome?: "hit" | "win" | "partial_win" | "near_miss" | "missed" | "loss" | "pending" | "expired" | null;
+  tradeStatus?: "watching" | "active" | "hit" | "stopped" | "miss" | "expired" | null;
   mfePercent?: number | null;
   maxFavorablePrice?: number | null;
   spreadDetails?: {
