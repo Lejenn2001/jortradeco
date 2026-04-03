@@ -11,7 +11,7 @@ import SignalFeedPanel from "@/components/dashboard/SignalFeedPanel";
 import { useMarketData, type MarketSignal } from "@/hooks/useMarketData";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { HelpCircle, X, Sparkles, Zap } from "lucide-react";
+import { HelpCircle, X, Sparkles, MessageSquare, ChevronDown, ChevronUp } from "lucide-react";
 import { dbRecordToSignal } from "@/lib/signalMapper";
 
 const getSignalScore = (signal: Pick<MarketSignal, "convictionScore" | "confidence">) =>
@@ -23,6 +23,7 @@ const Dashboard = () => {
   const firstName = profile?.full_name?.split(" ")[0] || "Trader";
   const [persistedSignals, setPersistedSignals] = useState<MarketSignal[]>([]);
   const [persistedLoading, setPersistedLoading] = useState(true);
+  const [chatOpen, setChatOpen] = useState(false);
 
   // Welcome banner state
   const welcomeKey = user?.id ? `biddie_welcomed_${user.id}` : null;
@@ -153,18 +154,18 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <AmbientBackground sentiment={sentiment} />
-      <div className="max-w-6xl mx-auto px-4 lg:px-6 py-5 space-y-5">
-        {/* Decision Engine Banner */}
-        <div className="relative overflow-hidden rounded-2xl border border-border/10 bg-card/80">
-          <svg className="absolute inset-0 w-full h-full opacity-[0.35]" viewBox="0 0 1000 200" preserveAspectRatio="none">
+      <div className="max-w-7xl mx-auto px-4 lg:px-6 py-4 space-y-4">
+        {/* Compact Decision Engine Banner */}
+        <div className="relative overflow-hidden rounded-xl border border-border/10 bg-card/80">
+          <svg className="absolute inset-0 w-full h-full opacity-[0.25]" viewBox="0 0 1000 100" preserveAspectRatio="none">
             {[40, 95, 150, 205, 260, 315, 370, 425, 480, 535, 590, 645, 700, 755, 810, 865, 920].map((x, i) => {
-              const heights = [60, 45, 80, 35, 70, 90, 50, 65, 40, 85, 55, 75, 30, 60, 45, 70, 55];
-              const tops = [70, 85, 50, 95, 60, 30, 80, 65, 90, 45, 75, 55, 100, 70, 85, 50, 75];
+              const heights = [30, 22, 40, 18, 35, 45, 25, 32, 20, 42, 28, 38, 15, 30, 22, 35, 28];
+              const tops = [35, 42, 25, 48, 30, 15, 40, 32, 45, 22, 38, 28, 50, 35, 42, 25, 38];
               const green = i % 3 !== 0;
               return (
                 <g key={i}>
-                  <line x1={x} y1={tops[i] - 15} x2={x} y2={tops[i] + heights[i] + 15} stroke={green ? "hsl(var(--primary))" : "hsl(var(--accent))"} strokeWidth="1" opacity="0.3" />
-                  <rect x={x - 8} y={tops[i]} width="16" height={heights[i]} fill={green ? "hsl(var(--primary))" : "hsl(var(--accent))"} rx="1" opacity="0.2" />
+                  <line x1={x} y1={tops[i] - 8} x2={x} y2={tops[i] + heights[i] + 8} stroke={green ? "hsl(var(--primary))" : "hsl(var(--accent))"} strokeWidth="1" opacity="0.3" />
+                  <rect x={x - 6} y={tops[i]} width="12" height={heights[i]} fill={green ? "hsl(var(--primary))" : "hsl(var(--accent))"} rx="1" opacity="0.2" />
                 </g>
               );
             })}
@@ -172,14 +173,14 @@ const Dashboard = () => {
           <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-accent/3 to-primary/5" />
           <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
 
-          <div className="relative px-6 py-7 lg:py-8">
+          <div className="relative px-5 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-1.5 h-10 rounded-full bg-gradient-to-b from-primary via-accent to-primary/50" />
+              <div className="w-1 h-8 rounded-full bg-gradient-to-b from-primary via-accent to-primary/50" />
               <div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-[0.15em] uppercase bg-gradient-to-r from-foreground via-foreground to-foreground/50 bg-clip-text text-transparent">
+                <h1 className="text-xl sm:text-2xl font-black tracking-[0.15em] uppercase bg-gradient-to-r from-foreground via-foreground to-foreground/50 bg-clip-text text-transparent">
                   DECISION ENGINE
                 </h1>
-                <p className="text-[10px] uppercase tracking-[0.3em] text-primary/80 font-semibold mt-0.5">
+                <p className="text-[9px] uppercase tracking-[0.3em] text-primary/80 font-semibold">
                   Flow · Insight · Execution
                 </p>
               </div>
@@ -229,7 +230,7 @@ const Dashboard = () => {
                   </button>
                 </div>
               ) : (
-                <div className="relative flex items-center px-5 py-4 gap-4">
+                <div className="relative flex items-center px-5 py-3 gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <Sparkles className="h-3.5 w-3.5 text-primary" />
@@ -243,49 +244,94 @@ const Dashboard = () => {
           )}
         </AnimatePresence>
 
-        {/* Market Pulse */}
-        <MarketPulse />
-
-        {/* Live State */}
-        <div className="space-y-1">
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 px-1">▸ Live State</p>
-          <MarketStatusSign />
+        {/* Market Pulse + Market Status — Side by Side */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2">
+            <MarketPulse />
+          </div>
+          <div className="lg:col-span-1">
+            <MarketStatusSign />
+          </div>
         </div>
 
+        {/* Section Divider */}
+        <div className="h-px bg-gradient-to-r from-transparent via-border/40 to-transparent" />
+
+        {/* Hero Signal */}
         <HeroSignalCard signal={heroSignal} loading={signalFeedLoading} />
 
-        {/* AI Chat */}
-        <div className="max-h-[600px]">
-          <AIChatPanel />
+        {/* Collapsible AI Chat */}
+        <div className="rounded-xl border border-border/20 bg-card/60 overflow-hidden">
+          <button
+            onClick={() => setChatOpen(!chatOpen)}
+            className="w-full flex items-center justify-between px-5 py-3 hover:bg-muted/20 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold text-foreground">AI Chat Assistant</span>
+              <span className="text-[10px] text-muted-foreground">Ask Biddie anything</span>
+            </div>
+            {chatOpen ? (
+              <ChevronUp className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            )}
+          </button>
+          <AnimatePresence>
+            {chatOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden"
+              >
+                <div className="max-h-[500px] border-t border-border/10">
+                  <AIChatPanel />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Categorized Signal Feeds */}
-        <div className="grid grid-cols-1 gap-4 lg:gap-6">
-          <SignalFeedPanel
-            signals={algorithmPlays}
-            loading={signalFeedLoading}
-            title="Algorithm Plays"
-            subtitle="AI detected setups using price action and options flow analysis"
-            icon="algorithm"
-            limit={5}
-          />
-          <SignalFeedPanel
-            signals={whalePlays}
-            loading={signalFeedLoading}
-            title="Whale Plays"
-            subtitle="Institutional money flow — high-conviction sweeps ($1M+)"
-            icon="whale"
-            limit={5}
-          />
-          <SignalFeedPanel
-            signals={spreadPlays}
-            loading={signalFeedLoading}
-            title="Spread Plays"
-            subtitle="Multi-leg strategies with defined risk/reward profiles"
-            icon="spread"
-            limit={5}
-          />
+        {/* Section Divider */}
+        <div className="h-px bg-gradient-to-r from-transparent via-border/40 to-transparent" />
+
+        {/* Signal Feeds — 2 Column on Desktop */}
+        <div>
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 px-1 mb-3">▸ Today's Signals</p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <SignalFeedPanel
+              signals={algorithmPlays}
+              loading={signalFeedLoading}
+              title="Algorithm Plays"
+              subtitle="AI detected setups using price action and options flow analysis"
+              icon="algorithm"
+              limit={5}
+            />
+            <SignalFeedPanel
+              signals={whalePlays}
+              loading={signalFeedLoading}
+              title="Whale Plays"
+              subtitle="Institutional money flow — high-conviction sweeps ($1M+)"
+              icon="whale"
+              limit={5}
+            />
+          </div>
+          <div className="mt-4">
+            <SignalFeedPanel
+              signals={spreadPlays}
+              loading={signalFeedLoading}
+              title="Spread Plays"
+              subtitle="Multi-leg strategies with defined risk/reward profiles"
+              icon="spread"
+              limit={5}
+            />
+          </div>
         </div>
+
+        {/* Section Divider */}
+        <div className="h-px bg-gradient-to-r from-transparent via-border/40 to-transparent" />
 
         {/* Portfolio */}
         <div className="overflow-y-auto">
