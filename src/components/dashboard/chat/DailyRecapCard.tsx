@@ -33,42 +33,44 @@ const DailyRecapCard = ({
   topCall = MOCK_DATA.topCall,
   totalMessages = MOCK_DATA.totalMessages,
 }: RecapProps) => {
-  const topTicker = tickers[0];
-
   return (
-    <div className="rounded-lg border border-border/60 bg-card/80 px-2 py-1.5">
-      <div className="flex items-center gap-1.5 overflow-x-auto whitespace-nowrap">
-        <div className="flex shrink-0 items-center gap-2 pr-1">
-          <img src={biddieRobot} alt="Biddie AI avatar" className="h-5 w-5 shrink-0" />
-          <div className="leading-none">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Daily Recap</p>
-            <p className="mt-0.5 text-[11px] font-medium text-foreground">{date}</p>
+    <div className="rounded-lg border border-border/60 bg-gradient-to-r from-primary/5 via-card/80 to-accent/5 p-3">
+      <div className="flex items-start gap-3">
+        <img src={biddieRobot} alt="Biddie AI" className="h-10 w-10 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1.5">
+            <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Daily Recap</p>
+            <span className="text-xs text-foreground font-medium">{date}</span>
+            <span className="rounded-full bg-muted/50 px-2 py-0.5 text-[10px] text-muted-foreground">
+              {totalMessages} msgs
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap mb-1.5">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Most Discussed:</span>
+            {tickers.map((t) => (
+              <span
+                key={t.ticker}
+                className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/40 px-2 py-0.5 text-[11px] text-foreground"
+              >
+                {t.direction === "up" ? (
+                  <TrendingUp className="h-3 w-3 text-primary" />
+                ) : (
+                  <TrendingDown className="h-3 w-3 text-destructive" />
+                )}
+                <span className="font-semibold">{t.ticker}</span>
+                <span className="text-muted-foreground">×{t.mentions}</span>
+              </span>
+            ))}
+          </div>
+
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-[11px]">
+            <Trophy className="h-3.5 w-3.5 text-primary" />
+            <span className="font-medium text-foreground">Biddie's Best Call:</span>
+            <span className="font-semibold text-foreground">{topCall.ticker} {topCall.direction}</span>
+            <span className="font-bold text-primary">{topCall.result}</span>
           </div>
         </div>
-
-        <span className="shrink-0 rounded-full bg-muted/50 px-2 py-0.5 text-[10px] text-muted-foreground">
-          {totalMessages} msgs
-        </span>
-
-        {topTicker && (
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border/60 bg-background/40 px-2 py-0.5 text-[10px] text-foreground">
-            {topTicker.direction === "up" ? (
-              <TrendingUp className="h-3 w-3 text-primary" />
-            ) : (
-              <TrendingDown className="h-3 w-3 text-destructive" />
-            )}
-            <span className="font-semibold">{topTicker.ticker}</span>
-            <span className="text-muted-foreground">×{topTicker.mentions}</span>
-          </span>
-        )}
-
-        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] text-foreground">
-          <Trophy className="h-3 w-3 text-primary" />
-          <span className="font-medium">
-            {topCall.ticker} {topCall.direction}
-          </span>
-          <span className="text-primary">{topCall.result}</span>
-        </span>
       </div>
     </div>
   );
