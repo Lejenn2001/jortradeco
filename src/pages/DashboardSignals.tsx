@@ -320,8 +320,14 @@ const DashboardSignals = () => {
   const algorithmSignals = useMemo(() => {
     const algoOnly = filtered.filter(s => s.category === "algorithm" || (s.category !== "whale" && s.category !== "spread"));
     return {
-      buy_now: algoOnly.filter(s => s.timeframe === "buy_now"),
-      short_term: algoOnly.filter(s => s.timeframe === "short_term" || s.timeframe === "swing"),
+      buy_now: algoOnly.filter(s => {
+        const { timeframe: tf } = deriveTimeframeLabel(s.expiry);
+        return tf === "buy_now";
+      }),
+      short_term: algoOnly.filter(s => {
+        const { timeframe: tf } = deriveTimeframeLabel(s.expiry);
+        return tf === "short_term" || tf === "swing";
+      }),
     };
   }, [filtered]);
 
