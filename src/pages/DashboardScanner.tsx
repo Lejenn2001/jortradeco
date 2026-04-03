@@ -211,6 +211,12 @@ const DashboardScanner = () => {
             <ScannerCard key={signal.ticker} signal={signal} index={i} />
           ))}
         </div>
+
+        {/* How It Works — Collapsible */}
+        <HowItWorksSection />
+
+        {/* Tracked Tickers — Collapsible */}
+        <TrackedTickersSection />
       </div>
     </DashboardLayout>
   );
