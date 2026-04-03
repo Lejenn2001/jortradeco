@@ -79,13 +79,13 @@ const DashboardCommunity = () => {
     setSelected(new Set());
   };
 
-  const scrollToBottom = () => {
-    requestAnimationFrame(() => {
+  const scrollToBottom = useCallback(() => {
+    setTimeout(() => {
       if (scrollRef.current) {
         scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
       }
-    });
-  };
+    }, 50);
+  }, []);
 
   const scrollToMessage = useCallback((id: string) => {
     const el = document.getElementById(`msg-${id}`);
