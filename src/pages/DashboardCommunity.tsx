@@ -40,8 +40,36 @@ const DashboardCommunity = () => {
   const [biddieTyping, setBiddieTyping] = useState(false);
   const [onlineCount, setOnlineCount] = useState(1);
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
+  const [manageMode, setManageMode] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const scrollRef = useRef<HTMLDivElement>(null);
   const broadcastTyping = useTypingBroadcast();
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const deleteSelected = async () => {
+    if (selected.size === 0) return;
+    const ids = Array.from(selected);
+    const { error } = await supabase.from("chat_messages").delete().in("id", ids);
+    if (error) {
+      toast({ title: "Error deleting", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: `Deleted ${ids.length} message(s)` });
+      setSelected(new Set());
+      setManageMode(false);
+    }
+  };
+
+  const exitManage = () => {
+    setManageMode(false);
+    setSelected(new Set());
+  };
 
   const scrollToBottom = () => {
     requestAnimationFrame(() => {
