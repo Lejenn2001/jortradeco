@@ -43,9 +43,11 @@ const DashboardCommunity = () => {
   const broadcastTyping = useTypingBroadcast();
 
   const scrollToBottom = () => {
-    setTimeout(() => {
-      scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-    }, 50);
+    requestAnimationFrame(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+    });
   };
 
   const scrollToMessage = useCallback((id: string) => {
