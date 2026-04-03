@@ -658,29 +658,22 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
   const { label: tfLabel, timeframe: derivedTf } = deriveTimeframeLabel(signal.expiry);
   const tfColor = derivedTf === "buy_now" ? "bg-yellow-500/90 text-yellow-950" : derivedTf === "short_term" ? "bg-accent/80 text-accent-foreground" : "bg-emerald-500/80 text-emerald-950";
 
-  // Outcome badges
+  // Outcome badges — simplified: WIN, PARTIAL WIN, LOSS (near_miss → loss on UI)
   const outcome = signal.outcome;
+  const isResolved = outcome && outcome !== "pending";
   const isWin = outcome === "win" || outcome === "hit";
   const isPartialWin = outcome === "partial_win";
-  const isNearMiss = outcome === "near_miss";
-  const isLoss = outcome === "loss" || outcome === "missed";
+  const isLoss = outcome === "loss" || outcome === "missed" || outcome === "near_miss" || outcome === "expired";
   const isPending = !outcome || outcome === "pending";
 
-  const statusMap: Record<string, { label: string; color: string }> = {
-    watching: { label: "WATCHING", color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
-    active: { label: "ACTIVE", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
-    hit: { label: "HIT ✓", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
-    stopped: { label: "STOPPED", color: "bg-destructive/20 text-destructive border-destructive/30" },
-    miss: { label: "MISS", color: "bg-destructive/20 text-destructive border-destructive/30" },
-    expired: { label: "EXPIRED", color: "bg-muted/30 text-muted-foreground border-muted/40" },
-  };
-  const status = signal.tradeStatus ? statusMap[signal.tradeStatus] : null;
+  // MFE progress for active (unresolved) signals
+  const mfeProgress = isPending && signal.mfePercent != null
+    ? { percent: signal.mfePercent, color: signal.mfePercent >= 75 ? "text-emerald-400" : signal.mfePercent >= 50 ? "text-primary" : signal.mfePercent >= 30 ? "text-yellow-400" : "text-destructive" }
+    : null;
 
-  const mfeInfo = signal.mfePercent != null
-    ? signal.mfePercent >= 75 ? { text: `Full Hit (${signal.mfePercent.toFixed(0)}% MFE)`, color: "text-emerald-400" }
-    : signal.mfePercent >= 50 ? { text: `Partial Hit (${signal.mfePercent.toFixed(0)}% MFE)`, color: "text-primary" }
-    : signal.mfePercent >= 30 ? { text: `Near Miss (${signal.mfePercent.toFixed(0)}% MFE)`, color: "text-yellow-400" }
-    : { text: `Miss (${signal.mfePercent.toFixed(0)}% MFE)`, color: "text-destructive" }
+  // MFE tier label for resolved signals
+  const mfeInfo = isResolved && signal.mfePercent != null
+    ? { text: `MFE ${signal.mfePercent.toFixed(0)}%`, color: signal.mfePercent >= 75 ? "text-emerald-400" : signal.mfePercent >= 50 ? "text-primary" : "text-destructive" }
     : null;
 
   const glowClass = signal.aiEvaluated
