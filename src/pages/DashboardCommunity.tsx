@@ -255,7 +255,7 @@ const DashboardCommunity = () => {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.2 }}
-                  className={`group flex gap-2.5 transition-all ${isOwn ? "flex-row-reverse" : ""}`}
+                  className={`group flex gap-2 transition-all ${isOwn ? "flex-row-reverse" : ""}`}
                 >
                   {/* Avatar */}
                   {isBiddie ? (
