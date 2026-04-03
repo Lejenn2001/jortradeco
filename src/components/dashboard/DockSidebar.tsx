@@ -91,11 +91,8 @@ const DockSidebar = () => {
   return (
     <Sidebar collapsible="icon" className="hidden lg:flex border-r border-border/40 bg-card/80 backdrop-blur-xl">
       <SidebarHeader className="p-3">
-        <Link to="/" className="flex flex-col items-center gap-1 px-1 py-2">
-          <img src={jortradeLogo} alt="JORTRADE" className="w-10 h-10 rounded-xl object-contain shrink-0" />
-          {!collapsed && (
-            <span className="text-[10px] font-bold text-muted-foreground tracking-[0.25em] uppercase mt-0.5">JORTRADE</span>
-          )}
+        <Link to="/" className="flex items-center justify-center px-1 py-2">
+          <img src={jortradeLogo} alt="JORTRADE" className="w-14 h-14 object-contain shrink-0" />
         </Link>
       </SidebarHeader>
 
