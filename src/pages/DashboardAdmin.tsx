@@ -78,7 +78,7 @@ const exportToCSV = (members: MemberWithRoles[]) => {
   URL.revokeObjectURL(url);
 };
 
-const DashboardAnalytics = () => {
+const DashboardAdmin = () => {
   const { session } = useAuth();
   const { signals, loading: signalsLoading } = useMarketData();
   const onlineUsers = usePresenceTracker();
