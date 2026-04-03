@@ -25,28 +25,28 @@ const MOCK_SIGNALS: MarketSignal[] = [
     confidence: 8.2,
     convictionScore: 82,
     convictionLabel: "Very High Conviction",
-    description: "Options flow. 100% ask aggression. Price @ $585.04.",
+    description: "Options flow. 100% ask aggression. Price @ $485.04.",
     timestamp: "4/3/2026 10:42 AM",
     tags: ["Call Flow", "ATM", "GEX Call Wall", "GEX Wall Target"],
-    strike: "$590",
-    expiry: "April 8, 2026",
+    strike: "$490",
+    expiry: "April 4, 2026",
     premium: "$142K",
     putCall: "call",
-    suggestedTrade: "Buy QQQ $590 Call",
-    entryTrigger: "Near $585.04 (no VWAP data)",
-    targetZone: "$590.00 (GEX call wall — likely resistance) – $608.45",
-    invalidation: "Below $573.34",
-    keyLevel: "$590 psychological level",
-    srLevel: "$590 psychological level",
-    tradeStatus: "hit",
-    timeframe: "swing",
+    suggestedTrade: "Buy QQQ $490 Call",
+    entryTrigger: "Near $485.04 (no VWAP data)",
+    targetZone: "$490.00 (GEX call wall — likely resistance) – $495.45",
+    invalidation: "Below $479.34",
+    keyLevel: "$490 psychological level",
+    srLevel: "$490 psychological level",
+    tradeStatus: "active",
+    timeframe: "buy_now",
     category: "algorithm",
     source: "live",
     gammaZone: "positive",
     gammaDescription: "Above gamma flip",
     aiEvaluated: false,
-    mfePercent: 92,
-    outcome: "win",
+    mfePercent: 72,
+    outcome: "pending",
   },
   {
     id: "mock-algo-2",
@@ -55,17 +55,17 @@ const MOCK_SIGNALS: MarketSignal[] = [
     confidence: 8.5,
     convictionScore: 85,
     convictionLabel: "Very High Conviction",
-    description: "Options flow. 0% ask aggression. Price @ $6582.68.",
+    description: "Options flow. 0% ask aggression. Price @ $5582.68.",
     timestamp: "4/2/2026 8:00 PM",
     tags: ["Call Flow", "⚡ HIGH CONVICTION", "SPX Flow", "VWAP Retest"],
-    strike: "$6670",
+    strike: "$5600",
     expiry: "April 6, 2026",
     premium: "$89K",
     putCall: "call",
-    suggestedTrade: "Buy SPXW $6670.00 Call (April 6, 2026)",
-    entryTrigger: "VWAP retest from above at $6559.4 — bounce is your entry",
-    targetZone: "$6594.22 – $6601.91 (previous swing high)",
-    invalidation: "Below $6559.4 (VWAP break invalidates bullish thesis)",
+    suggestedTrade: "Buy SPXW $5600.00 Call (April 6, 2026)",
+    entryTrigger: "VWAP retest from above at $5559.4 — bounce is your entry",
+    targetZone: "$5594.22 – $5601.91 (previous swing high)",
+    invalidation: "Below $5559.4 (VWAP break invalidates bullish thesis)",
     tradeStatus: "watching",
     timeframe: "short_term",
     category: "algorithm",
@@ -85,7 +85,7 @@ const MOCK_SIGNALS: MarketSignal[] = [
     timestamp: "4/3/2026 11:15 AM",
     tags: ["Call Flow", "🔥 ACT NOW"],
     strike: "$118",
-    expiry: "April 4, 2026",
+    expiry: "April 7, 2026",
     premium: "$320K",
     putCall: "call",
     suggestedTrade: "Buy NVDA $118 Calls",
@@ -95,12 +95,12 @@ const MOCK_SIGNALS: MarketSignal[] = [
     invalidation: "Below $114.90",
     keyLevel: "$115 support cluster",
     tradeStatus: "active",
-    timeframe: "buy_now",
+    timeframe: "short_term",
     category: "algorithm",
     source: "live",
     aiEvaluated: true,
-    mfePercent: 68,
-    outcome: "partial_win",
+    mfePercent: 41,
+    outcome: "pending",
   },
   {
     id: "mock-whale-1",
@@ -127,7 +127,7 @@ const MOCK_SIGNALS: MarketSignal[] = [
     source: "live",
     aiEvaluated: false,
     mfePercent: 18,
-    outcome: "loss",
+    outcome: "pending",
   },
   {
     id: "mock-whale-2",
@@ -154,7 +154,7 @@ const MOCK_SIGNALS: MarketSignal[] = [
     source: "live",
     aiEvaluated: true,
     mfePercent: 52,
-    outcome: "partial_win",
+    outcome: "pending",
   },
   {
     id: "mock-spread-1",
@@ -166,19 +166,19 @@ const MOCK_SIGNALS: MarketSignal[] = [
     description: "Bull call spread on SPY. Net debit $1.20.",
     timestamp: "4/3/2026 10:05 AM",
     tags: ["Call Flow", "Spread"],
-    strike: "$580/$585",
+    strike: "$530/$535",
     expiry: "April 7, 2026",
     premium: "$180K",
     putCall: "call",
-    suggestedTrade: "Buy SPY $580/$585 Bull Call Spread",
-    entryTrigger: "Near $578.50",
-    targetZone: "$585.00 (max profit at expiry)",
-    invalidation: "Below $575.00",
+    suggestedTrade: "Buy SPY $530/$535 Bull Call Spread",
+    entryTrigger: "Near $528.50",
+    targetZone: "$535.00 (max profit at expiry)",
+    invalidation: "Below $525.00",
     tradeStatus: "watching",
     timeframe: "short_term",
     category: "spread",
     source: "live",
-    spreadDetails: { type: "Bull Call Spread", legs: "Buy $580C / Sell $585C", max_profit: 380, max_loss: 120, probability: 62 },
+    spreadDetails: { type: "Bull Call Spread", legs: "Buy $530C / Sell $535C", max_profit: 380, max_loss: 120, probability: 62 },
     aiEvaluated: false,
     mfePercent: null,
     outcome: "pending",
@@ -190,18 +190,18 @@ const MOCK_SIGNALS: MarketSignal[] = [
     confidence: 8.0,
     convictionScore: 80,
     convictionLabel: "Very High Conviction",
-    description: "Options flow. $450K on SPXW Puts. 88% ask aggression. Gamma flip at 5620.",
+    description: "Options flow. $450K on SPXW Puts. 88% ask aggression. Gamma flip at 5520.",
     timestamp: "4/3/2026 11:00 AM",
     tags: ["Put Flow", "SPX Flow", "⚡ HIGH CONVICTION"],
-    strike: "$5580",
+    strike: "$5500",
     expiry: "April 4, 2026",
     premium: "$450K",
     putCall: "put",
-    suggestedTrade: "Buy SPXW $5580 Puts",
-    entryTrigger: "Break below $5605 (gamma flip zone)",
-    targetZone: "$5580.00 – $5560.00 (put wall support)",
-    invalidation: "Above $5625.00",
-    keyLevel: "$5620 gamma flip",
+    suggestedTrade: "Buy SPXW $5500 Puts",
+    entryTrigger: "Break below $5515 (gamma flip zone)",
+    targetZone: "$5500.00 – $5480.00 (put wall support)",
+    invalidation: "Above $5535.00",
+    keyLevel: "$5520 gamma flip",
     tradeStatus: "active",
     timeframe: "buy_now",
     category: "algorithm",
@@ -209,11 +209,10 @@ const MOCK_SIGNALS: MarketSignal[] = [
     gammaZone: "negative",
     gammaDescription: "Below gamma flip — expect volatility expansion",
     aiEvaluated: true,
-    mfePercent: 45,
-    outcome: "near_miss",
+    mfePercent: 58,
+    outcome: "pending",
   },
 ];
-
 const ALGO_SECTION_META = {
   buy_now: {
     label: "🔥 ACT NOW",
@@ -659,29 +658,22 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
   const { label: tfLabel, timeframe: derivedTf } = deriveTimeframeLabel(signal.expiry);
   const tfColor = derivedTf === "buy_now" ? "bg-yellow-500/90 text-yellow-950" : derivedTf === "short_term" ? "bg-accent/80 text-accent-foreground" : "bg-emerald-500/80 text-emerald-950";
 
-  // Outcome badges
+  // Outcome badges — simplified: WIN, PARTIAL WIN, LOSS (near_miss → loss on UI)
   const outcome = signal.outcome;
+  const isResolved = outcome && outcome !== "pending";
   const isWin = outcome === "win" || outcome === "hit";
   const isPartialWin = outcome === "partial_win";
-  const isNearMiss = outcome === "near_miss";
-  const isLoss = outcome === "loss" || outcome === "missed";
+  const isLoss = outcome === "loss" || outcome === "missed" || outcome === "near_miss" || outcome === "expired";
   const isPending = !outcome || outcome === "pending";
 
-  const statusMap: Record<string, { label: string; color: string }> = {
-    watching: { label: "WATCHING", color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
-    active: { label: "ACTIVE", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
-    hit: { label: "HIT ✓", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
-    stopped: { label: "STOPPED", color: "bg-destructive/20 text-destructive border-destructive/30" },
-    miss: { label: "MISS", color: "bg-destructive/20 text-destructive border-destructive/30" },
-    expired: { label: "EXPIRED", color: "bg-muted/30 text-muted-foreground border-muted/40" },
-  };
-  const status = signal.tradeStatus ? statusMap[signal.tradeStatus] : null;
+  // MFE progress for active (unresolved) signals
+  const mfeProgress = isPending && signal.mfePercent != null
+    ? { percent: signal.mfePercent, color: signal.mfePercent >= 75 ? "text-emerald-400" : signal.mfePercent >= 50 ? "text-primary" : signal.mfePercent >= 30 ? "text-yellow-400" : "text-destructive" }
+    : null;
 
-  const mfeInfo = signal.mfePercent != null
-    ? signal.mfePercent >= 75 ? { text: `Full Hit (${signal.mfePercent.toFixed(0)}% MFE)`, color: "text-emerald-400" }
-    : signal.mfePercent >= 50 ? { text: `Partial Hit (${signal.mfePercent.toFixed(0)}% MFE)`, color: "text-primary" }
-    : signal.mfePercent >= 30 ? { text: `Near Miss (${signal.mfePercent.toFixed(0)}% MFE)`, color: "text-yellow-400" }
-    : { text: `Miss (${signal.mfePercent.toFixed(0)}% MFE)`, color: "text-destructive" }
+  // MFE tier label for resolved signals
+  const mfeInfo = isResolved && signal.mfePercent != null
+    ? { text: `MFE ${signal.mfePercent.toFixed(0)}%`, color: signal.mfePercent >= 75 ? "text-emerald-400" : signal.mfePercent >= 50 ? "text-primary" : "text-destructive" }
     : null;
 
   const glowClass = signal.aiEvaluated
@@ -770,7 +762,6 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
             <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${isCall ? "bg-primary/20 text-primary" : "bg-destructive/20 text-destructive"}`}>
               {signal.putCall === "call" ? "CALL" : "PUT"}
             </span>
-            {/* Outcome badges */}
             {isWin && (
               <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
                 <CheckCircle2 className="h-3 w-3" /> WIN
@@ -778,28 +769,24 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
             )}
             {isPartialWin && (
               <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30 flex items-center gap-1">
-                <CheckCircle2 className="h-3 w-3" /> PARTIAL
+                <CheckCircle2 className="h-3 w-3" /> PARTIAL WIN
               </span>
             )}
-            {isNearMiss && (
-              <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 flex items-center gap-1">
-                <Target className="h-3 w-3" /> NEAR MISS
-              </span>
-            )}
-            {isLoss && (
+            {isLoss && isResolved && (
               <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-destructive/20 text-destructive border border-destructive/30 flex items-center gap-1">
                 <XCircle className="h-3 w-3" /> LOSS
               </span>
             )}
-            {/* MFE badge */}
-            {signal.mfePercent != null && (
-              <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
-                signal.mfePercent >= 75 ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
-                : signal.mfePercent >= 50 ? "bg-primary/20 text-primary border-primary/30"
-                : signal.mfePercent >= 30 ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
-                : "bg-destructive/20 text-destructive border-destructive/30"
-              }`}>
-                MFE {signal.mfePercent.toFixed(0)}%
+            {/* MFE badge on resolved signals */}
+            {mfeInfo && (
+              <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border bg-muted/20 border-border/30 ${mfeInfo.color}`}>
+                {mfeInfo.text}
+              </span>
+            )}
+            {/* MFE progress on active signals */}
+            {mfeProgress && (
+              <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border bg-muted/20 border-border/30 ${mfeProgress.color}`}>
+                {mfeProgress.percent.toFixed(0)}% to TP
               </span>
             )}
             {signal.premium && <span className="text-[10px] sm:text-xs text-accent font-semibold">{signal.premium}</span>}
@@ -906,12 +893,6 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
           )}
         </div>
 
-        {/* MFE */}
-        {mfeInfo && (
-          <div className={`text-[10px] sm:text-[11px] font-semibold ${mfeInfo.color}`}>
-            📊 {mfeInfo.text}
-          </div>
-        )}
 
         {/* I Took This Trade */}
         <button
