@@ -210,7 +210,7 @@ const MOCK_SIGNALS: MarketSignal[] = [
     gammaDescription: "Below gamma flip — expect volatility expansion",
     aiEvaluated: true,
     mfePercent: 45,
-    outcome: "pending",
+    outcome: "near_miss",
   },
 ];
 
