@@ -122,21 +122,8 @@ const DashboardCommunity = () => {
     };
   }, [session?.user?.id, firstName]);
 
-  const triggerBiddie = async (userMessage: string) => {
-    setBiddieTyping(true);
-    try {
-      const chatInstruction = `[COMMUNITY CHAT MODE] Keep your response SHORT — 2-3 sentences max. Only give a full detailed breakdown if you see a high-confidence alert (8+/10). For casual greetings, just be friendly and brief. For trading questions, give the #1 best play only with ticker, direction, and confidence. No long lists.\n\nUser says: ${userMessage}`;
-      const { error } = await supabase.functions.invoke("ai-chat", {
-        body: { message: chatInstruction, postToChat: true },
-      });
-      if (error) console.error("Biddie edge function error:", error);
-    } catch (e) {
-      console.error("Biddie API error:", e);
-    } finally {
-      // Fallback clear after 15s in case no message arrives
-      setTimeout(() => setBiddieTyping(false), 15000);
-    }
-  };
+  // Biddie typing is shown when a non-Biddie message arrives (DB trigger handles AI reply)
+  // We set biddieTyping=true after sending, and clear it when Biddie's message arrives via realtime
 
   const sendMessage = async (imageUrl?: string) => {
     if (!session?.user?.id) {
