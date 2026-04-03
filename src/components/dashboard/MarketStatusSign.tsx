@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Globe, Moon, Landmark, Building2 } from "lucide-react";
+import { useWeather } from "@/hooks/useWeather";
 
 /* ─── ET time helpers ─── */
 function getETNow() {
@@ -216,12 +217,33 @@ interface MarketStatusSignProps {
 const MarketStatusSign = ({ demoSessions }: MarketStatusSignProps = {}) => {
   const [state, setState] = useState(getMarketState);
   const [etNow, setEtNow] = useState(getETNow);
+  const [clock, setClock] = useState("");
+  const [dateStr, setDateStr] = useState("");
+  const { weather } = useWeather();
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    const tick = () => {
       setState(getMarketState());
-      setEtNow(getETNow());
-    }, 1000);
+      const et = getETNow();
+      setEtNow(et);
+
+      // Format clock: 12:29:04 PM ET
+      const timeFormatter = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/New_York",
+        hour: "numeric", minute: "2-digit", second: "2-digit",
+        hour12: true,
+      });
+      setClock(timeFormatter.format(new Date()) + " ET");
+
+      // Format date: Friday, April 3 EST
+      const dateFormatter = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/New_York",
+        weekday: "long", month: "long", day: "numeric",
+      });
+      setDateStr(dateFormatter.format(new Date()) + " EST");
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -238,28 +260,46 @@ const MarketStatusSign = ({ demoSessions }: MarketStatusSignProps = {}) => {
     <div className="glass-panel rounded-xl p-4 border-glow-purple relative overflow-hidden">
       <div className={`absolute inset-0 rounded-xl transition-all duration-1000 ${cfg.bgGlow}`} />
 
-      {/* Row 1: Market status + countdown */}
-      <div className="relative flex items-center justify-between gap-4 mb-3">
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className={`w-3 h-3 rounded-full ${cfg.dotClass}`} />
-            <div className={`absolute inset-0 w-3 h-3 rounded-full animate-ping ${cfg.pingClass}`} />
+      {/* Row 1: Market status + clock + weather */}
+      <div className="relative flex items-start justify-between gap-4 mb-3">
+        <div>
+          <div className="flex items-center gap-3 mb-1">
+            <div className="relative">
+              <div className={`w-3 h-3 rounded-full ${cfg.dotClass}`} />
+              <div className={`absolute inset-0 w-3 h-3 rounded-full animate-ping ${cfg.pingClass}`} />
+            </div>
+            <span
+              className={`text-lg font-black tracking-[0.25em] uppercase ${cfg.textClass}`}
+              style={{ textShadow: cfg.textShadow }}
+            >
+              {cfg.label}
+            </span>
           </div>
-          <span
-            className={`text-lg font-black tracking-[0.25em] uppercase ${cfg.textClass}`}
-            style={{ textShadow: cfg.textShadow }}
-          >
-            {cfg.label}
-          </span>
+          <div className="pl-6">
+            <p className="text-sm font-bold text-foreground tracking-wide">{clock}</p>
+            <p className="text-[11px] text-muted-foreground">{dateStr}</p>
+          </div>
         </div>
 
-        <div className="text-right">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
-            {state.targetLabel}{" "}
-            <span className="text-foreground font-bold">{state.targetTime}</span>
-          </div>
-          <div className={`text-sm font-mono font-bold tracking-[0.2em] ${cfg.countdownClass}`}>
-            {state.countdown}
+        {/* Weather + countdown */}
+        <div className="text-right space-y-1.5">
+          {weather && (
+            <div className="flex items-center gap-2 justify-end">
+              <span className="text-lg">{weather.icon}</span>
+              <div>
+                <p className="text-sm font-bold text-foreground">{weather.temp}°F</p>
+                <p className="text-[10px] text-muted-foreground">{weather.location}</p>
+              </div>
+            </div>
+          )}
+          <div className="border-t border-border/10 pt-1.5">
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
+              {state.targetLabel}{" "}
+              <span className="text-foreground font-bold">{state.targetTime}</span>
+            </div>
+            <div className={`text-sm font-mono font-bold tracking-[0.2em] ${cfg.countdownClass}`}>
+              {state.countdown}
+            </div>
           </div>
         </div>
       </div>
