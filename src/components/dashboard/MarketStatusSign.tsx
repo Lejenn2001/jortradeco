@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Globe, Moon, Landmark, Building2 } from "lucide-react";
+import { useWeather } from "@/hooks/useWeather";
 
 /* ─── ET time helpers ─── */
 function getETNow() {
