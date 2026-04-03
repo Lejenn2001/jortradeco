@@ -246,7 +246,7 @@ const DashboardCommunity = () => {
     <DashboardLayout showTickerTape={false}>
       <div className="flex-1 flex flex-col overflow-hidden p-1 sm:p-1.5 bg-mesh">
         {/* Header */}
-        <div className="mb-0.5 shrink-0 hidden xl:block">
+        <div className="mb-0.5 shrink-0">
           <ChatRoomHeader onlineCount={onlineCount} firstName={firstName} />
         </div>
 
