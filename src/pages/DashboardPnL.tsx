@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import PageBanner from "@/components/dashboard/PageBanner";
 import { ChevronLeft, ChevronRight, Flame, Trophy, Calendar as CalendarIcon, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -195,7 +196,14 @@ const DashboardPnL = () => {
   return (
     <DashboardLayout>
       <div className="max-w-6xl mx-auto px-4 lg:px-6 py-5 space-y-6">
-          {/* Stats Row */}
+          <PageBanner
+            title="P&L TRACKER"
+            subtitle="Calendar · Trades · Growth"
+            accentFrom="hsl(20, 90%, 55%)"
+            accentTo="hsl(350, 80%, 60%)"
+            gradientFrom="from-orange-900/15"
+            gradientTo="to-rose-900/10"
+          />
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             <div className="glass-panel rounded-xl p-4 border-glow-blue">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Monthly P&L</p>

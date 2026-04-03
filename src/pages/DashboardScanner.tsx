@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import PageBanner from "@/components/dashboard/PageBanner";
 import ConvictionScoreRing from "@/components/dashboard/ConvictionScoreRing";
 import GammaLevelsPanel from "@/components/dashboard/GammaLevelsPanel";
 import { Bell, ChevronRight, RefreshCw, Eye, Radio, Crosshair } from "lucide-react";
@@ -172,26 +173,14 @@ const DashboardScanner = () => {
   return (
     <DashboardLayout>
       <div className="max-w-5xl mx-auto px-4 lg:px-6 py-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <Crosshair className="w-6 h-6 text-primary" />
-              <h1 className="text-2xl font-black tracking-tight text-foreground">Breakout Scanner</h1>
-            </div>
-            <p className="text-sm text-muted-foreground/60">Real-time breakout detection across 40 tickers</p>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRescan}
-            disabled={isScanning}
-            className="gap-2 border-primary/30 text-primary hover:bg-primary/10"
-          >
-            <RefreshCw className={`w-4 h-4 ${isScanning ? "animate-spin" : ""}`} />
-            Rescan
-          </Button>
-        </div>
+        <PageBanner
+          title="BREAKOUT SCANNER"
+          subtitle="Detection · Alerts · Execution"
+          accentFrom="hsl(38, 92%, 50%)"
+          accentTo="hsl(45, 93%, 47%)"
+          gradientFrom="from-amber-900/15"
+          gradientTo="to-yellow-900/10"
+        />
 
         {/* Stats bar */}
         <div className="flex items-center gap-4 text-xs text-muted-foreground/60 flex-wrap">

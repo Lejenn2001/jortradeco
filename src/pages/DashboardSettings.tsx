@@ -1,14 +1,19 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import PageBanner from "@/components/dashboard/PageBanner";
 import NotificationSettings from "@/components/dashboard/NotificationSettings";
 
 const DashboardSettings = () => {
   return (
     <DashboardLayout showTickerTape={false}>
       <div className="max-w-4xl mx-auto px-4 lg:px-6 py-5 space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-          <p className="text-muted-foreground text-sm mt-1">Manage your alert preferences</p>
-        </div>
+        <PageBanner
+          title="SETTINGS"
+          subtitle="Preferences · Alerts · Account"
+          accentFrom="hsl(220, 15%, 50%)"
+          accentTo="hsl(225, 15%, 40%)"
+          gradientFrom="from-slate-800/15"
+          gradientTo="to-slate-900/10"
+        />
         <NotificationSettings />
       </div>
     </DashboardLayout>

@@ -6,6 +6,7 @@ import SignalAccuracyPanel from "@/components/dashboard/SignalAccuracyPanel";
 import SignalFeedPanel from "@/components/dashboard/SignalFeedPanel";
 import { useMarketData } from "@/hooks/useMarketData";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import PageBanner from "@/components/dashboard/PageBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -229,18 +230,15 @@ const DashboardAnalytics = () => {
 
   return (
     <DashboardLayout>
-      <div className="max-w-6xl mx-auto px-4 lg:px-6 py-5 bg-mesh">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h1 className="text-xl font-bold text-foreground">Analytics</h1>
-                <p className="text-sm text-muted-foreground">Member activity and platform overview</p>
-              </div>
-              <Link to="/ecosystem">
-                <Button size="sm" variant="outline" className="text-xs gap-2">
-                  <Globe className="h-3.5 w-3.5" /> Preview Ecosystem Page
-                </Button>
-              </Link>
-            </div>
+      <div className="max-w-6xl mx-auto px-4 lg:px-6 py-5 bg-mesh space-y-6">
+            <PageBanner
+              title="ADMIN PANEL"
+              subtitle="Members · Analytics · Control"
+              accentFrom="hsl(142, 71%, 45%)"
+              accentTo="hsl(160, 60%, 40%)"
+              gradientFrom="from-emerald-900/15"
+              gradientTo="to-green-900/10"
+            />
 
           {loading ? (
             <div className="flex items-center justify-center h-40">

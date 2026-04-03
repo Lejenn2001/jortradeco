@@ -10,6 +10,9 @@ import {
   Users,
   PieChart,
   Gift,
+  Crosshair,
+  Flame,
+  ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -17,24 +20,32 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarFooter,
   SidebarHeader,
-  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 
-const navItems = [
+const mainNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-  { icon: Users, label: "Chat", path: "/dashboard/community" },
   { icon: Activity, label: "Signals", path: "/dashboard/signals" },
   { icon: BarChart3, label: "Market", path: "/dashboard/market" },
+  { icon: Crosshair, label: "Scanner", path: "/dashboard/scanner" },
+  { icon: Flame, label: "Trump Feed", path: "/dashboard/trump" },
+  { icon: Users, label: "Chat", path: "/dashboard/community" },
+];
+
+const trackingNavItems = [
   { icon: Wallet, label: "P&L", path: "/dashboard/pnl" },
   { icon: Activity, label: "Performance", path: "/dashboard/performance" },
-  { icon: PieChart, label: "Analytics", path: "/dashboard/analytics" },
   { icon: Gift, label: "Referrals", path: "/dashboard/referrals" },
+];
+
+const systemNavItems = [
+  { icon: PieChart, label: "Analytics", path: "/dashboard/analytics" },
   { icon: Settings, label: "Settings", path: "/dashboard/settings" },
 ];
 
@@ -49,6 +60,24 @@ const DockSidebar = () => {
     await signOut();
     navigate("/login");
   };
+
+  const renderNavItems = (items: typeof mainNavItems) =>
+    items.map((item) => {
+      const isActive =
+        location.pathname === item.path ||
+        (item.path === "/dashboard" && location.pathname === "/dashboard");
+
+      return (
+        <SidebarMenuItem key={item.path}>
+          <SidebarMenuButton asChild isActive={isActive} tooltip={item.label}>
+            <Link to={item.path} className="flex items-center gap-2.5">
+              <item.icon className="h-[18px] w-[18px] shrink-0" />
+              <span>{item.label}</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      );
+    });
 
   return (
     <Sidebar collapsible="icon" className="hidden lg:flex border-r border-border/40 bg-card/80 backdrop-blur-xl">
@@ -65,29 +94,23 @@ const DockSidebar = () => {
 
       <SidebarContent>
         <SidebarGroup>
+          {!collapsed && <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground/50 px-3">Trading</SidebarGroupLabel>}
           <SidebarGroupContent>
-            <SidebarMenu>
-              {navItems.map((item) => {
-                const isActive =
-                  location.pathname === item.path ||
-                  (item.path === "/dashboard" && location.pathname === "/dashboard");
+            <SidebarMenu>{renderNavItems(mainNavItems)}</SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-                return (
-                  <SidebarMenuItem key={item.path}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive}
-                      tooltip={item.label}
-                    >
-                      <Link to={item.path} className="flex items-center gap-2.5">
-                        <item.icon className="h-[18px] w-[18px] shrink-0" />
-                        <span>{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
+        <SidebarGroup>
+          {!collapsed && <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground/50 px-3">Tracking</SidebarGroupLabel>}
+          <SidebarGroupContent>
+            <SidebarMenu>{renderNavItems(trackingNavItems)}</SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          {!collapsed && <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground/50 px-3">System</SidebarGroupLabel>}
+          <SidebarGroupContent>
+            <SidebarMenu>{renderNavItems(systemNavItems)}</SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
