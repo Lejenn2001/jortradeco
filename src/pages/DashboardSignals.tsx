@@ -770,10 +770,20 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
             <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${isCall ? "bg-primary/20 text-primary" : "bg-destructive/20 text-destructive"}`}>
               {signal.putCall === "call" ? "CALL" : "PUT"}
             </span>
-            {/* WIN / LOSS badge */}
+            {/* Outcome badges */}
             {isWin && (
               <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
                 <CheckCircle2 className="h-3 w-3" /> WIN
+              </span>
+            )}
+            {isPartialWin && (
+              <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30 flex items-center gap-1">
+                <CheckCircle2 className="h-3 w-3" /> PARTIAL
+              </span>
+            )}
+            {isNearMiss && (
+              <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 flex items-center gap-1">
+                <Target className="h-3 w-3" /> NEAR MISS
               </span>
             )}
             {isLoss && (
