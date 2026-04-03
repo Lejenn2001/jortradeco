@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import PageBanner from "@/components/dashboard/PageBanner";
 import ConvictionScoreRing from "@/components/dashboard/ConvictionScoreRing";
 import GammaLevelsPanel from "@/components/dashboard/GammaLevelsPanel";
 import { Bell, ChevronRight, RefreshCw, Eye, Radio, Crosshair } from "lucide-react";
