@@ -662,6 +662,8 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
   // Outcome badges
   const outcome = signal.outcome;
   const isWin = outcome === "win" || outcome === "hit";
+  const isPartialWin = outcome === "partial_win";
+  const isNearMiss = outcome === "near_miss";
   const isLoss = outcome === "loss" || outcome === "missed";
   const isPending = !outcome || outcome === "pending";
 
