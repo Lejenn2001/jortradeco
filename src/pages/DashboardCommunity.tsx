@@ -455,26 +455,51 @@ const DashboardCommunity = () => {
         />
 
         {/* Input */}
-        <div className="glass-panel rounded-lg p-1 sm:p-1.5 flex gap-1 border-glow-blue shrink-0">
-          <ChatImageUpload onImageUploaded={handleImageUploaded} disabled={sending} />
-          <Input
-            value={input}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            placeholder={replyTo ? `Reply to ${replyTo.user_name}...` : `Message as ${firstName}...`}
-            className="h-8 flex-1 border-border/50 bg-muted/30 text-xs transition-colors focus:border-primary/50"
-            maxLength={500}
-          />
-          <Button
-            onClick={() => sendMessage()}
-            disabled={!input.trim() || sending}
-            variant="hero"
-            size="icon"
-            className="h-8 w-8 rounded-lg"
-          >
-            <Send className="h-3.5 w-3.5" />
-          </Button>
-        </div>
+        {/* Input / Manage bar */}
+        {manageMode ? (
+          <div className="glass-panel rounded-lg p-1.5 sm:p-2 flex items-center justify-between border-glow-blue shrink-0">
+            <span className="text-xs font-medium text-muted-foreground">
+              {selected.size} message{selected.size !== 1 ? "s" : ""} selected
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={selected.size === messages.length ? deselectAll : selectAll}
+                className="text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {selected.size === messages.length ? "Deselect All" : "Select All"}
+              </button>
+              <button
+                onClick={deleteSelected}
+                disabled={selected.size === 0}
+                className="flex items-center gap-1 rounded-md bg-destructive px-3 py-1.5 text-[11px] font-semibold text-destructive-foreground transition-colors hover:bg-destructive/80 disabled:opacity-40"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Delete {selected.size > 0 ? selected.size : ""}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="glass-panel rounded-lg p-1 sm:p-1.5 flex gap-1 border-glow-blue shrink-0">
+            <ChatImageUpload onImageUploaded={handleImageUploaded} disabled={sending} />
+            <Input
+              value={input}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              placeholder={replyTo ? `Reply to ${replyTo.user_name}...` : `Message as ${firstName}...`}
+              className="h-8 flex-1 border-border/50 bg-muted/30 text-xs transition-colors focus:border-primary/50"
+              maxLength={500}
+            />
+            <Button
+              onClick={() => sendMessage()}
+              disabled={!input.trim() || sending}
+              variant="hero"
+              size="icon"
+              className="h-8 w-8 rounded-lg"
+            >
+              <Send className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );
