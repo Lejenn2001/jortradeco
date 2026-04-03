@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import PageBanner from "@/components/dashboard/PageBanner";
 
 const TIERS = [
   { count: 1, label: "First Referral", reward: "50% off your next month", icon: Gift },
