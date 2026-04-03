@@ -69,11 +69,15 @@ const DashboardCommunity = () => {
         .limit(100);
       if (data) {
         setMessages(data as ChatMessage[]);
-        scrollToBottom();
       }
     };
     load();
   }, []);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   // Realtime subscription
   useEffect(() => {
