@@ -922,7 +922,7 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
                 {mfeProgress.percent.toFixed(0)}% to TP
               </span>
             )}
-            {signal.premium && <span className="text-[10px] sm:text-xs text-accent font-semibold">{signal.premium}</span>}
+            
           </div>
           <ConvictionScoreRing score={score} label={signal.convictionLabel ?? ""} />
         </div>
@@ -1017,6 +1017,11 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
             }`}>
               <Shield className="h-2.5 w-2.5" />
               {signal.gammaZone === "positive" ? "POS GAMMA" : signal.gammaZone === "negative" ? "NEG GAMMA" : "NEUTRAL"}
+            </span>
+          )}
+          {signal.premium && (
+            <span className="text-[9px] sm:text-[10px] bg-accent/15 text-accent px-2 py-0.5 rounded-full font-semibold">
+              💰 {signal.premium}
             </span>
           )}
           {signal.expiry && (
