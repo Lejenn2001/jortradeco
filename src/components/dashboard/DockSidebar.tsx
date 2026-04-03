@@ -3,16 +3,15 @@ import {
   LayoutDashboard,
   Activity,
   BarChart3,
-  Wallet,
   Settings,
   LogOut,
   Bot,
   Users,
   PieChart,
-  Gift,
   Crosshair,
-  Flame,
+  Megaphone,
   ShieldCheck,
+  Wallet,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -20,7 +19,6 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -29,55 +27,33 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-const mainNavItems = [
+const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-  { icon: Activity, label: "Signals", path: "/dashboard/signals" },
-  { icon: BarChart3, label: "Market", path: "/dashboard/market" },
-  { icon: Crosshair, label: "Scanner", path: "/dashboard/scanner" },
-  { icon: Flame, label: "Trump Feed", path: "/dashboard/trump" },
-  { icon: Users, label: "Chat", path: "/dashboard/community" },
-];
-
-const trackingNavItems = [
-  { icon: Wallet, label: "P&L", path: "/dashboard/pnl" },
-  { icon: Activity, label: "Performance", path: "/dashboard/performance" },
-  { icon: Gift, label: "Referrals", path: "/dashboard/referrals" },
-];
-
-const systemNavItems = [
+  { icon: Users, label: "Jortrade Chat", path: "/dashboard/community" },
+  { icon: Activity, label: "Decision Engine", path: "/dashboard/signals" },
+  { icon: Crosshair, label: "Breakout Scanner", path: "/dashboard/scanner" },
+  { icon: BarChart3, label: "Market View", path: "/dashboard/market" },
+  { icon: Wallet, label: "P&L Tracker", path: "/dashboard/pnl" },
   { icon: PieChart, label: "Analytics", path: "/dashboard/analytics" },
+  { icon: Megaphone, label: "Trump Feed", path: "/dashboard/trump" },
   { icon: Settings, label: "Settings", path: "/dashboard/settings" },
 ];
 
 const DockSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, isAdmin } = useAuth();
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
+
+  const allNavItems = isAdmin
+    ? [...navItems, { icon: ShieldCheck, label: "Admin", path: "/dashboard/admin" }]
+    : navItems;
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/login");
   };
-
-  const renderNavItems = (items: typeof mainNavItems) =>
-    items.map((item) => {
-      const isActive =
-        location.pathname === item.path ||
-        (item.path === "/dashboard" && location.pathname === "/dashboard");
-
-      return (
-        <SidebarMenuItem key={item.path}>
-          <SidebarMenuButton asChild isActive={isActive} tooltip={item.label}>
-            <Link to={item.path} className="flex items-center gap-2.5">
-              <item.icon className="h-[18px] w-[18px] shrink-0" />
-              <span>{item.label}</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      );
-    });
 
   return (
     <Sidebar collapsible="icon" className="hidden lg:flex border-r border-border/40 bg-card/80 backdrop-blur-xl">
@@ -94,23 +70,25 @@ const DockSidebar = () => {
 
       <SidebarContent>
         <SidebarGroup>
-          {!collapsed && <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground/50 px-3">Trading</SidebarGroupLabel>}
           <SidebarGroupContent>
-            <SidebarMenu>{renderNavItems(mainNavItems)}</SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+            <SidebarMenu>
+              {allNavItems.map((item) => {
+                const isActive =
+                  location.pathname === item.path ||
+                  (item.path === "/dashboard" && location.pathname === "/dashboard");
 
-        <SidebarGroup>
-          {!collapsed && <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground/50 px-3">Tracking</SidebarGroupLabel>}
-          <SidebarGroupContent>
-            <SidebarMenu>{renderNavItems(trackingNavItems)}</SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          {!collapsed && <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground/50 px-3">System</SidebarGroupLabel>}
-          <SidebarGroupContent>
-            <SidebarMenu>{renderNavItems(systemNavItems)}</SidebarMenu>
+                return (
+                  <SidebarMenuItem key={item.path}>
+                    <SidebarMenuButton asChild isActive={isActive} tooltip={item.label}>
+                      <Link to={item.path} className="flex items-center gap-2.5">
+                        <item.icon className="h-[18px] w-[18px] shrink-0" />
+                        <span>{item.label}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
