@@ -422,4 +422,4 @@ const DashboardAnalytics = () => {
   );
 };
 
-export default DashboardAnalytics;
+export default DashboardAdmin;
