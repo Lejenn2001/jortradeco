@@ -15,8 +15,7 @@ import DashboardCommunity from "./pages/DashboardCommunity.tsx";
 import DashboardAnalytics from "./pages/DashboardAnalytics.tsx";
 import DashboardSettings from "./pages/DashboardSettings.tsx";
 import DashboardScanner from "./pages/DashboardScanner.tsx";
-import DashboardPerformance from "./pages/DashboardPerformance.tsx";
-import DashboardReferrals from "./pages/DashboardReferrals.tsx";
+// Performance and Referrals are now tabs within P&L
 import DashboardTrump from "./pages/DashboardTrump.tsx";
 import Login from "./pages/Login.tsx";
 import Signup from "./pages/Signup.tsx";
