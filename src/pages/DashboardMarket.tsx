@@ -1,6 +1,7 @@
 import { useState } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import MarketChartPanel from "@/components/dashboard/MarketChartPanel";
+import PageBanner from "@/components/dashboard/PageBanner";
 import { TrendingUp, TrendingDown, BarChart3 } from "lucide-react";
 
 const sectors = [
