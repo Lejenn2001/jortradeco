@@ -12,12 +12,6 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import jortradeLogo from "@/assets/jortrade_logo_dark.png";
-  Users,
-  PieChart,
-  Crosshair,
-  Megaphone,
-  ShieldCheck,
-} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
   Sidebar,
