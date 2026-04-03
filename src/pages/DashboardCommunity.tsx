@@ -290,9 +290,12 @@ const DashboardCommunity = () => {
             </div>
           )}
 
+          <ScrollArea
+            className="flex-1 glass-panel rounded-lg border-glow-purple min-h-0"
+          >
           <div
             ref={scrollRef}
-            className="flex-1 glass-panel rounded-lg border-glow-purple px-1.5 sm:px-2 pt-7 pb-1 overflow-y-auto min-h-0"
+            className="px-1.5 sm:px-2 pt-7 pb-1"
           >
           <div className="space-y-0.5">
             {messages.length === 0 && (
