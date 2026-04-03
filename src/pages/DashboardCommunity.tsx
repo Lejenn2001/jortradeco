@@ -43,9 +43,11 @@ const DashboardCommunity = () => {
   const broadcastTyping = useTypingBroadcast();
 
   const scrollToBottom = () => {
-    setTimeout(() => {
-      scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-    }, 50);
+    requestAnimationFrame(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+    });
   };
 
   const scrollToMessage = useCallback((id: string) => {
@@ -67,11 +69,15 @@ const DashboardCommunity = () => {
         .limit(100);
       if (data) {
         setMessages(data as ChatMessage[]);
-        scrollToBottom();
       }
     };
     load();
   }, []);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   // Realtime subscription
   useEffect(() => {
@@ -86,9 +92,7 @@ const DashboardCommunity = () => {
             if (prev.some((m) => m.id === newMsg.id)) return prev;
             return [...prev, newMsg];
           });
-          // Clear biddie typing when biddie message arrives
           if (newMsg.user_id === BIDDIE_USER_ID) setBiddieTyping(false);
-          scrollToBottom();
         }
       )
       .on(
