@@ -478,7 +478,7 @@ const DashboardSignals = () => {
       <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-5 space-y-4">
         {/* Decision Engine Banner */}
         <div className="relative overflow-hidden rounded-2xl border border-border/10 bg-card/80">
-          <svg className="absolute inset-0 w-full h-full opacity-[0.35]" viewBox="0 0 800 200" preserveAspectRatio="none">
+          <svg className="absolute inset-0 w-full h-full opacity-[0.15]" viewBox="0 0 800 200" preserveAspectRatio="none">
             {[40, 90, 140, 190, 240, 290, 340, 390, 440, 490, 540, 590, 640, 690, 740].map((x, i) => {
               const heights = [60, 45, 80, 35, 70, 90, 50, 65, 40, 85, 55, 75, 30, 60, 45];
               const tops = [70, 85, 50, 95, 60, 30, 80, 65, 90, 45, 75, 55, 100, 70, 85];
@@ -491,7 +491,7 @@ const DashboardSignals = () => {
               );
             })}
           </svg>
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/15 via-transparent to-cyan-900/10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/10 via-transparent to-cyan-900/5" />
           <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
           <div className="relative px-6 py-7 flex items-center justify-between">
             <div className="flex items-center gap-2">
