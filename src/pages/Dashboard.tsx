@@ -249,10 +249,7 @@ const Dashboard = () => {
         {/* Live State */}
         <div className="space-y-1">
           <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 px-1">▸ Live State</p>
-          <div className="grid md:grid-cols-2 gap-4">
-            <MarketStatusSign />
-            <PerformanceSnapshot />
-          </div>
+          <MarketStatusSign />
         </div>
 
         <HeroSignalCard signal={heroSignal} loading={signalFeedLoading} />
