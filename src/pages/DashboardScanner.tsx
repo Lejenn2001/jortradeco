@@ -347,8 +347,6 @@ const DashboardScanner = () => {
           </span>
         </div>
 
-        {/* Gamma Levels Panel */}
-        <GammaLevelsPanel ticker="SPX" />
 
         {/* Cards grid */}
         <div className="grid sm:grid-cols-2 gap-4">
