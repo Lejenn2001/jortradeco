@@ -286,7 +286,7 @@ const DashboardSignals = () => {
   }, [liveSignals, dbSignals]);
 
   const loading = liveLoading && dbLoading;
-  const signals = allSignals;
+  const signals = allSignals.length > 0 ? allSignals : MOCK_SIGNALS;
 
   const filtered = useMemo(() => {
     let list = [...signals];
