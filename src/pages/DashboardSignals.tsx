@@ -1019,6 +1019,11 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
               {signal.gammaZone === "positive" ? "POS GAMMA" : signal.gammaZone === "negative" ? "NEG GAMMA" : "NEUTRAL"}
             </span>
           )}
+          {signal.premium && (
+            <span className="text-[9px] sm:text-[10px] bg-accent/15 text-accent px-2 py-0.5 rounded-full font-semibold">
+              💰 {signal.premium}
+            </span>
+          )}
           {signal.expiry && (
             <span className="text-[9px] sm:text-[10px] bg-muted/40 text-muted-foreground px-2 py-0.5 rounded-full font-medium">
               Exp: {signal.expiry}
