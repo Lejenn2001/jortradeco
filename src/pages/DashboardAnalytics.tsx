@@ -6,6 +6,7 @@ import SignalAccuracyPanel from "@/components/dashboard/SignalAccuracyPanel";
 import SignalFeedPanel from "@/components/dashboard/SignalFeedPanel";
 import { useMarketData } from "@/hooks/useMarketData";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import PageBanner from "@/components/dashboard/PageBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
