@@ -229,13 +229,13 @@ const Dashboard = () => {
           )}
         </AnimatePresence>
 
-        {/* Market Pulse + Market Status */}
+        {/* Market Status + Market Pulse */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2">
-            <MarketPulse />
-          </div>
           <div className="lg:col-span-1">
             <MarketStatusSign />
+          </div>
+          <div className="lg:col-span-2">
+            <MarketPulse />
           </div>
         </div>
 
