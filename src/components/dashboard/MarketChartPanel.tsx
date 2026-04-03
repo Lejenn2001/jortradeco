@@ -281,7 +281,7 @@ const MarketChartPanel = () => {
           {candles.map((c, i) => {
             const top = Math.min(c.o, c.c);
             const bottom = Math.max(c.o, c.c);
-            const color = c.bull ? "hsl(var(--primary))" : "hsl(var(--destructive))";
+            const color = c.bull ? "hsl(var(--primary) / 0.55)" : "hsl(var(--destructive) / 0.55)";
             return (
               <g key={i}>
                 <line x1={c.x} y1={c.h} x2={c.x} y2={c.l} stroke={color} strokeWidth="2" />
