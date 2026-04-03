@@ -688,6 +688,9 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
           {catIcon}
           <span className={`text-[9px] sm:text-[10px] font-bold tracking-widest uppercase ${catColor}`}>{catLabel}</span>
           <span className={`text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded ${tfColor}`}>{tfLabel}</span>
+          {signal.id.startsWith("mock-") && (
+            <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400 uppercase tracking-wider">MOCK</span>
+          )}
           {signal.aiEvaluated && (
             <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 uppercase tracking-wider flex items-center gap-0.5">
               <CheckCircle2 className="h-2.5 w-2.5" /> BIDDIE PICK
