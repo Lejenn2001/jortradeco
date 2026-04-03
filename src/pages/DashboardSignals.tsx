@@ -5,7 +5,8 @@ import { useMarketData, type MarketSignal, type SignalTimeframe } from "@/hooks/
 import { supabase } from "@/integrations/supabase/client";
 import {
   Search, Filter, TrendingUp, TrendingDown, Zap, Clock, Target,
-  ShieldX, Crosshair, MapPin, Gauge, Waves, XCircle
+  ShieldX, Crosshair, MapPin, Gauge, Waves, XCircle, Eye, Shield,
+  CheckCircle2, Plus, ThumbsUp, ThumbsDown, MessageSquare
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import SignalLegend from "@/components/dashboard/SignalLegend";
