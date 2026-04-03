@@ -91,12 +91,14 @@ const DockSidebar = () => {
   return (
     <Sidebar collapsible="icon" className="hidden lg:flex border-r border-border/40 bg-card/80 backdrop-blur-xl">
       <SidebarHeader className="p-3">
-        <Link to="/" className="flex items-center gap-2.5 px-1">
-          <div className="w-9 h-9 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
-            <Bot className="h-5 w-5 text-primary" />
+        <Link to="/" className="flex flex-col items-center gap-1 px-1 py-2">
+          <div className="w-10 h-10 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center shrink-0">
+            <span className="text-primary font-black text-lg tracking-tighter leading-none" style={{ fontFamily: "'Inter', sans-serif" }}>
+              JT
+            </span>
           </div>
           {!collapsed && (
-            <span className="font-bold text-sm text-foreground tracking-tight">JORTRADE</span>
+            <span className="text-[10px] font-bold text-muted-foreground tracking-[0.25em] uppercase mt-0.5">JORTRADE</span>
           )}
         </Link>
       </SidebarHeader>
