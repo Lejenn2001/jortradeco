@@ -434,6 +434,7 @@ const DashboardCommunity = () => {
             {/* Typing indicators */}
             <ChatTypingIndicator biddieTyping={biddieTyping} />
           </div>
+          </div>
         </div>
 
         {/* Reply preview */}
