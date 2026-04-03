@@ -83,7 +83,10 @@ const DashboardCommunity = () => {
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
       if (scrollRef.current) {
-        scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+        const viewport = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
+        if (viewport) {
+          viewport.scrollTo({ top: viewport.scrollHeight, behavior: "smooth" });
+        }
       }
     }, 50);
   }, []);
