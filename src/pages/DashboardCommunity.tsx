@@ -208,14 +208,14 @@ const DashboardCommunity = () => {
 
   return (
     <DashboardLayout showTickerTape={false}>
-      <div className="flex-1 flex flex-col overflow-hidden p-1.5 sm:p-2 lg:p-3 bg-mesh">
+      <div className="flex-1 flex flex-col overflow-hidden p-1.5 sm:p-2 bg-mesh">
         {/* Header */}
-        <div className="mb-1.5 sm:mb-2 shrink-0 hidden sm:block">
+        <div className="mb-1 shrink-0 hidden sm:block">
           <ChatRoomHeader onlineCount={onlineCount} firstName={firstName} />
         </div>
 
         {/* Daily Recap */}
-        <div className="mb-1.5 shrink-0">
+        <div className="mb-1 shrink-0">
           <DailyRecapCard />
         </div>
 
@@ -225,9 +225,9 @@ const DashboardCommunity = () => {
         {/* Messages */}
         <div
           ref={scrollRef}
-          className="flex-1 glass-panel rounded-xl border-glow-purple px-2.5 sm:px-4 py-2 sm:py-3 overflow-y-auto flex flex-col-reverse mb-1.5 sm:mb-2 min-h-0"
+          className="flex-1 glass-panel rounded-xl border-glow-purple px-2 sm:px-3 py-1.5 sm:py-2 overflow-y-auto flex flex-col-reverse mb-1 sm:mb-1.5 min-h-0"
         >
-          <div className="space-y-2">
+          <div className="space-y-1">
           {messages.length === 0 && (
             <div className="flex-1 flex items-center justify-center h-full">
               <motion.div
@@ -255,7 +255,7 @@ const DashboardCommunity = () => {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.2 }}
-                  className={`group flex gap-2.5 transition-all ${isOwn ? "flex-row-reverse" : ""}`}
+                  className={`group flex gap-2 transition-all ${isOwn ? "flex-row-reverse" : ""}`}
                 >
                   {/* Avatar */}
                   {isBiddie ? (
@@ -272,7 +272,7 @@ const DashboardCommunity = () => {
 
                   {/* Message Bubble */}
                   <div
-                    className={`max-w-[85%] sm:max-w-[70%] rounded-2xl px-2.5 sm:px-3 py-1.5 sm:py-2 ${
+                    className={`max-w-[90%] sm:max-w-[80%] rounded-xl px-2.5 sm:px-3 py-1.5 ${
                       isBiddie
                         ? "bg-primary/10 border border-primary/25 rounded-bl-sm"
                         : isOwn
