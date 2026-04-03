@@ -671,6 +671,7 @@ function SignalCard({ signal }: { signal: MarketSignal }) {
     watching: { label: "WATCHING", color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
     active: { label: "ACTIVE", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
     hit: { label: "HIT ✓", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
+    stopped: { label: "STOPPED", color: "bg-destructive/20 text-destructive border-destructive/30" },
     miss: { label: "MISS", color: "bg-destructive/20 text-destructive border-destructive/30" },
     expired: { label: "EXPIRED", color: "bg-muted/30 text-muted-foreground border-muted/40" },
   };
