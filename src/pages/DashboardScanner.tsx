@@ -4,8 +4,9 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import PageBanner from "@/components/dashboard/PageBanner";
 import ConvictionScoreRing from "@/components/dashboard/ConvictionScoreRing";
 import GammaLevelsPanel from "@/components/dashboard/GammaLevelsPanel";
-import { Bell, ChevronRight, RefreshCw, Eye, Radio, Crosshair } from "lucide-react";
+import { Bell, ChevronRight, RefreshCw, Eye, Radio, Crosshair, Info, ChevronUp, Zap, BarChart3, TrendingUp, Target, Activity, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface ScannerSignal {
   ticker: string;
