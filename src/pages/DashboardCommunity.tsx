@@ -320,8 +320,17 @@ const DashboardCommunity = () => {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
-                    className={`group flex gap-1.5 transition-all ${isOwn ? "flex-row-reverse" : ""}`}
+                    className={`group flex gap-1.5 transition-all ${isOwn ? "flex-row-reverse" : ""} ${manageMode && selected.has(msg.id) ? "bg-primary/5 rounded-lg" : ""}`}
+                    onClick={manageMode ? () => toggleSelect(msg.id) : undefined}
                   >
+                    {/* Manage checkbox */}
+                    {manageMode && (
+                      <div className="flex shrink-0 items-center self-center">
+                        <div className={`flex h-4 w-4 items-center justify-center rounded border ${selected.has(msg.id) ? "border-primary bg-primary" : "border-muted-foreground/40 bg-muted/20"} transition-colors`}>
+                          {selected.has(msg.id) && <CheckSquare className="h-3 w-3 text-primary-foreground" />}
+                        </div>
+                      </div>
+                    )}
                     {/* Avatar */}
                     {isBiddie ? (
                       <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full border border-primary/40 bg-primary/20">
