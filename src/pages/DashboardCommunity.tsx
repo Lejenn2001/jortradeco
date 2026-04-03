@@ -66,6 +66,14 @@ const DashboardCommunity = () => {
     }
   };
 
+  const selectAll = () => {
+    setSelected(new Set(messages.map((m) => m.id)));
+  };
+
+  const deselectAll = () => {
+    setSelected(new Set());
+  };
+
   const exitManage = () => {
     setManageMode(false);
     setSelected(new Set());
