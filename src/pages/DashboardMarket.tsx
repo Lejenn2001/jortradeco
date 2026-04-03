@@ -27,11 +27,14 @@ const DashboardMarket = () => {
   return (
     <DashboardLayout>
       <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-5 space-y-5">
-          {/* Header */}
-          <div className="space-y-1">
-            <h1 className="text-2xl font-extrabold text-foreground">Market View</h1>
-            <p className="text-sm text-muted-foreground">Full market overview with sector breakdown</p>
-          </div>
+          <PageBanner
+            title="MARKET VIEW"
+            subtitle="Indices · Sectors · Analysis"
+            accentFrom="hsl(174, 72%, 56%)"
+            accentTo="hsl(199, 89%, 48%)"
+            gradientFrom="from-teal-900/15"
+            gradientTo="to-cyan-900/10"
+          />
 
           {/* Indices strip */}
           <div className="flex gap-3 overflow-x-auto pb-1">
