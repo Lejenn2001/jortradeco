@@ -9,6 +9,7 @@ import ChatPinnedBar from "@/components/dashboard/chat/ChatPinnedBar";
 import ChatImageUpload from "@/components/dashboard/chat/ChatImageUpload";
 import ChatUserBadge from "@/components/dashboard/chat/ChatUserBadge";
 import ChatReplyPreview from "@/components/dashboard/chat/ChatReplyPreview";
+import DailyRecapCard from "@/components/dashboard/chat/DailyRecapCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
