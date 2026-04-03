@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import SignalLegend from "@/components/dashboard/SignalLegend";
 import ConvictionScoreRing from "@/components/dashboard/ConvictionScoreRing";
 import SignalErrorBoundary from "@/components/dashboard/SignalErrorBoundary";
-import { dbRecordToSignal, classifyTimeframe } from "@/lib/signalMapper";
+import { dbRecordToSignal, classifyTimeframe, deriveTimeframeLabel } from "@/lib/signalMapper";
 
 type FilterType = "all" | "call" | "put";
 type ViewTab = "algorithm" | "whale" | "spread" | "spx";

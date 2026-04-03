@@ -39,7 +39,7 @@ export function formatSignalTimestamp(isoStr: string): string {
   return `${month}/${day}/${year} ${time}`;
 }
 
-export function classifyTimeframe(record: any): SignalTimeframe {
+export function classifyTimeframe(record: { expiry?: string | null }): SignalTimeframe {
   if (record.expiry) {
     const expDate = new Date(record.expiry);
     if (!isNaN(expDate.getTime())) {
@@ -48,11 +48,22 @@ export function classifyTimeframe(record: any): SignalTimeframe {
       const expStr = expDate.toISOString().split("T")[0];
       if (expStr === todayStr) return "buy_now";
       const dte = Math.max(0, Math.ceil((expDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
-      if (dte <= 7) return "short_term";
+      if (dte <= 3) return "short_term";
       return "swing";
     }
   }
   return "swing";
+}
+
+/** Derive a human-readable timeframe label from expiry date */
+export function deriveTimeframeLabel(expiry?: string | null): { label: string; timeframe: SignalTimeframe } {
+  const tf = classifyTimeframe({ expiry });
+  const labels: Record<SignalTimeframe, string> = {
+    buy_now: "DAY TRADE",
+    short_term: "1–3 DAY TRADE",
+    swing: "SWING TRADE",
+  };
+  return { label: labels[tf], timeframe: tf };
 }
 
 export function dbRecordToSignal(record: any): MarketSignal {
